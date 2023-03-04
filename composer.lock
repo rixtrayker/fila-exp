@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b67d69bbb61e6b134926b9ce8a624d46",
+    "content-hash": "731730581437b89fac55308eef8a9d29",
     "packages": [
         {
             "name": "akaunting/laravel-money",
@@ -3111,6 +3111,89 @@
                 }
             ],
             "time": "2022-12-21T22:28:25+00:00"
+        },
+        {
+            "name": "lucasgiovanny/filament-multiselect-two-sides",
+            "version": "v1.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/lucasgiovanny/filament-multiselect-two-sides.git",
+                "reference": "7e05930673db413a0d3038b76ae325e72c9c63fe"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/lucasgiovanny/filament-multiselect-two-sides/zipball/7e05930673db413a0d3038b76ae325e72c9c63fe",
+                "reference": "7e05930673db413a0d3038b76ae325e72c9c63fe",
+                "shasum": ""
+            },
+            "require": {
+                "filament/filament": "^2.0",
+                "illuminate/contracts": "^9.0|^10.0",
+                "php": "^8.1",
+                "spatie/laravel-package-tools": "^1.13.5"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.0",
+                "nunomaduro/collision": "^6.0",
+                "orchestra/testbench": "^7.0",
+                "pestphp/pest": "^1.21",
+                "pestphp/pest-plugin-laravel": "^1.1",
+                "pestphp/pest-plugin-livewire": "^1.0",
+                "pestphp/pest-plugin-parallel": "^0.3",
+                "phpunit/phpunit": "^9.5",
+                "spatie/laravel-ray": "^1.26"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "LucasGiovanny\\FilamentMultiselectTwoSides\\FilamentMultiselectTwoSidesServiceProvider"
+                    ],
+                    "aliases": {
+                        "FilamentMultiselectTwoSides": "LucasGiovanny\\FilamentMultiselectTwoSides\\Facades\\FilamentMultiselectTwoSides"
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "LucasGiovanny\\FilamentMultiselectTwoSides\\": "src",
+                    "LucasGiovanny\\FilamentMultiselectTwoSides\\Database\\Factories\\": "database/factories"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Lucas Giovanny",
+                    "email": "lucas@vezoa.com",
+                    "role": "Developer"
+                },
+                {
+                    "name": "Leo França",
+                    "email": "leoarkiteto@gmail.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "This package is a Filament package that allows you to create a multiselect with two sides.",
+            "homepage": "https://github.com/lucasgiovanny/filament-multiselect-two-sides",
+            "keywords": [
+                "filament-multiselect-two-sides",
+                "laravel",
+                "lucasgiovanny"
+            ],
+            "support": {
+                "issues": "https://github.com/lucasgiovanny/filament-multiselect-two-sides/issues",
+                "source": "https://github.com/lucasgiovanny/filament-multiselect-two-sides/tree/v1.1.1"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/lucasgiovanny",
+                    "type": "github"
+                }
+            ],
+            "time": "2023-02-24T10:42:04+00:00"
         },
         {
             "name": "masterminds/html5",
