@@ -117,6 +117,22 @@ return [
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],
+
+        // app channels
+
+        'listeners' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/listeners/listeners.log'),
+            'level' => 'debug',
+            'permission' => 0775,
+            'days' => 14,
+        ],
+
+        'debugging' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/debugging/debugging.log'),
+            'level' => 'debug',
+        ],
     ],
 
 ];
