@@ -70,4 +70,9 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->is_admin == 1;
     }
+
+    public function cities()
+    {
+        return $this->belongsToMany(City::class);
+    }
 }
