@@ -19,11 +19,11 @@ return new class extends Migration
         Schema::create('clients', function (Blueprint $table) {
             $table->id();
             $table->json('name');
-            $table->string('email');
+            $table->string('email')->nullable();
             $table->string('phone');
             $table->foreignIdFor(City::class);
             $table->string('address');
-            $table->enum('grade',['A','B','C','N','PH']);
+            $table->enum('grade',['A+','A','B+','B','C']);
             $table->enum('shift',['AM','PM']);
             $table->foreignIdFor(ClientType::class);
             $table->foreignIdFor(Speciality::class);
