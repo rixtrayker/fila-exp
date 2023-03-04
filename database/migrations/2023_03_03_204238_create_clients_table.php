@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\City;
 use App\Models\ClientType;
 use App\Models\Speciality;
 use Illuminate\Database\Migrations\Migration;
@@ -20,6 +21,7 @@ return new class extends Migration
             $table->json('name');
             $table->string('email');
             $table->string('phone');
+            $table->foreignIdFor(City::class);
             $table->string('address');
             $table->enum('grade',['A','B','C','N','PH']);
             $table->enum('shift',['AM','PM']);
