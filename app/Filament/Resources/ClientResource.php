@@ -10,7 +10,6 @@ use Filament\Forms;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Resources\Concerns\Translatable;
 use Filament\Resources\Form;
 use Filament\Resources\Resource;
 use Filament\Resources\Table;
@@ -21,7 +20,6 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ClientResource extends Resource
 {
-    use Translatable;
     protected static ?string $model = Client::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-collection';
@@ -30,22 +28,12 @@ class ClientResource extends Resource
     {
         return $form
             ->schema([
-                Section::make('Name')
-                ->statePath('name')
-                ->schema([
-                    TextInput::make('ar')
-                        ->label('الاسم بالعربية')
-                        ->required(),
-                    TextInput::make('en')
-                        ->label('Name')
-                        ->required(),
-                ]),
-                // TextInput::make('name')
-                //     ->label('Name')
-                //     ->required(),
-                // TextInput::make('arabic_name')
-                //     ->label('Name (العربية)')
-                //     ->required(),
+                TextInput::make('name_en')
+                    ->label('Name')
+                    ->required(),
+                TextInput::make('name_ar')
+                    ->label('Name (العربية)')
+                    ->required(),
                 TextInput::make('email')
                     ->email()
                     ->label('Email'),
@@ -85,11 +73,14 @@ class ClientResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('name')
+                TextColumn::make('name_en')
                     ->searchable()
-                    ->label('Name English'),
-                TextColumn::make('arabic_name')
-                    ->label('Name Arabic'),
+                    ->sortable()
+                    ->label('Name'),
+                TextColumn::make('name_ar')
+                    ->label('Name (العربية)')
+                    ->searchable()
+                    ->sortable(),
                 TextColumn::make('email')
                     ->sortable()
                     ->searchable()

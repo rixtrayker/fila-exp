@@ -14,12 +14,12 @@ class Product extends Model
     use HasTranslations;
 
     protected $fillable = [
-        'name',
+        'name_en',
+        'name_ar',
         'product_category_id',
         'price',
         'active',
     ];
-    protected $translatable = ['name'];
 
     public static function boot()
     {

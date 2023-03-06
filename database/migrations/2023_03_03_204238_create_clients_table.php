@@ -18,7 +18,8 @@ return new class extends Migration
     {
         Schema::create('clients', function (Blueprint $table) {
             $table->id();
-            $table->json('name');
+            $table->string('name_en');
+            $table->string('name_ar');
             $table->string('email')->nullable();
             $table->string('phone');
             $table->foreignIdFor(City::class);

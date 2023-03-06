@@ -10,7 +10,6 @@ use Illuminate\Contracts\Database\Eloquent\Builder;
 
 class ListClients extends ListRecords
 {
-    use ListRecords\Concerns\Translatable;
     protected static string $resource = ClientResource::class;
 
     protected function getActions(): array

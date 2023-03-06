@@ -15,7 +15,8 @@ class Client extends Model
 
     protected $translatable = ['name'];
     protected $fillable = [
-        'name',
+        'name_en',
+        'name_ar',
         'email',
         'phone',
         'address',
@@ -26,7 +27,8 @@ class Client extends Model
         'speciality_id',
     ];
     public $editable = [
-        'name',
+        'name_en',
+        'name_ar',
         'email',
         'phone',
         'address',
@@ -36,9 +38,7 @@ class Client extends Model
         'client_type_id',
         'speciality_id',
     ];
-    protected $casts = [
-        'name' => 'json',
-    ];
+
     public function visits()
     {
         return $this->hasMany(Visit::class);
@@ -55,13 +55,9 @@ class Client extends Model
     {
         return $this->belongsTo(Speciality::class);
     }
-    public function getArabicNameAttribute()
+    public function getNameAttribute()
     {
-        return $this->getTranslation('name', 'ar');
-    }
-    public function setArabicNameAttribute($value){
-
-        $this->setTranslation('name','ar',$value)->save();
+        return $this->name_ar .' - '. $this->name_en;
     }
 
     public function scopeFilter($query, array $filters)
