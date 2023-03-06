@@ -95,7 +95,6 @@ class ClientResource extends Resource
                     ->label('Address'),
                 TextColumn::make('city.name')
                     ->sortable()
-                    ->searchable()
                     ->label('City'),
                 TextColumn::make('grade')
                     ->sortable()
@@ -107,11 +106,9 @@ class ClientResource extends Resource
                     ->label('Shift'),
                 TextColumn::make('clientType.name')
                     ->sortable()
-                    ->searchable()
                     ->label('Type'),
                 TextColumn::make('speciality.name')
                     ->sortable()
-                    ->searchable()
                     ->label('Speciality'),
             ])
             ->filters([
