@@ -48,4 +48,8 @@ class Visit extends Model
     {
         return $this->belongsTo(City::class);
     }
+    public function products()
+    {
+        return $this->belongsToMany(Product::class,'product_visits');
+    }
 }

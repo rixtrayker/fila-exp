@@ -30,12 +30,17 @@ class Product extends Model
     {
         return  $query->where('active', true);
     }
-    public function getArabicNameAttribute()
-    {
-        return $this->getTranslation('name', 'ar');
-    }
+
     public function productCategory()
     {
         return  $this->belongsTo(ProductCategory::class);
+    }
+    public function orders()
+    {
+        return $this->belongsToMany(Order::class,'order_products');
+    }
+    public function visits()
+    {
+        return $this->belongsToMany(Visit::class,'order_visits');
     }
 }
