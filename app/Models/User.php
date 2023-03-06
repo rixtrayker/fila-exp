@@ -75,4 +75,8 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->belongsToMany(City::class);
     }
+    public function clientRequests()
+    {
+        return $this->hasMany(ClientRequest::class);
+    }
 }

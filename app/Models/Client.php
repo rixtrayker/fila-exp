@@ -69,4 +69,8 @@ class Client extends Model
         //     $query->where('status', '=', $status);
         // });
     }
+    public function clientRequests()
+    {
+        return $this->hasMany(ClientRequest::class);
+    }
 }

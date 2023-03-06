@@ -12,4 +12,8 @@ class ClientRequestType extends Model
     protected $fillable = [
         'name',
     ];
+
+    public function clientRequests(){
+        return $this->hasMany(ClientRequest::class);
+    }
 }
