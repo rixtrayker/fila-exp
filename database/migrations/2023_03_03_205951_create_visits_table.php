@@ -22,10 +22,13 @@ return new class extends Migration
             $table->foreignIdFor(Client::class);
             $table->foreignIdFor(User::class);
             $table->foreignIdFor(User::class,'second_user_id')->nullable();
+            $table->date('visit_date');
             $table->date('next_visit')->nullable();
-            $table->foreignIdFor(CallType::class);
-            $table->foreignIdFor(VisitType::class);
-            $table->text('comment');
+            $table->enum('status',['pending','verified','visited','cancelled'])->default('pending');
+            $table->date('next_visit')->nullable();
+            $table->foreignIdFor(CallType::class)->nullable();
+            $table->foreignIdFor(VisitType::class)->nullable();
+            $table->text('comment')->nullable();
             $table->double('lat')->nullable();
             $table->double('lng')->nullable();
             $table->timestamps();
