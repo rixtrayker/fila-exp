@@ -19,6 +19,12 @@ trait HasEditRequest{
     public static function bootHasEditRequest(){
         static::updating(function ($model)
         {
+            $user = auth()->user();
+
+            if( !$user->hasRole('medical-rep')){
+                return true;
+            }
+
             $editable = isset($model->editable) ? $model->editable : $model->fillable;
 
             $updatesList = [];
@@ -34,11 +40,7 @@ trait HasEditRequest{
 
             EditRequest::insert($updatesList);
 
-            $user = auth()->user();
-
-            if($user->hasRole('super-admin')){
-                return false;
-            }
+            return false;
         });
     }
     public static function prepareEditRequest($event, $model, $key = null)
