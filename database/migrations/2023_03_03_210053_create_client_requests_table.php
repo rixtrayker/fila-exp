@@ -19,9 +19,9 @@ return new class extends Migration
             $table->foreignIdFor(User::class);
             $table->foreignIdFor(Client::class);
             $table->foreignIdFor(ClientRequestType::class);
-            $table->integer('request_cost');
-            $table->integer('expected_revenue');
-            $table->date('response_date');
+            $table->integer('request_cost')->default(0);
+            $table->integer('expected_revenue')->default(0);
+            $table->date('response_date')->nullable();
             $table->enum('rx_rate',['yes','no']);
             $table->enum('ordered_before',['yes','no']);
             $table->text('description')->nullable();
