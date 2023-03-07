@@ -2,28 +2,28 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\VisitResource\Pages;
-use App\Filament\Resources\VisitResource\RelationManagers;
-use App\Models\CallType;
+use App\Filament\Resources\ClientRequestResource\Pages;
+use App\Filament\Resources\ClientRequestResource\RelationManagers;
 use App\Models\Client;
+use App\Models\ClientRequest;
+use App\Models\ClientRequestType;
 use App\Models\User;
-use App\Models\Visit;
 use App\Models\VisitType;
 use Filament\Forms;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Form;
 use Filament\Resources\Resource;
 use Filament\Resources\Table;
 use Filament\Tables;
-use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class VisitResource extends Resource
+class ClientRequestResource extends Resource
 {
-    protected static ?string $model = Visit::class;
+    protected static ?string $model = ClientRequest::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-collection';
 
@@ -31,14 +31,6 @@ class VisitResource extends Resource
     {
         return $form
             ->schema([
-                Select::make('second_user_id')
-                    ->label('2nd Medical Rep')
-                    ->searchable()
-                    ->placeholder('You can search both arabic and english name')
-                    ->getSearchResultsUsing(fn (string $search) => User::role('medical-rep')->where('name', 'like', "%{$search}%")->limit(50)->pluck('name_en', 'id'))
-                    ->options(User::role('medical-rep')->pluck('name', 'id'))
-                    ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
-                    ->preload(),
                 Select::make('client_id')
                     ->label('Client')
                     ->searchable()
@@ -53,17 +45,35 @@ class VisitResource extends Resource
                     ->options(VisitType::all()->pluck('name', 'id'))
                     ->preload()
                     ->required(),
-                Select::make('call_type_id')
-                    ->label('Call Type')
-                    ->options(CallType::all()->pluck('name', 'id'))
+                Select::make('client_tequest_type_id')
+                    ->label('Request type')
+                    ->options(ClientRequestType::all()->pluck('name', 'id'))
                     ->preload()
                     ->required(),
-                DatePicker::make('next_visit')
-                    ->label('Next call time')
+                TextInput::make('expected_revenue')
+                    ->numeric()
+                    ->minValue(1)
+                    ->required(),
+                TextInput::make('expected_cost')
+                    ->numeric()
+                    ->minValue(1)
+                    ->required(),
+                Select::make('ordered_before')
+                    ->label('Previous orders')
+                    ->options(['yes','no'])
+                    ->preload()
+                    ->required(),
+                Select::make('rx_rate')
+                    ->label('Previous rate of RX')
+                    ->options(['yes','no'])
+                    ->preload()
+                    ->required(),
+                DatePicker::make('response_date')
+                    ->label('Expected response time')
                     ->closeOnDateSelection()
                     ->required(),
-                Textarea::make('comment')
-                    ->label('Comment')
+                Textarea::make('description')
+                    ->label('Description')
                     ->columnSpan('full')
                     ->required(),
             ]);
@@ -73,25 +83,10 @@ class VisitResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('id')->sortable(),
-                TextColumn::make('client.name_en')
-                    ->label('Client')
-                    ->searchable()
-                    ->sortable(),
-                TextColumn::make('user.name')
-                    ->label('M.Rep')
-                    ->sortable(),
-                TextColumn::make('secondRep.name')
-                    ->label('M.Rep 2nd'),
-                TextColumn::make('created_at')
-                ->dateTime('d-M-Y')
-                ->sortable()
-                ->searchable(),
-                TextColumn::make('comment')
-                ->limit(60),
+
             ])
             ->filters([
-
+                //
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -104,16 +99,16 @@ class VisitResource extends Resource
     public static function getRelations(): array
     {
         return [
-
+            //
         ];
     }
 
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListVisits::route('/'),
-            'create' => Pages\CreateVisit::route('/create'),
-            'edit' => Pages\EditVisit::route('/{record}/edit'),
+            'index' => Pages\ListClientRequests::route('/'),
+            'create' => Pages\CreateClientRequest::route('/create'),
+            'edit' => Pages\EditClientRequest::route('/{record}/edit'),
         ];
     }
 }
