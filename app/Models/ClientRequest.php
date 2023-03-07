@@ -9,6 +9,8 @@ class ClientRequest extends Model
 {
     use HasFactory;
 
+    // protected static bool $shouldRegisterNavigation = false;
+
     protected $fillable = [
         'user_id',
         'client_id',

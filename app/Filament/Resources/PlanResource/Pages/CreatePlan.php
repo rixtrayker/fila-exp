@@ -14,7 +14,7 @@ use Filament\Support\Exceptions\Halt;
 class CreatePlan extends CreateRecord
 {
     protected static string $resource = PlanResource::class;
-
+    protected static bool $canCreateAnother = false;
     public function create(bool $another = false): void
     {
         $this->authorizeAccess();

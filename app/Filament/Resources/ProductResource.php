@@ -16,7 +16,8 @@ use Filament\Resources\Form;
 use Filament\Resources\Resource;
 use Filament\Resources\Table;
 use Filament\Tables;
-use Filament\Tables\Columns;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
@@ -30,24 +31,12 @@ class ProductResource extends Resource
     {
         return $form
             ->schema([
-                Section::make('Name')
-                ->statePath('name')
-                ->schema([
-                    TextInput::make('ar')
-                        ->label('الاسم بالعربية')
-                        ->required(),
-                    TextInput::make('en')
-                        ->label('Name')
-                        ->required(),
-                ])->compact(),
-                // Select::make('product_category_id')
-                //     ->label('Product Category')
-                //     ->searchable()
-                //     ->getSearchResultsUsing(fn (string $search) => ProductCategory::where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'))
-                //     ->options(ProductCategory::pluck('name', 'id'))
-                //     ->getOptionLabelUsing(fn ($value): ?string => ProductCategory::find($value)?->name)
-                //     ->preload()
-                //     ->required(),
+                TextInput::make('name_en')
+                    ->label('Name')
+                    ->required(),
+                TextInput::make('name_ar')
+                    ->label('Name (العربية)')
+                    ->required(),
                 Select::make('product_category_id')
                     ->label('Product Category')
                     ->relationship('productCategory','name')
@@ -69,15 +58,23 @@ class ProductResource extends Resource
     {
         return $table
             ->columns([
-                Columns\TextColumn::make('name')
+                TextColumn::make('name_en')
+                ->searchable()
+                ->sortable()
+                ->label('Name'),
+                TextColumn::make('name_ar')
+                    ->label('Name (العربية)')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('name')
                     ->label('Name'),
-                Columns\TextColumn::make('arabic_name')
+                TextColumn::make('arabic_name')
                     ->label('Arabic Name'),
-                Columns\TextColumn::make('category.name'),
-                Columns\TextColumn::make('price'),
-                Columns\IconColumn::make('active')
+                TextColumn::make('category.name'),
+                TextColumn::make('price'),
+                IconColumn::make('active')
                     ->boolean(),
-                Columns\TextColumn::make('created_at')
+                TextColumn::make('created_at')
                     ->dateTime(),
             ])
             ->filters([

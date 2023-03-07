@@ -23,8 +23,10 @@ use Filament\Tables\Columns\TextColumn;
 
 class PlanResource extends Resource
 {
+    // protected static bool $shouldRegisterNavigation = false;
+
     protected static ?string $model = Plan::class;
-    protected static ?string $navigationLabel = 'Plans';
+    protected static ?string $navigationLabel = 'Weekly Plans';
     protected static ?string $navigationIcon = 'heroicon-o-collection';
     protected static ?string $slug = 'plans';
 
