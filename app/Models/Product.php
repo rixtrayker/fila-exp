@@ -26,10 +26,10 @@ class Product extends Model
         parent::boot();
         static::addGlobalScope(new ActiveScope);
     }
-    public function scopeActive(Builder $query): Builder
-    {
-        return  $query->where('active', true);
-    }
+    // public function scopeActive(Builder $query): Builder
+    // {
+    //     return  $query->where('active', true);
+    // }
 
     public function productCategory()
     {
