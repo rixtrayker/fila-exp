@@ -51,11 +51,11 @@ class ClientResource extends Resource
                     ->required(),
                 Select::make('grade')
                     ->label('Grade')
-                    ->options(['A+','A','B+','B','C'])
+                    ->options(['A+'=>'A+','A'=>'A','B+'=>'B+','B'=>'B','C'=>'C'])
                     ->getOptionLabelUsing(fn ($value): ?string => $value)
                     ->required(),
                 Select::make('shift')
-                    ->options(['AM','PM'])
+                    ->options(['AM'=>'AM','PM'=>'PM'])
                     ->getOptionLabelUsing(fn ($value): ?string => $value)
                     ->label('Shift'),
                 Select::make('client_type_id')

@@ -61,12 +61,12 @@ class ClientRequestResource extends Resource
                     ->required(),
                 Select::make('ordered_before')
                     ->label('Previous orders')
-                    ->options(['yes','no'])
+                    ->options(['yes'=>'Yes','no'=>'No'])
                     ->preload()
                     ->required(),
                 Select::make('rx_rate')
                     ->label('Previous rate of RX')
-                    ->options(['yes','no'])
+                    ->options(['yes'=>'Yes','no'=>'No'])
                     ->preload()
                     ->required(),
                 DatePicker::make('response_date')
