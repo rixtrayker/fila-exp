@@ -11,6 +11,7 @@ class Visit extends Model
 
     protected $fillable = [
         'user_id',
+        'plan_id',
         'second_user_id',
         'client_id',
         'visit_type_id',
@@ -47,6 +48,10 @@ class Visit extends Model
     public function city()
     {
         return $this->belongsTo(City::class);
+    }
+    public function plan()
+    {
+        return $this->belongsTo(Plan::class);
     }
     public function products()
     {
