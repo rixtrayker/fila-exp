@@ -5,15 +5,13 @@ namespace App\Models;
 use App\Traits\HasEditRequest;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Translatable\HasTranslations;
 
 class Client extends Model
 {
     use HasFactory;
-    use HasTranslations;
     use HasEditRequest;
 
-    protected $translatable = ['name'];
+    protected $appends = ['name'];
     protected $fillable = [
         'name_en',
         'name_ar',
@@ -57,7 +55,7 @@ class Client extends Model
     }
     public function getNameAttribute()
     {
-        return $this->name_ar .' - '. $this->name_en;
+        return $this->name_en .' - '. $this->name_ar;
     }
 
     public function scopeFilter($query, array $filters)
