@@ -22,6 +22,14 @@ class EditRequest extends Model
         $this->save();
     }
 
+    public function approveBatch()
+    {
+        $requests = EditRequest::where('batch',$this->batch)->get();
+
+        foreach ($requests as $request) {
+            $request->approve();
+        }
+    }
     protected static function booted()
     {
         static::updating(function ($editRequest) {

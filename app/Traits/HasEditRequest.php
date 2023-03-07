@@ -21,21 +21,21 @@ trait HasEditRequest{
         {
             $user = auth()->user();
 
-            if( !$user->hasRole('medical-rep')){
+            if( !$user->hasRole('super-admin')){
                 return true;
             }
 
             $editable = isset($model->editable) ? $model->editable : $model->fillable;
 
             $updatesList = [];
-
+            $batchNumber = 'bt_'.time();
             foreach($model->getDirty() as $key => $value)
             {
                 if(!in_array($key,$editable)){
                     continue;
                 }
 
-                array_push($updatesList,self::prepareEditRequest('changed', $model, $key));
+                array_push($updatesList,self::prepareEditRequest('changed', $model, $batchNumber, $key));
             }
 
             EditRequest::insert($updatesList);
@@ -43,7 +43,7 @@ trait HasEditRequest{
             return false;
         });
     }
-    public static function prepareEditRequest($event, $model, $key = null)
+    public static function prepareEditRequest($event, $model, $batchNumber ,$key = null)
     {
         $from = $to = null;
 
@@ -62,6 +62,7 @@ trait HasEditRequest{
             'editable_id' => $model->id,
             'from' => $from,
             'to' => $to,
+            'batch' => $batchNumber,
             'added_by_id' => auth()->user()->id,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
