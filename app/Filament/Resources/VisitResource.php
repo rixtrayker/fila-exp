@@ -106,12 +106,13 @@ class VisitResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('id')->sortable(),
+                TextColumn::make('user.name')
+                    ->label('M.Rep')
+                    ->hidden(auth()->user()->hasRole('medical-rep'))
+                    ->sortable(),
                 TextColumn::make('client.name_en')
                     ->label('Client')
                     ->searchable()
-                    ->sortable(),
-                TextColumn::make('user.name')
-                    ->label('M.Rep')
                     ->sortable(),
                 TextColumn::make('secondRep.name')
                     ->label('M.Rep 2nd'),
