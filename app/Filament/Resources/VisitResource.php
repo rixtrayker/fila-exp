@@ -126,10 +126,13 @@ class VisitResource extends Resource
 
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\ViewAction::make(),
+                Tables\Actions\DeleteAction::make()->hidden(
+                    auth()->user()->hasRole('medical-rep')
+                )
             ])
             ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make(),
+                // Tables\Actions\DeleteBulkAction::make(),
             ]);
     }
 
@@ -145,7 +148,7 @@ class VisitResource extends Resource
         return [
             'index' => Pages\ListVisits::route('/'),
             'create' => Pages\CreateVisit::route('/create'),
-            'edit' => Pages\EditVisit::route('/{record}/edit'),
+            'view' => Pages\ViewVist::route('/{record}'),
         ];
     }
 }
