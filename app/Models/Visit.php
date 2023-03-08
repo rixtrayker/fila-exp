@@ -17,6 +17,7 @@ class Visit extends Model
         'visit_type_id',
         'call_type_id',
         'next_visit',
+        'visit_date',
         'comment',
     ];
 

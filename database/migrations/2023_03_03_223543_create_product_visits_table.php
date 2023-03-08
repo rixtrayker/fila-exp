@@ -19,6 +19,7 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(Product::class);
             $table->foreignIdFor(Visit::class);
+            $table->integer('count');
             $table->timestamps();
         });
     }

@@ -6,13 +6,17 @@ use App\Filament\Resources\VisitResource\Pages;
 use App\Filament\Resources\VisitResource\RelationManagers;
 use App\Models\CallType;
 use App\Models\Client;
+use App\Models\Product;
 use App\Models\User;
 use App\Models\Visit;
 use App\Models\VisitType;
+use Awcodes\FilamentTableRepeater\Components\TableRepeater;
 use Filament\Forms;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Form;
 use Filament\Resources\Resource;
 use Filament\Resources\Table;
@@ -64,6 +68,32 @@ class VisitResource extends Resource
                     ->label('Next call time')
                     ->closeOnDateSelection()
                     ->required(),
+                Section::make('products')
+                    ->disableLabel()
+                    ->schema([
+                        TableRepeater::make('products')
+                        ->relationship('products')
+                        ->disableLabel()
+                        ->headers(['Product', 'Sample Count'])
+                        ->emptyLabel('There is no product added.')
+                        ->columnWidths([
+                            'count' => '40px',
+                            'product_id' => '180px',
+                            'row_actions' => '20px',
+                        ])
+                        ->schema([
+                            Select::make('product_id')
+                                ->disableLabel()
+                                ->placeholder('select a product')
+                                ->options(Product::pluck('name_en','id')),
+                            TextInput::make('count')
+                                ->numeric()
+                                ->minValue(1)
+                                ->disableLabel(),
+                        ])
+                        ->disableItemMovement()
+                        ->defaultItems(2),
+                    ])->compact(),
                 Textarea::make('comment')
                     ->label('Comment')
                     ->columnSpan('full')
