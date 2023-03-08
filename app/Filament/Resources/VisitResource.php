@@ -45,8 +45,7 @@ class VisitResource extends Resource
                     ->options(User::role('medical-rep')->pluck('name', 'id'))
                     ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
                     ->preload()
-                    ->default(0)
-                    ->hidden(!auth()->user()->hasRole('medical-rep')),
+                    ->hidden(auth()->user()->hasRole('medical-rep')),
                 Select::make('second_user_id')
                     ->label('2nd Medical Rep')
                     ->searchable()
@@ -78,6 +77,9 @@ class VisitResource extends Resource
                     ->label('Next call time')
                     ->closeOnDateSelection()
                     ->required(),
+                DatePicker::make('visit_date')
+                    ->default(today())
+                    ->hidden(),
                 Section::make('products')
                     ->disableLabel()
                     ->schema([

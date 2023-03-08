@@ -42,8 +42,7 @@ class ClientRequestResource extends Resource
                     ->options(User::role('medical-rep')->pluck('name', 'id'))
                     ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
                     ->preload()
-                    ->default(0)
-                    ->hidden(!auth()->user()->hasRole('medical-rep')),
+                    ->hidden(auth()->user()->hasRole('medical-rep')),
                 Select::make('client_id')
                     ->label('Client')
                     ->searchable()

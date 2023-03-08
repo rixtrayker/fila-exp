@@ -14,4 +14,10 @@ class CreateClientRequest extends CreateRecord
     {
         return ClientRequestResource::getUrl('index');
     }
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        $data['user_id'] = auth()->id();
+
+        return $data;
+    }
 }
