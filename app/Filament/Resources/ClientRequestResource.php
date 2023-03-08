@@ -7,6 +7,7 @@ use App\Filament\Resources\ClientRequestResource\RelationManagers;
 use App\Models\Client;
 use App\Models\ClientRequest;
 use App\Models\ClientRequestType;
+use App\Models\Scopes\GetMineScope;
 use App\Models\User;
 use App\Models\VisitType;
 use Filament\Forms;
@@ -18,6 +19,7 @@ use Filament\Resources\Form;
 use Filament\Resources\Resource;
 use Filament\Resources\Table;
 use Filament\Tables;
+use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
@@ -32,6 +34,16 @@ class ClientRequestResource extends Resource
     {
         return $form
             ->schema([
+                Select::make('user_id')
+                    ->label('Medical Rep')
+                    ->searchable()
+                    ->placeholder('Search english name')
+                    ->getSearchResultsUsing(fn (string $search) => User::role('medical-rep')->where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'))
+                    ->options(User::role('medical-rep')->pluck('name', 'id'))
+                    ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
+                    ->preload()
+                    ->default(0)
+                    ->hidden(!auth()->user()->hasRole('medical-rep')),
                 Select::make('client_id')
                     ->label('Client')
                     ->searchable()
@@ -41,21 +53,18 @@ class ClientRequestResource extends Resource
                     ->getOptionLabelUsing(fn ($value): ?string => Client::find($value)?->name)
                     ->preload()
                     ->required(),
-                Select::make('visit_type_id')
-                    ->label('Visit Type')
-                    ->options(VisitType::all()->pluck('name', 'id'))
-                    ->preload()
-                    ->required(),
-                Select::make('client_tequest_type_id')
+                Select::make('client_request_type_id')
                     ->label('Request type')
                     ->options(ClientRequestType::all()->pluck('name', 'id'))
                     ->preload()
                     ->required(),
                 TextInput::make('expected_revenue')
+                    ->label('Expected Revenue')
                     ->numeric()
                     ->minValue(1)
                     ->required(),
-                TextInput::make('expected_cost')
+                TextInput::make('request_cost')
+                    ->label('Expected Cost')
                     ->numeric()
                     ->minValue(1)
                     ->required(),
@@ -84,7 +93,31 @@ class ClientRequestResource extends Resource
     {
         return $table
             ->columns([
-
+                TextColumn::make('user.name')
+                    ->label('M.Rep')
+                    ->hidden(auth()->user()->hasRole('medical-rep')),
+                TextColumn::make('client.name_en')
+                    ->searchable()
+                    ->sortable()
+                    ->label('Client Name'),
+                TextColumn::make('client.name_ar')
+                    ->label('Client Name (العربية)')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('requestType.name')
+                    ->label('Request Type'),
+                TextColumn::make('request_cost')
+                    ->label('Expected Cost'),
+                TextColumn::make('expected_revenue')
+                    ->label('Expected Revenue'),
+                TextColumn::make('response_date')
+                    ->label('Expected response time')
+                    ->dateTime('d-M-Y')
+                    ->sortable()
+                    ->searchable(),
+                TextColumn::make('description')
+                    ->label('Description')
+                    ->limit(60),
             ])
             ->filters([
                 //
@@ -104,6 +137,13 @@ class ClientRequestResource extends Resource
         ];
     }
 
+    // public static function getEloquentQuery(): Builder
+    // {
+    //     return parent::getEloquentQuery()
+    //         ->withoutGlobalScopes([
+    //             GetMineScope::class
+    //         ]);
+    // }
     public static function getPages(): array
     {
         return [

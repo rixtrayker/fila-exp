@@ -63,7 +63,7 @@ trait HasEditRequest{
             'from' => $from,
             'to' => $to,
             'batch' => $batchNumber,
-            'added_by_id' => auth()->user()->id,
+            'added_by_id' => auth()->id(),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ];

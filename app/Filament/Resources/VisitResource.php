@@ -37,11 +37,21 @@ class VisitResource extends Resource
     {
         return $form
             ->schema([
+                Select::make('user_id')
+                    ->label('Medical Rep')
+                    ->searchable()
+                    ->placeholder('Search english name')
+                    ->getSearchResultsUsing(fn (string $search) => User::role('medical-rep')->where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'))
+                    ->options(User::role('medical-rep')->pluck('name', 'id'))
+                    ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
+                    ->preload()
+                    ->default(0)
+                    ->hidden(!auth()->user()->hasRole('medical-rep')),
                 Select::make('second_user_id')
                     ->label('2nd Medical Rep')
                     ->searchable()
-                    ->placeholder('You can search both arabic and english name')
-                    ->getSearchResultsUsing(fn (string $search) => User::role('medical-rep')->where('name', 'like', "%{$search}%")->limit(50)->pluck('name_en', 'id'))
+                    ->placeholder('Search english name')
+                    ->getSearchResultsUsing(fn (string $search) => User::role('medical-rep')->where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'))
                     ->options(User::role('medical-rep')->pluck('name', 'id'))
                     ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
                     ->preload(),
@@ -117,11 +127,11 @@ class VisitResource extends Resource
                 TextColumn::make('secondRep.name')
                     ->label('M.Rep 2nd'),
                 TextColumn::make('created_at')
-                ->dateTime('d-M-Y')
-                ->sortable()
-                ->searchable(),
+                    ->dateTime('d-M-Y')
+                    ->sortable()
+                    ->searchable(),
                 TextColumn::make('comment')
-                ->limit(60),
+                    ->limit(60),
             ])
             ->filters([
 

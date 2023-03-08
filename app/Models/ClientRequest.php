@@ -2,12 +2,16 @@
 
 namespace App\Models;
 
+use App\Traits\HasEditRequest;
+use App\Traits\HasRoleScopeTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ClientRequest extends Model
 {
     use HasFactory;
+    use HasEditRequest;
+    use HasRoleScopeTrait;
 
     // protected static bool $shouldRegisterNavigation = false;
 
@@ -25,7 +29,7 @@ class ClientRequest extends Model
 
     public function requestType()
     {
-        return $this->belongsTo(ClientRequestType::class);
+        return $this->belongsTo(ClientRequestType::class, 'client_request_type_id');
     }
     public function client()
     {

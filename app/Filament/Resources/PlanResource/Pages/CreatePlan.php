@@ -72,7 +72,7 @@ class CreatePlan extends CreateRecord
     public function saveVisits($data)
     {
         $visits = [];
-        $userId = auth()->user()->id;
+        $userId = auth()->id();
 
         $startAt = $this->getVisitDate(1);
         $visitDates = $this->calculateVisitDates();

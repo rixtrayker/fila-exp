@@ -18,7 +18,7 @@ class GetMineScope implements Scope
     public function apply(Builder $builder, Model $model)
     {
         if(auth()->user() && auth()->user()->hasRole('medical-rep')){
-            $builder->where('user_id', '=', auth()->user()->id);
+            $builder->where('user_id', '=', auth()->id());
         }
     }
 }
