@@ -83,4 +83,8 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->hasMany(Plan::class);
     }
+    public function expenses()
+    {
+        return $this->hasMany(Expenses::class);
+    }
 }
