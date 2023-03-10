@@ -27,7 +27,7 @@ class PlanResource extends Resource
 
     protected static ?string $model = Plan::class;
     protected static ?string $navigationLabel = 'Weekly Plans';
-    protected static ?string $navigationIcon = 'heroicon-o-collection';
+    protected static ?string $navigationIcon = 'heroicon-o-calendar';
     protected static ?string $slug = 'plans';
 
     public static function form(Form $form): Form

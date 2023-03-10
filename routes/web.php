@@ -17,6 +17,10 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/test', function () {
+    return \App\Models\User::find(1)->editRequests;
+});
+
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),

@@ -6,8 +6,11 @@ use App\Filament\Resources\PermissionResource;
 use App\Filament\Resources\RoleResource;
 use App\Filament\Resources\UserResource;
 use Filament\Facades\Filament;
+use Filament\Navigation\NavigationBuilder;
+use Filament\Navigation\NavigationItem;
 use Filament\Navigation\UserMenuItem;
 use Illuminate\Support\ServiceProvider;
+use Yepsua\Filament\Themes\Filament\Forms\Components\ThemesSelect;
 
 class FilamentServiceProvider extends ServiceProvider
 {
@@ -28,6 +31,16 @@ class FilamentServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        // Filament::navigation(function (NavigationBuilder $builder): NavigationBuilder {
+        //     return $builder->items([
+        //         NavigationItem::make('Dashboard')
+        //             ->icon('heroicon-o-home')
+        //             ->activeIcon('heroicon-s-home')
+        //             ->isActiveWhen(fn (): bool => request()->routeIs('filament.pages.dashboard'))
+        //             ->url(route('filament.pages.dashboard')),
+        //         ...UserResource::getNavigationItems(),
+        //     ]);
+        // });
         Filament::serving(function() {
             if(auth()->user() && auth()->user()->is_admin === 1 && auth()->user()->hasAnyRole(['super-admin','admin','moderator'])){
                 Filament::registerUserMenuItems([

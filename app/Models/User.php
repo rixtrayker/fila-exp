@@ -12,6 +12,8 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements FilamentUser
@@ -86,5 +88,19 @@ class User extends Authenticatable implements FilamentUser
     public function expenses()
     {
         return $this->hasMany(Expenses::class);
+    }
+    public function messages()
+    {
+        return $this->belongsToMany(Message::class);
+    }
+    public function firstRole()
+    {
+        return $this->morphToMany(
+            config('permission.models.role'),
+            'model',
+            config('permission.table_names.model_has_roles'),
+            config('permission.column_names.model_morph_key'),
+            PermissionRegistrar::$pivotRole
+        )->limit(1);
     }
 }

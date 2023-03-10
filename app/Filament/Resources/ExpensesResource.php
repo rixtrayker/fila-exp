@@ -34,7 +34,7 @@ class ExpensesResource extends Resource
                 Select::make('user_id')
                     ->label('Medical Rep')
                     ->searchable()
-                    ->placeholder('Search english name')
+                    ->placeholder('Search name')
                     ->getSearchResultsUsing(fn (string $search) => User::role('medical-rep')->where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'))
                     ->options(User::role('medical-rep')->pluck('name', 'id'))
                     ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)

@@ -40,7 +40,7 @@ class VisitResource extends Resource
                 Select::make('user_id')
                     ->label('Medical Rep')
                     ->searchable()
-                    ->placeholder('Search english name')
+                    ->placeholder('Search name')
                     ->getSearchResultsUsing(fn (string $search) => User::role('medical-rep')->where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'))
                     ->options(User::role('medical-rep')->pluck('name', 'id'))
                     ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
@@ -49,7 +49,7 @@ class VisitResource extends Resource
                 Select::make('second_user_id')
                     ->label('2nd Medical Rep')
                     ->searchable()
-                    ->placeholder('Search english name')
+                    ->placeholder('Search name')
                     ->getSearchResultsUsing(fn (string $search) => User::role('medical-rep')->where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'))
                     ->options(User::role('medical-rep')->pluck('name', 'id'))
                     ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
@@ -133,7 +133,7 @@ class VisitResource extends Resource
                     ->sortable()
                     ->searchable(),
                 TextColumn::make('comment')
-                    ->limit(60),
+                    ->wrap(),
             ])
             ->filters([
 
