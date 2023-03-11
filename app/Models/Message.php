@@ -5,11 +5,12 @@ namespace App\Models;
 use Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Permission\Models\Role;
+use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
 class Message extends Model
 {
     use HasFactory;
+    use HasRelationships;
 
     protected $guarded = [];
     protected $casts = [
@@ -29,11 +30,20 @@ class Message extends Model
     {
         return $this->belongsToMany(User::class);
     }
+    public function visibleUsers()
+    {
+        return $this->belongsToMany(User::class)->wherePivot('hidden','!=',1);
+    }
 
     public function roles()
     {
         return $this->belongsToMany(Role::class);
     }
+    public function rolesUsers()
+    {
+        return $this->hasManyDeepFromRelations([$this, 'roles'], [new Role(), 'users']);
+    }
+
     public function scopeUnread($query)
     {
         $pivot = $this->users()->getTable();
@@ -52,8 +62,8 @@ class Message extends Model
     }
     public function scopeReceived($query)
     {
-        $receivedMessages = auth()->user()->allMessages()->pluck('id');
-        $query->whereIn('id',$receivedMessages);
+        $receivedMessages = auth()->user()->userMessages()->pluck('messages.id');
+        $query->whereIn('id',$receivedMessages)->where('user_id','!=',auth()->id());
     }
     public function scopeSent($query)
     {

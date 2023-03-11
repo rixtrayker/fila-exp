@@ -16,4 +16,14 @@ class CreateMessage extends CreateRecord
 
         return $data;
     }
+    public function afterCreate()
+    {
+        $users = $this->form->getRawState()['visibleUsers'];
+        $this->record->users()->sync($users);
+
+        if(!$this->form->getRawState()['roles'])
+            return
+        $usersId = $this->record->rolesUsers()->pluck('users.id');
+        $this->record->users()->syncWithPivotValues($usersId,['hidden' => 1]);
+    }
 }

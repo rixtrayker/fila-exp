@@ -28,6 +28,7 @@ return new class extends Migration
         Schema::create('message_user', function (Blueprint $table) {
             $table->id();
             $table->boolean('read')->default(0);
+            $table->boolean('hidden')->default(0);
             $table->foreignIdFor(User::class);
             $table->foreignIdFor(Message::class);
             $table->timestamps();

@@ -105,6 +105,14 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->mergedRelation('all_messages');
     }
+    public function scopeSelectedVisible($query, $msg)
+    {
+        $pivot = $this->userMessages()->getTable();
+
+        $query->whereHas('userMessages', function ($q) use ($pivot,$msg) {
+            $q->where("{$pivot}.hidden", 0)->where("{$pivot}.message_id", $msg->id);
+        });
+    }
     public function sentMessages()
     {
         return $this->hasMany(Message::class);

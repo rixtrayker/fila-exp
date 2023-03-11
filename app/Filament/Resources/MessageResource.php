@@ -37,16 +37,15 @@ class MessageResource extends Resource
     {
         return $form
             ->schema([
-                Select::make('users')
+                Select::make('visibleUsers')
                     ->label('Send to users')
                     ->validationAttribute('users')
-                    ->relationship('users','name')
+                    ->relationship('visibleUsers','name')
                     ->multiple()
                     ->searchable()
                     ->placeholder('Search name')
-                    ->getSearchResultsUsing(fn (string $search) => User::where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'))
-                    ->options(User::pluck('name', 'id'))
-                    ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
+                    // ->getSearchResultsUsing(fn (string $search) => User::where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'))
+                    // ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
                     ->preload()
                     ->requiredWithout('roles'),
                 Select::make('roles')
@@ -56,7 +55,7 @@ class MessageResource extends Resource
                     ->multiple()
                     ->searchable()
                     ->preload()
-                    ->requiredWithout('users'),
+                    ->requiredWithout('visibleUsers'),
                 TextInput::make('title')
                     ->label('Title'),
                 RichEditor::make('message')
@@ -114,7 +113,7 @@ class MessageResource extends Resource
                     ->trueLabel('Unread')
                     ->falseLabel('Sent')
                     ->queries(
-                        true: fn (Builder $query) => $query->unread(),
+                        true: fn (Builder $query) => $query->received()->unread(),
                         false: fn (Builder $query) => $query->sent(),
                         blank: fn (Builder $query) => $query->received(),
                     ),
@@ -137,7 +136,7 @@ class MessageResource extends Resource
     }
     protected static function getNavigationBadge(): ?string
     {
-        return static::getModel()::unRead()->count();
+        return static::getModel()::received()->unread()->count();
     }
 
     protected static function getNavigationBadgeColor(): ?string
