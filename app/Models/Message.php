@@ -32,10 +32,9 @@ class Message extends Model
 
     public function roles()
     {
-        return $this->belongsToMany(Role::class,'message_role','message_id','role_id');
+        return $this->belongsToMany(Role::class);
     }
-
-    public function scopeUnRead($query)
+    public function scopeUnread($query)
     {
         $pivot = $this->users()->getTable();
 
@@ -50,6 +49,15 @@ class Message extends Model
         $query->whereHas('users', function ($q) use ($pivot) {
             $q->where("{$pivot}.read", 1);
         });
+    }
+    public function scopeReceived($query)
+    {
+        $receivedMessages = auth()->user()->allMessages()->pluck('id');
+        $query->whereIn('id',$receivedMessages);
+    }
+    public function scopeSent($query)
+    {
+        $query->where('user_id',auth()->id());
     }
     public function hasFiles()
     {

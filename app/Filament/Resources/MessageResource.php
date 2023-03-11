@@ -20,6 +20,7 @@ use Filament\Tables;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Filters\TernaryFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Http\UploadedFile;
@@ -108,7 +109,15 @@ class MessageResource extends Resource
                     ->since(),
             ])->defaultSort('created_at','desc')
             ->filters([
-                //
+                TernaryFilter::make('myMessages')
+                    ->placeholder('Received')
+                    ->trueLabel('Unread')
+                    ->falseLabel('Sent')
+                    ->queries(
+                        true: fn (Builder $query) => $query->unread(),
+                        false: fn (Builder $query) => $query->sent(),
+                        blank: fn (Builder $query) => $query->received(),
+                    ),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
@@ -134,6 +143,14 @@ class MessageResource extends Resource
     protected static function getNavigationBadgeColor(): ?string
     {
         return 'primary';
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->scopes([
+                // 'received',
+            ]);
     }
 
     public static function getPages(): array
