@@ -51,35 +51,16 @@ class CreatePlan extends CreateRecord
 
         $this->redirect(PlanResource::getUrl('index'));
     }
-
-    public function getVisitDate($day)
-    {
-        $nextWeek = today()->dayOfWeek == Carbon::FRIDAY;
-        $date = new Carbon(DateHelper::getFirstOfWeek($nextWeek));
-        return $date->addDays($day);
-    }
-
-    public function calculateVisitDates()
-    {
-        $dates = [];
-
-        for($i = 0; $i < 7; $i++)
-            $dates[] = $this->getVisitDate($i);
-
-        return $dates;
-    }
-
     public function saveVisits($data)
     {
         $visits = [];
         $userId = auth()->id();
 
-        $startAt = $this->getVisitDate(1);
-        $visitDates = $this->calculateVisitDates();
+        $visitDates = DateHelper::calculateVisitDates();
 
         $existedPlan = Plan::where([
             'user_id' => $userId,
-            'start_at' => $startAt,
+            'start_at' => $visitDates[0],
         ])->first();
 
         if ($existedPlan){
@@ -88,7 +69,7 @@ class CreatePlan extends CreateRecord
 
         $plan = Plan::create([
             'user_id' => $userId,
-            'start_at' =>  $startAt,
+            'start_at' =>  $visitDates[0],
         ]);
 
         foreach($data['clients_saturday'] as $itemId){
