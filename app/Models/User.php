@@ -73,7 +73,7 @@ class User extends Authenticatable implements FilamentUser
 
     public function canAccessFilament(): bool
     {
-        return $this->is_admin == 1;
+        return true;
     }
 
     public function cities()
