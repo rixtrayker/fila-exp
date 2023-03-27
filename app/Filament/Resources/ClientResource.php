@@ -51,7 +51,7 @@ class ClientResource extends Resource
                     ->required(),
                 Select::make('grade')
                     ->label('Grade')
-                    ->options(['A+'=>'A+','A'=>'A','B+'=>'B+','B'=>'B','C'=>'C'])
+                    ->options(['A'=>'A','B'=>'B','C'=>'C','N'=>'N','PH'=>'PH'])
                     ->getOptionLabelUsing(fn ($value): ?string => $value)
                     ->required(),
                 Select::make('shift')
@@ -80,7 +80,8 @@ class ClientResource extends Resource
                 TextColumn::make('name_ar')
                     ->label('Name (العربية)')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault:true),
                 TextColumn::make('email')
                     ->sortable()
                     ->searchable()
