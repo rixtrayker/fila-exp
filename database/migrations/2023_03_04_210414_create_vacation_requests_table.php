@@ -20,6 +20,8 @@ return new class extends Migration
             $table->foreignIdFor(User::class, 'manager_id');
             $table->boolean('approved');
             $table->dateTime('approved_at');
+            $table->date('start');
+            $table->date('end');
             $table->timestamps();
         });
     }
