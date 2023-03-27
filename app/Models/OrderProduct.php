@@ -13,5 +13,7 @@ class OrderProduct extends Model
         'count',
         'order_id',
         'product_id',
+        'created_at',
+        'updated_at',
     ];
 }

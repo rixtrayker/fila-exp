@@ -13,5 +13,7 @@ class ProductVisit extends Model
         'count',
         'product_id',
         'visit_id',
+        'created_at',
+        'updated_at',
     ];
 }

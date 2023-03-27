@@ -9,9 +9,11 @@ class VacationRequest extends Model
 {
     use HasFactory;
 
-    public function user()
+    protected $guarded = [];
+
+    public function repUser()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class,'rep_id');
     }
 
     public function vacationType()
