@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Models\VacationType;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -18,8 +19,9 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(User::class, 'rep_id');
             $table->foreignIdFor(User::class, 'manager_id');
-            $table->boolean('approved');
-            $table->dateTime('approved_at');
+            $table->foreignIdFor(VacationType::class);
+            $table->boolean('approved')->default(0);
+            $table->dateTime('approved_at')->nullable();
             $table->date('start');
             $table->date('end');
             $table->timestamps();
