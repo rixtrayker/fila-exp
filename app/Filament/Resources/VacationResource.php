@@ -25,6 +25,8 @@ class VacationResource extends Resource
     protected static ?string $model = VacationRequest::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-collection';
+    protected static ?int $navigationSort = 7;
+
 
     public static function form(Form $form): Form
     {

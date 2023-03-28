@@ -29,6 +29,8 @@ class ClientRequestResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-collection';
     // protected static bool $shouldRegisterNavigation = false;
+    protected static ?int $navigationSort = 4;
+
 
     public static function form(Form $form): Form
     {
@@ -78,7 +80,15 @@ class ClientRequestResource extends Resource
                     ->preload()
                     ->required(),
                 DatePicker::make('response_date')
-                    ->label('Expected response time')
+                    ->label('Max approval date')
+                    ->closeOnDateSelection()
+                    ->required(),
+                DatePicker::make('from_date')
+                    ->label('Expected from')
+                    ->closeOnDateSelection()
+                    ->required(),
+                DatePicker::make('to_date')
+                    ->label('Expected to')
                     ->closeOnDateSelection()
                     ->required(),
                 Textarea::make('description')

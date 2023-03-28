@@ -23,6 +23,7 @@ class RoleResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-s-cog';
     protected static ?string $navigationGroup = 'Admin management';
+    protected static ?int $navigationSort = 2;
 
 
     public static function form(Form $form): Form

@@ -22,8 +22,7 @@
         "spatie/laravel-permission": "^5.9",
         "staudenmeir/belongs-to-through": "^2.5",
         "staudenmeir/eloquent-has-many-deep": "^1.7",
-        "staudenmeir/laravel-merged-relations": "^1.0",
-        "stephenjude/filament-debugger": "^1.2"
+        "staudenmeir/laravel-merged-relations": "^1.0"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.8",

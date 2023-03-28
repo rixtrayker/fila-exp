@@ -19,7 +19,7 @@ class CallTypeResource extends Resource
 {
     protected static ?string $model = CallType::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-collection';
+    protected static ?string $navigationIcon = 'heroicon-o-tag';
 
     protected static ?string $navigationGroup = 'Types management';
 
