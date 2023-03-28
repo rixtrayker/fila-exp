@@ -33,11 +33,8 @@ class ProductResource extends Resource
     {
         return $form
             ->schema([
-                TextInput::make('name_en')
+                TextInput::make('name')
                     ->label('Name')
-                    ->required(),
-                TextInput::make('name_ar')
-                    ->label('Name (العربية)')
                     ->required(),
                 Select::make('product_category_id')
                     ->label('Product Category')
@@ -60,18 +57,10 @@ class ProductResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('name_en')
+                TextColumn::make('name')
                 ->searchable()
                 ->sortable()
                 ->label('Name'),
-                TextColumn::make('name_ar')
-                    ->label('Name (العربية)')
-                    ->searchable()
-                    ->sortable(),
-                TextColumn::make('name')
-                    ->label('Name'),
-                TextColumn::make('arabic_name')
-                    ->label('Arabic Name'),
                 TextColumn::make('category.name'),
                 TextColumn::make('price'),
                 IconColumn::make('active')

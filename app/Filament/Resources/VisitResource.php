@@ -99,7 +99,7 @@ class VisitResource extends Resource
                             Select::make('product_id')
                                 ->disableLabel()
                                 ->placeholder('select a product')
-                                ->options(Product::pluck('name_en','id')),
+                                ->options(Product::pluck('name','id')),
                             TextInput::make('count')
                                 ->numeric()
                                 ->minValue(1)
