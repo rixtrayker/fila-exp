@@ -24,7 +24,7 @@ return new class extends Migration
             $table->string('phone');
             $table->foreignIdFor(City::class);
             $table->string('address');
-            $table->enum('grade',['A+','A','B+','B','C']);
+            $table->enum('grade',['A','B','C','N','PH']);
             $table->enum('shift',['AM','PM']);
             $table->foreignIdFor(ClientType::class);
             $table->foreignIdFor(Speciality::class);

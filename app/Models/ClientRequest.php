@@ -22,6 +22,8 @@ class ClientRequest extends Model
         'request_cost',
         'expected_revenue',
         'response_date',
+        'from_date',
+        'to_date',
         'rx_rate',
         'ordered_before',
         'description',

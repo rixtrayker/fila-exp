@@ -35,7 +35,7 @@ class ClientFactory extends Factory
             'client_type_id' => $this->faker->randomElement(ClientType::pluck('id')),
             'speciality_id' => $this->faker->randomElement(Speciality::pluck('id')),
             'shift' => $this->faker->randomElement(['AM','PM']),
-            'grade' => $this->faker->randomElement(['A+','A','B+','B','C']),
+            'grade' => $this->faker->randomElement(['A','B','C','N','PH']),
         ];
 
         return array_merge($arr,$arr2);

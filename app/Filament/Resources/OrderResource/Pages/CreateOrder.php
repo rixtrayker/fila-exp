@@ -1,37 +1,35 @@
 <?php
 
-namespace App\Filament\Resources\VisitResource\Pages;
+namespace App\Filament\Resources\OrderResource\Pages;
 
-use App\Filament\Resources\VisitResource;
-use App\Models\ProductVisit;
-use App\Models\Visit;
+use App\Filament\Resources\OrderResource;
+use App\Models\OrderProduct;
 use Filament\Pages\Actions;
 use Filament\Resources\Pages\CreateRecord;
-use Filament\Support\Exceptions\Halt;
 
-class CreateVisit extends CreateRecord
+class CreateOrder extends CreateRecord
 {
-    protected static string $resource = VisitResource::class;
+    protected static string $resource = OrderResource::class;
 
     protected function mutateFormDataBeforeCreate($data): array
     {
         if(auth()->user()->hasRole('medical-rep'))
             $data['user_id'] = auth()->id();
-        $data['visit_date'] = today();
+        $data['order_date'] = today();
         return $data;
     }
+
     public function afterCreate()
     {
         $data = $this->form->getRawState();
         $products = $data['products'];
-        $visitId = $this->record->id;
+        $orderId = $this->record->id;
 
         $insertData = [];
         $now = now();
-
         foreach($products as $product){
             $insertData[] = [
-                'visit_id' => $visitId,
+                'order_id' => $orderId,
                 'product_id' =>  $product['product_id'],
                 'count' => $product['count'],
                 'created_at' => $now,
@@ -39,7 +37,7 @@ class CreateVisit extends CreateRecord
             ];
         }
 
-        ProductVisit::insert($insertData);
+        OrderProduct::insert($insertData);
     }
 
     public function create(bool $another = false): void
@@ -79,5 +77,10 @@ class CreateVisit extends CreateRecord
         }
 
         $this->redirect($this->getRedirectUrl());
+    }
+
+    protected function getRedirectUrl(): string
+    {
+        return OrderResource::getUrl('index');
     }
 }
