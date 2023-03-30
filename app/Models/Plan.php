@@ -33,6 +33,10 @@ class Plan extends Model
     {
         return $this->hasMany(Visit::class);
     }
+    public function shifts()
+    {
+        return $this->hasMany(PlanShift::class);
+    }
 
     public function getEndDateAttribute(){
         return $this->start_at->addDays(6);

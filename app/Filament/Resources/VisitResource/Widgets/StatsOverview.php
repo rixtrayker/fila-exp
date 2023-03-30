@@ -13,7 +13,9 @@ class StatsOverview extends BaseWidget
       protected function getCards(): array
     {
         return [
-            Card::make('Daily achieved vists', $this->achievedVisits()),
+            Card::make('Daily achieved vists', $this->achievedVisits())
+                ->descriptionIcon('heroicon-s-trending-up')
+                ->color('success'),
             Card::make('Total visits', $this->totalVisits()),
             Card::make('Direct orders', $this->directOrders()),
             Card::make('Remaining vacations', $this->remainingVacations()),

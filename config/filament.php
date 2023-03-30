@@ -1,5 +1,8 @@
 <?php
 
+use App\Filament\Resources\VisitResource\Widgets\StatsOverview;
+use App\Filament\Resources\VisitResource\Widgets\YearVisitsChart;
+use App\Filament\Widgets\MonthlySalesChart;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Http\Middleware\MirrorConfigToSubpackages;
@@ -139,8 +142,9 @@ return [
         'namespace' => 'App\\Filament\\Widgets',
         'path' => app_path('Filament/Widgets'),
         'register' => [
-            Widgets\AccountWidget::class,
-            Widgets\FilamentInfoWidget::class,
+            StatsOverview::class,
+            MonthlySalesChart::class,
+            YearVisitsChart::class,
         ],
     ],
 
@@ -236,7 +240,7 @@ return [
             'have_inline_labels' => false,
         ],
         'footer' => [
-            'should_show_logo' => true,
+            'should_show_logo' => false,
         ],
         'max_content_width' => 'full',
         'notifications' => [

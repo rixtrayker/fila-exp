@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 // use LucasGiovanny\FilamentMultiselectTwoSides\Forms\Components\Fields\MultiselectTwoSides;
 use App\Http\Livewire\MultiSelect2Sides as MultiselectTwoSides;
 use App\Models\Plan;
+use Closure;
 use Filament\Tables\Columns\TextColumn;
 
 class PlanResource extends Resource
@@ -39,36 +40,180 @@ class PlanResource extends Resource
                 ->tabs([
                     Tabs\Tab::make('Saturday')
                         ->schema([
+                            Select::make('sat_am')
+                            ->label('AM shift')
+                            ->searchable()
+                            ->placeholder('You can search both arabic and english name')
+                            ->getSearchResultsUsing(fn (string $search) => Client::where('name_en', 'like', "%{$search}%")->orWhere('name_ar', 'like', "%{$search}%")->limit(50)->pluck('name_en', 'id'))
+                            ->options(Client::pluck('name_en', 'id'))
+                            ->getOptionLabelUsing(fn ($value): ?string => Client::find($value)?->name)
+                            ->preload(),
+                            Select::make('sat_pm')
+                            ->label('PM shift')
+                            ->searchable()
+                            ->placeholder('You can search both arabic and english name')
+                            ->getSearchResultsUsing(fn (string $search) => Client::where('name_en', 'like', "%{$search}%")->orWhere('name_ar', 'like', "%{$search}%")->limit(50)->pluck('name_en', 'id'))
+                            ->options(Client::pluck('name_en', 'id'))
+                            ->getOptionLabelUsing(fn ($value): ?string => Client::find($value)?->name)
+                            ->preload(),
                             MultiselectTwoSides::make('clients_saturday')
                                 ->options(self::getClients(1)),
                         ]),
                     Tabs\Tab::make('Sunday')
                         ->schema([
+                            Select::make('sun_am')
+                            ->label('AM shift')
+                            ->searchable()
+                            ->placeholder('You can search both arabic and english name')
+                            ->getSearchResultsUsing(fn (string $search) => Client::where('name_en', 'like', "%{$search}%")->orWhere('name_ar', 'like', "%{$search}%")->limit(50)->pluck('name_en', 'id'))
+                            ->options(Client::pluck('name_en', 'id'))
+                            ->getOptionLabelUsing(fn ($value): ?string => Client::find($value)?->name)
+                            ->preload(),
+                            Select::make('sun_pm')
+                            ->label('PM shift')
+                            ->searchable()
+                            ->placeholder('You can search both arabic and english name')
+                            ->getSearchResultsUsing(fn (string $search) => Client::where('name_en', 'like', "%{$search}%")->orWhere('name_ar', 'like', "%{$search}%")->limit(50)->pluck('name_en', 'id'))
+                            ->options(Client::pluck('name_en', 'id'))
+                            ->getOptionLabelUsing(fn ($value): ?string => Client::find($value)?->name)
+                            ->preload(),
                             MultiselectTwoSides::make('clients_sunday')
                                 ->options(self::getClients(2)),
                         ]),
                     Tabs\Tab::make('Monday')
                         ->schema([
+                            Select::make('mon_am')
+                            ->label('AM shift')
+                            ->searchable()
+                            ->placeholder('You can search both arabic and english name')
+                            ->getSearchResultsUsing(fn (string $search) => Client::where('name_en', 'like', "%{$search}%")->orWhere('name_ar', 'like', "%{$search}%")->limit(50)->pluck('name_en', 'id'))
+                            ->options(Client::pluck('name_en', 'id'))
+                            ->getOptionLabelUsing(fn ($value): ?string => Client::find($value)?->name)
+                            ->preload()
+                            ->required(function(Closure $get){
+                                $all = $get('clients_monday');
+                                foreach($all as $one){
+                                    if(explode('_',$one)[1] == 3)
+                                        return true;
+                                }
+                                return false;
+                            }),
+                            Select::make('mon_pm')
+                            ->label('PM shift')
+                            ->searchable()
+                            ->placeholder('You can search both arabic and english name')
+                            ->getSearchResultsUsing(fn (string $search) => Client::where('name_en', 'like', "%{$search}%")->orWhere('name_ar', 'like', "%{$search}%")->limit(50)->pluck('name_en', 'id'))
+                            ->options(Client::pluck('name_en', 'id'))
+                            ->getOptionLabelUsing(fn ($value): ?string => Client::find($value)?->name)
+                            ->preload()
+                            ->required(function(Closure $get){
+                                $all = $get('clients_monday');
+                                foreach($all as $one){
+                                    if(explode('_',$one)[1] == 3)
+                                        return true;
+                                }
+                                return false;
+                            }),
+                            Select::make('sat_am')
+                            ->label('AM shift')
+                            ->searchable()
+                            ->placeholder('You can search both arabic and english name')
+                            ->getSearchResultsUsing(fn (string $search) => Client::where('name_en', 'like', "%{$search}%")->orWhere('name_ar', 'like', "%{$search}%")->limit(50)->pluck('name_en', 'id'))
+                            ->options(Client::pluck('name_en', 'id'))
+                            ->getOptionLabelUsing(fn ($value): ?string => Client::find($value)?->name)
+                            ->preload(),
+                            Select::make('sat_pm')
+                            ->label('PM shift')
+                            ->searchable()
+                            ->placeholder('You can search both arabic and english name')
+                            ->getSearchResultsUsing(fn (string $search) => Client::where('name_en', 'like', "%{$search}%")->orWhere('name_ar', 'like', "%{$search}%")->limit(50)->pluck('name_en', 'id'))
+                            ->options(Client::pluck('name_en', 'id'))
+                            ->getOptionLabelUsing(fn ($value): ?string => Client::find($value)?->name)
+                            ->preload(),
                             MultiselectTwoSides::make('clients_monday')
                                 ->options(self::getClients(3)),
                             ]),
                     Tabs\Tab::make('Tuesday')
                         ->schema([
+                            Select::make('tues_am')
+                            ->label('AM shift')
+                            ->searchable()
+                            ->placeholder('You can search both arabic and english name')
+                            ->getSearchResultsUsing(fn (string $search) => Client::where('name_en', 'like', "%{$search}%")->orWhere('name_ar', 'like', "%{$search}%")->limit(50)->pluck('name_en', 'id'))
+                            ->options(Client::pluck('name_en', 'id'))
+                            ->getOptionLabelUsing(fn ($value): ?string => Client::find($value)?->name)
+                            ->preload(),
+                            Select::make('tues_pm')
+                            ->label('PM shift')
+                            ->searchable()
+                            ->placeholder('You can search both arabic and english name')
+                            ->getSearchResultsUsing(fn (string $search) => Client::where('name_en', 'like', "%{$search}%")->orWhere('name_ar', 'like', "%{$search}%")->limit(50)->pluck('name_en', 'id'))
+                            ->options(Client::pluck('name_en', 'id'))
+                            ->getOptionLabelUsing(fn ($value): ?string => Client::find($value)?->name)
+                            ->preload(),
                             MultiselectTwoSides::make('clients_tuesday')
                                 ->options(self::getClients(4)),
                             ]),
                     Tabs\Tab::make('Wednesday')
                         ->schema([
+                            Select::make('wednes_am')
+                            ->label('AM shift')
+                            ->searchable()
+                            ->placeholder('You can search both arabic and english name')
+                            ->getSearchResultsUsing(fn (string $search) => Client::where('name_en', 'like', "%{$search}%")->orWhere('name_ar', 'like', "%{$search}%")->limit(50)->pluck('name_en', 'id'))
+                            ->options(Client::pluck('name_en', 'id'))
+                            ->getOptionLabelUsing(fn ($value): ?string => Client::find($value)?->name)
+                            ->preload(),
+                            Select::make('wednes_pm')
+                            ->label('PM shift')
+                            ->searchable()
+                            ->placeholder('You can search both arabic and english name')
+                            ->getSearchResultsUsing(fn (string $search) => Client::where('name_en', 'like', "%{$search}%")->orWhere('name_ar', 'like', "%{$search}%")->limit(50)->pluck('name_en', 'id'))
+                            ->options(Client::pluck('name_en', 'id'))
+                            ->getOptionLabelUsing(fn ($value): ?string => Client::find($value)?->name)
+                            ->preload(),
                             MultiselectTwoSides::make('clients_wednesday')
                                 ->options(self::getClients(5)),
                             ]),
                     Tabs\Tab::make('Thursday')
                         ->schema([
+                            Select::make('thurs_am')
+                            ->label('AM shift')
+                            ->searchable()
+                            ->placeholder('You can search both arabic and english name')
+                            ->getSearchResultsUsing(fn (string $search) => Client::where('name_en', 'like', "%{$search}%")->orWhere('name_ar', 'like', "%{$search}%")->limit(50)->pluck('name_en', 'id'))
+                            ->options(Client::pluck('name_en', 'id'))
+                            ->getOptionLabelUsing(fn ($value): ?string => Client::find($value)?->name)
+                            ->preload(),
+                            Select::make('thurs_pm')
+                            ->label('PM shift')
+                            ->searchable()
+                            ->placeholder('You can search both arabic and english name')
+                            ->getSearchResultsUsing(fn (string $search) => Client::where('name_en', 'like', "%{$search}%")->orWhere('name_ar', 'like', "%{$search}%")->limit(50)->pluck('name_en', 'id'))
+                            ->options(Client::pluck('name_en', 'id'))
+                            ->getOptionLabelUsing(fn ($value): ?string => Client::find($value)?->name)
+                            ->preload(),
                             MultiselectTwoSides::make('clients_thursday')
                                 ->options(self::getClients(6)),
                         ]),
                     Tabs\Tab::make('Friday')
                         ->schema([
+                            Select::make('fri_am')
+                            ->label('AM shift')
+                            ->searchable()
+                            ->placeholder('You can search both arabic and english name')
+                            ->getSearchResultsUsing(fn (string $search) => Client::where('name_en', 'like', "%{$search}%")->orWhere('name_ar', 'like', "%{$search}%")->limit(50)->pluck('name_en', 'id'))
+                            ->options(Client::pluck('name_en', 'id'))
+                            ->getOptionLabelUsing(fn ($value): ?string => Client::find($value)?->name)
+                            ->preload(),
+                            Select::make('fri_pm')
+                            ->label('PM shift')
+                            ->searchable()
+                            ->placeholder('You can search both arabic and english name')
+                            ->getSearchResultsUsing(fn (string $search) => Client::where('name_en', 'like', "%{$search}%")->orWhere('name_ar', 'like', "%{$search}%")->limit(50)->pluck('name_en', 'id'))
+                            ->options(Client::pluck('name_en', 'id'))
+                            ->getOptionLabelUsing(fn ($value): ?string => Client::find($value)?->name)
+                            ->preload(),
                             MultiselectTwoSides::make('clients_friday')
                                 ->options(self::getClients(7)),
                         ]),

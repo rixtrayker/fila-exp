@@ -5,6 +5,7 @@ namespace App\Filament\Resources\PlanResource\Pages;
 use App\Filament\Resources\PlanResource;
 use App\Helpers\DateHelper;
 use App\Models\Plan;
+use App\Models\PlanShift;
 use App\Models\Visit;
 use Carbon\Carbon;
 use Filament\Pages\Actions;
@@ -15,6 +16,7 @@ class CreatePlan extends CreateRecord
 {
     protected static string $resource = PlanResource::class;
     protected static bool $canCreateAnother = false;
+    protected $plan;
     public function create(bool $another = false): void
     {
         $this->authorizeAccess();
@@ -31,6 +33,7 @@ class CreatePlan extends CreateRecord
             $this->callHook('beforeCreate');
 
             $this->saveVisits($data);
+            $this->saveShifts($data);
 
             $this->callHook('afterCreate');
         } catch (Halt $exception) {
@@ -64,10 +67,11 @@ class CreatePlan extends CreateRecord
         ])->first();
 
         if ($existedPlan){
+            $this->plan = $existedPlan;
             return;
         }
 
-        $plan = Plan::create([
+        $this->plan = Plan::create([
             'user_id' => $userId,
             'start_at' =>  $visitDates[0],
         ]);
@@ -79,11 +83,33 @@ class CreatePlan extends CreateRecord
             $visits[] = [
                 'user_id' => $userId,
                 'client_id' => $clientId,
-                'plan_id' => $plan->id,
+                'plan_id' => $this->plan->id,
                 'visit_date' => $visitDates[$day],
             ];
         }
 
         Visit::insert($visits);
+    }
+    private function saveShifts($data){
+        $days = ['sat','sun','mon','tues','wednes','thurs','fri'];
+        for($i =0; $i < 7; $i++){
+            if( !$this->dayHasInput($i+1) )
+                continue;
+            PlanShift::updateOrCreate([
+                'plan_id' => $this->plan->id,
+                'day' => $i+1,
+                'am_shift' => $data[$days[$i].'_am'],
+                'pm_shift' => $data[$days[$i].'_pm'],
+            ]);
+        }
+    }
+
+    private function dayHasInput($i){
+        $all = $this->form->getRawState()['clients_saturday'];
+        foreach($all as $one){
+            if(explode('_',$one)[1] == $i )
+                return true;
+        }
+        return false;
     }
 }
