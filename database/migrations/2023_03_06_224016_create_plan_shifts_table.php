@@ -22,7 +22,9 @@ return new class extends Migration
             $table->enum('day',[1,2,3,4,5,6,7]);
             $table->unique(['plan_id', 'day']);
             $table->foreignIdFor(Client::class,'am_shift');
+            $table->time('am_time');
             $table->foreignIdFor(Client::class,'pm_shift');
+            $table->time('pm_time');
             $table->timestamps();
         });
     }

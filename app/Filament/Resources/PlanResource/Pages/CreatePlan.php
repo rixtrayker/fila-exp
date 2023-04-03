@@ -99,7 +99,9 @@ class CreatePlan extends CreateRecord
                 'plan_id' => $this->plan->id,
                 'day' => $i+1,
                 'am_shift' => $data[$days[$i].'_am'],
+                'am_time' => $data[$days[$i].'_time_am'],
                 'pm_shift' => $data[$days[$i].'_pm'],
+                'pm_time' => $data[$days[$i].'_time_pm'],
             ]);
         }
     }
