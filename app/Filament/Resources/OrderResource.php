@@ -75,7 +75,7 @@ class OrderResource extends Resource
                                 ->disableLabel(),
                         ])
                         ->disableItemMovement()
-                        ->defaultItems(2),
+                        ->defaultItems(1),
                     ])->compact(),
             ]);
     }

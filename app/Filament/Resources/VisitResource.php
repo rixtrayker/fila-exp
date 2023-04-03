@@ -106,7 +106,7 @@ class VisitResource extends Resource
                                 ->disableLabel(),
                         ])
                         ->disableItemMovement()
-                        ->defaultItems(2),
+                        ->defaultItems(1),
                     ])->compact(),
                 Textarea::make('comment')
                     ->label('Comment')
