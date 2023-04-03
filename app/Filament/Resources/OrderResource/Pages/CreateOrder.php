@@ -4,6 +4,7 @@ namespace App\Filament\Resources\OrderResource\Pages;
 
 use App\Filament\Resources\OrderResource;
 use App\Models\OrderProduct;
+use App\Models\Product;
 use Filament\Pages\Actions;
 use Filament\Resources\Pages\CreateRecord;
 
@@ -32,6 +33,7 @@ class CreateOrder extends CreateRecord
                 'order_id' => $orderId,
                 'product_id' =>  $product['product_id'],
                 'count' => $product['count'],
+                'cost' => Product::find( $product['product_id'])->price * $product['count'],
                 'created_at' => $now,
                 'updated_at' => $now,
             ];
