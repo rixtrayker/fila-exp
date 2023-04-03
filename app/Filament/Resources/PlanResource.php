@@ -38,14 +38,14 @@ class PlanResource extends Resource
         $dates = DateHelper::calculateVisitDates();
 
         for($i=0; $i<7; $i++){
-            $dates[$i] = Carbon::createFromTimeString($dates[$i].' 00:00:00')->format('M-d');
+            $dates[$i] = Carbon::createFromTimeString($dates[$i].' 00:00:00')->format('D M-d');
         }
 
         return $form
             ->schema([
                 Tabs::make('Weekly Plan')
                 ->tabs([
-                    Tabs\Tab::make('Saturday '.$dates[0])
+                    Tabs\Tab::make($dates[0])
                         ->schema([
                             Select::make('sat_am')
                                 ->label('AM shift')
@@ -74,7 +74,7 @@ class PlanResource extends Resource
                             MultiselectTwoSides::make('clients_saturday')
                                 ->options(self::getClients(1)),
                         ]),
-                    Tabs\Tab::make('Sunday '.$dates[1])
+                    Tabs\Tab::make($dates[1])
                         ->schema([
                             Select::make('sun_am')
                                 ->label('AM shift')
@@ -99,7 +99,7 @@ class PlanResource extends Resource
                             MultiselectTwoSides::make('clients_sunday')
                                 ->options(self::getClients(2)),
                         ]),
-                    Tabs\Tab::make('Monday '.$dates[2])
+                    Tabs\Tab::make($dates[2])
                         ->schema([
                             // Select::make('mon_am')
                             // ->label('AM shift')
@@ -133,7 +133,7 @@ class PlanResource extends Resource
                             //     }
                             //     return false;
                             // }),
-                            Select::make('sat_am')
+                            Select::make('mon_am')
                                 ->label('AM shift')
                                 ->searchable()
                                 ->placeholder('You can search both arabic and english name')
@@ -143,7 +143,7 @@ class PlanResource extends Resource
                                 ->preload(),
                             TimePicker::make('mon_time_am')
                                 ->withoutSeconds(),
-                            Select::make('sat_pm')
+                            Select::make('mon_pm')
                                 ->label('PM shift')
                                 ->searchable()
                                 ->placeholder('You can search both arabic and english name')
@@ -156,7 +156,7 @@ class PlanResource extends Resource
                             MultiselectTwoSides::make('clients_monday')
                                 ->options(self::getClients(3)),
                             ]),
-                    Tabs\Tab::make('Tuesday '.$dates[3])
+                    Tabs\Tab::make($dates[3])
                         ->schema([
                             Select::make('tues_am')
                             ->label('AM shift')
@@ -181,7 +181,7 @@ class PlanResource extends Resource
                             MultiselectTwoSides::make('clients_tuesday')
                                 ->options(self::getClients(4)),
                             ]),
-                    Tabs\Tab::make('Wednesday '.$dates[4])
+                    Tabs\Tab::make($dates[4])
                         ->schema([
                             Select::make('wednes_am')
                                 ->label('AM shift')
@@ -206,7 +206,7 @@ class PlanResource extends Resource
                             MultiselectTwoSides::make('clients_wednesday')
                                 ->options(self::getClients(5)),
                             ]),
-                    Tabs\Tab::make('Thursday '.$dates[5])
+                    Tabs\Tab::make($dates[5])
                         ->schema([
                             Select::make('thurs_am')
                                 ->label('AM shift')
@@ -231,7 +231,7 @@ class PlanResource extends Resource
                             MultiselectTwoSides::make('clients_thursday')
                                 ->options(self::getClients(6)),
                         ]),
-                    Tabs\Tab::make('Friday '.$dates[6])
+                    Tabs\Tab::make($dates[6])
                         ->schema([
                             Select::make('fri_am')
                                 ->label('AM shift')
