@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Filament\Pages\Actions;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Support\Exceptions\Halt;
+use Str;
 
 class CreatePlan extends CreateRecord
 {
@@ -54,6 +55,7 @@ class CreatePlan extends CreateRecord
 
         $this->redirect(PlanResource::getUrl('index'));
     }
+
     public function saveVisits($data)
     {
         $visits = [];
@@ -68,7 +70,7 @@ class CreatePlan extends CreateRecord
 
         if ($existedPlan){
             $this->plan = $existedPlan;
-            return;
+            $this->redirect(PlanResource::getUrl('index'));
         }
 
         $this->plan = Plan::create([
@@ -76,25 +78,36 @@ class CreatePlan extends CreateRecord
             'start_at' =>  $visitDates[0],
         ]);
 
-        foreach($data['clients_saturday'] as $itemId){
-            $clientId = explode('_',$itemId)[0];
-            $day = intval(explode('_',$itemId)[1]) - 1;
+        $fieldName = ['clients_sat','clients_sun','clients_mon','clients_tues','clients_wednes','clients_thurs','clients_fri'];
 
-            $visits[] = [
-                'user_id' => $userId,
-                'client_id' => $clientId,
-                'plan_id' => $this->plan->id,
-                'visit_date' => $visitDates[$day],
-            ];
+
+        foreach($fieldName as $dayKey => $field){
+            if(!isset($data[$field]))
+                continue;
+
+            foreach($data[$field] as $clientId){
+                $visits[] = [
+                    'user_id' => $userId,
+                    'client_id' => $clientId,
+                    'plan_id' => $this->plan->id,
+                    'visit_date' => $visitDates[$dayKey],
+                ];
+            }
         }
 
         Visit::insert($visits);
     }
-    private function saveShifts($data){
+
+    public function saveShifts($data)
+    {
+        $fieldName = ['clients_sat','clients_sun','clients_mon','clients_tues','clients_wednes','clients_thurs','clients_fri'];
         $days = ['sat','sun','mon','tues','wednes','thurs','fri'];
+
         for($i =0; $i < 7; $i++){
-            if( !$this->dayHasInput($i+1) )
+
+            if(!isset($data[$fieldName[$i]]))
                 continue;
+
             PlanShift::updateOrCreate([
                 'plan_id' => $this->plan->id,
                 'day' => $i+1,
@@ -106,12 +119,4 @@ class CreatePlan extends CreateRecord
         }
     }
 
-    private function dayHasInput($i){
-        $all = $this->form->getRawState()['clients_saturday'];
-        foreach($all as $one){
-            if(explode('_',$one)[1] == $i )
-                return true;
-        }
-        return false;
-    }
 }
