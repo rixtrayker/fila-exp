@@ -46,4 +46,13 @@ class Plan extends Model
         parent::boot();
         static::addGlobalScope(new GetMineScope);
     }
+
+    public function shiftClient($shiftQuery){
+        $days = ['sat','sun','mon','tues','wednes','thurs','fri'];
+        $day = array_search($shiftQuery, $days) + 1;
+
+        $shift = $this->shifts()->where('day', $day)->first();
+
+        return $shift;
+    }
 }
