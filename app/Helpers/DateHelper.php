@@ -21,7 +21,7 @@ class DateHelper{
         // Get the start date of last Saturday
         return $today->copy()->previous(Carbon::SATURDAY)->startOfDay();
     }
-    public static function calculateVisitDates()
+    public static function calculateVisitDates(): array
     {
         $dates = [];
 
