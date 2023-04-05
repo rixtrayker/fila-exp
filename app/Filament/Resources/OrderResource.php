@@ -9,7 +9,9 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
 use Awcodes\FilamentTableRepeater\Components\TableRepeater;
+use Closure;
 use Filament\Forms;
+use Filament\Forms\Components\Component;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -20,6 +22,7 @@ use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Log;
 
 class OrderResource extends Resource
 {
@@ -28,9 +31,14 @@ class OrderResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-shopping-cart';
     protected static ?int $navigationSort = 5;
+    protected static $totalField;
 
+    protected static function makeTotalField(){
+        self::$totalField = TextInput::make('total')->disabled()->default(0);
+    }
     public static function form(Form $form): Form
     {
+        self::makeTotalField();
         return $form
             ->schema([
                 Select::make('user_id')
@@ -56,28 +64,64 @@ class OrderResource extends Resource
                     ->schema([
                         TableRepeater::make('products')
                         ->relationship('products')
+                        ->reactive()
                         ->disableLabel()
                         ->headers(['Product', 'Sample Count'])
                         ->emptyLabel('There is no product added.')
                         ->columnWidths([
-                            'count' => '40px',
-                            'product_id' => '180px',
+                            'count' => '140px',
+                            'cost' => '140px',
+                            'product_id' => '440px',
                             'row_actions' => '20px',
                         ])
                         ->schema([
                             Select::make('product_id')
                                 ->disableLabel()
                                 ->placeholder('select a product')
-                                ->options(Product::pluck('name','id')),
+                                ->options(Product::pluck('name','id'))
+                                ->reactive()
+                                ->afterStateUpdated(
+                                    function($set, $get){
+                                        $product = Product::find($get('product_id'));
+                                        $cost = 0;
+                                        if($product && $get('count'))
+                                            $cost = $product->price * $get('count');
+
+                                        $set('cost',$cost);
+                                        self::updateTotal($get);
+                                    }
+                                ),
                             TextInput::make('count')
                                 ->numeric()
                                 ->minValue(1)
+                                ->disableLabel()
+                                ->reactive()
+                                ->afterStateUpdated(
+                                    function($set, $get){
+                                        $product = Product::find($get('product_id'));
+                                        $cost = 0;
+                                        if($product && $get('count'))
+                                            $cost = $product->price * $get('count');
+
+                                        $set('cost',$cost);
+                                        OrderResource::updateTotal($get);
+                                    }
+                                ),
+                            TextInput::make('cost')
+                                ->dehydrateStateUsing(function($get) {
+                                    $product = Product::find($get('product_id'));
+                                    return $product && $get('count')? $product->price * $get('count') : 0;
+                                }) // todo load from DB directly if found
+                                ->numeric()
+                                ->minValue(1)
+                                ->disabled()
                                 ->disableLabel(),
-                        ])
-                        ->disableItemMovement()
+                        ])->disableItemMovement()
                         ->defaultItems(1),
+                        self::$totalField,
+                            // ->disabled(),
                     ])->compact(),
-            ]);
+                ]);
     }
 
     public static function table(Table $table): Table
@@ -130,8 +174,20 @@ class OrderResource extends Resource
         return [
             'index' => Pages\ListOrders::route('/'),
             'create' => Pages\CreateOrder::route('/create'),
+            'view' => Pages\ViewOrder::route('/{record}'),
             'edit' => Pages\EditOrder::route('/{record}/edit'),
         ];
     }
+    public static function updateTotal($get)
+    {
+        $total = 0;
 
+        foreach($get('../../products') as $item){
+            $product = Product::find($item['product_id']);
+            if($product && $item['count'])
+            $total += $product->price * $item['count'];
+        }
+
+        self::$totalField->state($total);
+    }
 }

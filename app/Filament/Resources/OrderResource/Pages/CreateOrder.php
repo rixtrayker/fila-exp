@@ -14,12 +14,13 @@ class CreateOrder extends CreateRecord
 
     protected function mutateFormDataBeforeCreate($data): array
     {
+        unset($data['total']);
+
         if(auth()->user()->hasRole('medical-rep'))
             $data['user_id'] = auth()->id();
         $data['order_date'] = today();
         return $data;
     }
-
     public function afterCreate()
     {
         $data = $this->form->getRawState();
