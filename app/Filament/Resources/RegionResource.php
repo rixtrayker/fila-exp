@@ -6,6 +6,7 @@ use App\Filament\Resources\RegionResource\Pages;
 use App\Filament\Resources\RegionResource\RelationManagers;
 use App\Filament\Resources\RegionResource\RelationManagers\GovernoratesRelationManager;
 use App\Models\Region;
+use App\Traits\RolesOnlyResources;
 use Filament\Forms;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Form;
@@ -18,6 +19,8 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class RegionResource extends Resource
 {
+    use RolesOnlyResources;
+
     protected static ?string $model = Region::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-collection';
@@ -66,5 +69,9 @@ class RegionResource extends Resource
             'create' => Pages\CreateRegion::route('/create'),
             'edit' => Pages\EditRegion::route('/{record}/edit'),
         ];
+    }
+    public static function canAccessMe(): array
+    {
+        return ['super-admin','moderator'];
     }
 }

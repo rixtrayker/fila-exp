@@ -6,6 +6,7 @@ use App\Filament\Resources\UserResource\Pages;
 use App\Filament\Resources\UserResource\RelationManagers;
 use App\Filament\Resources\UserResource\RelationManagers\RolesRelationManager;
 use App\Models\User;
+use App\Traits\RolesOnlyResources;
 use Filament\Forms;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Resources\Form;
@@ -28,6 +29,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class UserResource extends Resource
 {
+    use RolesOnlyResources;
     protected static ?string $model = User::class;
 
     protected static ?string $navigationIcon = 'heroicon-s-users';
@@ -62,7 +64,7 @@ class UserResource extends Resource
                     ->label(static fn(Page $livewire): string => ($livewire instanceof Pages\EditUser) ? 'New Password' : 'Password')
                     ->maxLength(32),
                 CheckboxList::make('roles')
-                    ->relationship('roles','name')
+                    ->relationship('roles','display_name')
                     ->columns(2)
                     ->helperText('Only choose one!')
                     ->required(),
@@ -76,7 +78,7 @@ class UserResource extends Resource
                 TextColumn::make('name'),
                 IconColumn::make('is_admin')
                     ->boolean(),
-                TextColumn::make('roles.name'),
+                TextColumn::make('roles.display_name'),
                 TextColumn::make('email')
                     ->searchable(),
                 TextColumn::make('current_team_id'),
@@ -119,6 +121,12 @@ class UserResource extends Resource
             'index' => Pages\ListUsers::route('/'),
             'create' => Pages\CreateUser::route('/create'),
             'edit' => Pages\EditUser::route('/{record}/edit'),
+            'view' => Pages\ViewUser::route('/{record}'),
         ];
+    }
+
+    public static function canAccessMe(): array
+    {
+        return ['super-admin','moderator'];
     }
 }

@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\RoleResource\Pages;
 use App\Filament\Resources\RoleResource\RelationManagers\PermissionsRelationManager;
+use App\Traits\RolesOnlyResources;
 use Filament\Forms\Components\TextInput;
 use Spatie\Permission\Models\Role;
 use Filament\Forms;
@@ -19,6 +20,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class RoleResource extends Resource
 {
+    use RolesOnlyResources;
     protected static ?string $model = Role::class;
 
     protected static ?string $navigationIcon = 'heroicon-s-cog';
@@ -31,7 +33,15 @@ class RoleResource extends Resource
         return $form
             ->schema([
                 TextInput::make('name')
+                    ->label('System name')
                     ->unique(ignoreRecord:true)
+                    ->required(),
+                TextInput::make('display_name')
+                    ->label('Display name')
+                    ->unique(ignoreRecord:true)
+                    ->required(),
+                TextInput::make('description')
+                    ->label('Description')
                     ->required(),
                 Select::make('permissions')
                     ->relationship('permissions','name')
@@ -47,8 +57,16 @@ class RoleResource extends Resource
             ->columns([
                 TextColumn::make('id')->sortable(),
                 TextColumn::make('name')
+                    ->label('System name')
                     ->sortable()
                     ->searchable(),
+                TextColumn::make('display_name')
+                    ->label('Display name')
+                    ->sortable()
+                    ->searchable(),
+                TextColumn::make('description')
+                    ->label('Description')
+                    ->wrap(),
                 TextColumn::make('created_at')
                     ->dateTime('d-M-Y')
                     ->sortable()
