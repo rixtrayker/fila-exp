@@ -56,6 +56,14 @@ class UserResource extends Resource
                     ->relationship('cities','name')
                     ->multiple()
                     ->preload(),
+                Select::make('manager_id')
+                    ->label('Manager')
+                    ->searchable()
+                    ->placeholder('Search name')
+                    ->getSearchResultsUsing(fn (string $search) => User::where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'))
+                    ->options(User::pluck('name', 'id'))
+                    // ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
+                    ->preload(),
                 TextInput::make('password')
                     ->password()
                     ->dehydrateStateUsing(static fn(null|string $state): null|string=> filled($state)?bcrypt($state) : null)
@@ -81,6 +89,8 @@ class UserResource extends Resource
                 TextColumn::make('roles.display_name'),
                 TextColumn::make('email')
                     ->searchable(),
+                TextColumn::make('manager.name')
+                        ->label('Manager'),
                 TextColumn::make('current_team_id'),
                 TextColumn::make('created_at')
                     ->dateTime('d-M-Y g:i A'),
@@ -111,7 +121,7 @@ class UserResource extends Resource
     public static function getRelations(): array
     {
         return [
-            RolesRelationManager::class,
+            // RolesRelationManager::class,
         ];
     }
 

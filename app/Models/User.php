@@ -117,6 +117,10 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->hasMany(Message::class);
     }
+    public function manager()
+    {
+        return $this->belongsTo(User::class,'manager_id');
+    }
     public function firstRole()
     {
         return $this->morphToMany(
