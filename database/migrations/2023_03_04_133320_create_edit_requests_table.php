@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('to')->nullable();
             $table->string('attribute')->nullable();
             $table->string('batch');
-            $table->unsignedBigInteger('added_by_id');
+            $table->unsignedBigInteger('user_id');
             $table->enum('status',['pending','refused','approved'])->default('pending');
             $table->timestamps();
         });

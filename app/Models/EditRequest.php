@@ -24,7 +24,7 @@ class EditRequest extends Model
     }
     public function user()
     {
-        return $this->belongsTo(User::class,'added_by_id');
+        return $this->belongsTo(User::class,'user_id');
     }
     public function getChangedFieldsAttribute()
     {

@@ -8,7 +8,7 @@ use Carbon\Carbon;
 trait HasEditRequest{
 
     public function myEditRequests(){
-        return $this->hasMany(EditRequest::class, 'added_by_id');
+        return $this->hasMany(EditRequest::class, 'user_id');
     }
 
     public function editRequests()
@@ -63,7 +63,7 @@ trait HasEditRequest{
             'from' => $from,
             'to' => $to,
             'batch' => $batchNumber,
-            'added_by_id' => auth()->id(),
+            'user_id' => auth()->id(),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ];
