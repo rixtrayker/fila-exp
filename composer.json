@@ -6,6 +6,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.0.2",
+        "althinect/filament-spatie-roles-permissions": "^1.1",
         "awcodes/filament-table-repeater": "*",
         "blade-ui-kit/blade-heroicons": "^1.4",
         "doctrine/dbal": "^3.6",

@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\CallTypeResource\Pages;
 use App\Filament\Resources\CallTypeResource\RelationManagers;
 use App\Models\CallType;
+use App\Traits\RolesOnlyResources;
 use Filament\Forms;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Form;
@@ -17,6 +18,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class CallTypeResource extends Resource
 {
+    use RolesOnlyResources;
     protected static ?string $model = CallType::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-tag';
@@ -57,5 +59,10 @@ class CallTypeResource extends Resource
         return [
             'index' => Pages\ManageCallTypes::route('/'),
         ];
+    }
+
+    public static function canAccessMe(): array
+    {
+        return ['super-admin','moderator'];
     }
 }

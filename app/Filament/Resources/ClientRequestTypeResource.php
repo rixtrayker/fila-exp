@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ClientRequestTypeResource\Pages;
 use App\Filament\Resources\ClientRequestTypeResource\RelationManagers;
 use App\Models\ClientRequestType;
+use App\Traits\RolesOnlyResources;
 use Filament\Forms;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Form;
@@ -17,6 +18,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ClientRequestTypeResource extends Resource
 {
+    use RolesOnlyResources;
     protected static ?string $model = ClientRequestType::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-tag';
@@ -57,5 +59,10 @@ class ClientRequestTypeResource extends Resource
         return [
             'index' => Pages\ManageClientRequestTypes::route('/'),
         ];
+    }
+
+    public static function canAccessMe(): array
+    {
+        return ['super-admin','moderator'];
     }
 }

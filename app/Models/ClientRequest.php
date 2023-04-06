@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Scopes\GetMineScope;
 use App\Traits\HasEditRequest;
 use App\Traits\HasRoleScopeTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -41,5 +42,10 @@ class ClientRequest extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+    public static function boot()
+    {
+        parent::boot();
+        static::addGlobalScope(new GetMineScope);
     }
 }

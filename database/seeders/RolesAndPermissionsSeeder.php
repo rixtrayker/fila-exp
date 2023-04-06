@@ -22,23 +22,27 @@ class RolesAndPermissionsSeeder extends Seeder
 
         $miscPermission = Permission::create(['name' => 'N/A']);
 
-        $permissions[] = Permission::create(['name' => 'create: user']);
-        $permissions[] = Permission::create(['name' => 'read: user']);
-        $permissions[] = Permission::create(['name' => 'update: user']);
-        $permissions[] = Permission::create(['name' => 'delete: user']);
+        $permissions = [];
+        $models = ['CallType','City','Client','ClientRequest','ClientRequestType','ClientType','Company','CompanyBranch','EditRequest','Expenses','Governorate','Hospital','Message','Order','OrderProduct','Permission','Plan','PlanShift','Product','ProductCategory','ProductVisit','Region','Role','Speciality','User','VacationRequest','VacationType','Visit','VisitType'];
 
-        $permissions[] = Permission::create(['name' => 'create: role']);
-        $permissions[] = Permission::create(['name' => 'read: role']);
-        $permissions[] = Permission::create(['name' => 'update: role']);
-        $permissions[] = Permission::create(['name' => 'delete: role']);
+        //admin
+        foreach($models as $model){
+            $permissions[] = Permission::create(['name' => 'view-any ' . $model]);
+            $permissions[] = Permission::create(['name' => 'view ' . $model]);
+            $permissions[] = Permission::create(['name' => 'create ' . $model]);
+            $permissions[] = Permission::create(['name' => 'update ' . $model]);
+            $permissions[] = Permission::create(['name' => 'delete ' . $model]);
+            $permissions[] = Permission::create(['name' => 'restore ' . $model]);
+            $permissions[] = Permission::create(['name' => 'force-delete ' . $model]);
+        }
 
-        $permissions[] = Permission::create(['name' => 'create: permission']);
-        $permissions[] = Permission::create(['name' => 'read: permission']);
-        $permissions[] = Permission::create(['name' => 'update: permission']);
-        $permissions[] = Permission::create(['name' => 'delete: permission']);
+        $superAdminRole = Role::create(['name' => 'super-admin'])
+            ->syncPermissions(array_merge($permissions,[$miscPermission]));
 
-        $permissions[] = Permission::create(['name' => 'read: admin']);
-        $permissions[] = Permission::create(['name' => 'update: admin']);
+
+        // $permissions[] = Permission::create(['name' => 'replicate User']);
+        // $permissions[] = Permission::create(['name' => 'reorder user']);
+
 
         $userRole = Role::create(['name' => 'user'])->syncPermissions([
             $miscPermission
@@ -55,6 +59,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 $permissions[13],
                 ]
             );
+
         $developerRole = Role::create(['name' => 'developer'])
             ->syncPermissions([
                 $permissions[13],
@@ -93,4 +98,19 @@ class RolesAndPermissionsSeeder extends Seeder
         }
 
     }
+
+    // public function getModels($path = app_path() . '/Models'){
+    //     $out = [];
+    //     $results = scandir($path);
+    //     foreach ($results as $result) {
+    //         if ($result === '.' or $result === '..') continue;
+    //         $filename = $path . '/' . $result;
+    //         if (is_dir($filename)) {
+    //             $out = array_merge($out, getModels($filename));
+    //         }else{
+    //             $out[] = substr($filename,0,-4);
+    //         }
+    //     }
+    //     return $out;
+    // }
 }

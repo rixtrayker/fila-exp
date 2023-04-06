@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ClientTypeResource\Pages;
 use App\Filament\Resources\ClientTypeResource\RelationManagers;
 use App\Models\ClientType;
+use App\Traits\RolesOnlyResources;
 use Filament\Forms;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Form;
@@ -17,6 +18,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ClientTypeResource extends Resource
 {
+    use RolesOnlyResources;
     protected static ?string $model = ClientType::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-tag';
@@ -57,5 +59,10 @@ class ClientTypeResource extends Resource
         return [
             'index' => Pages\ManageClientTypes::route('/'),
         ];
+    }
+
+    public static function canAccessMe(): array
+    {
+        return ['super-admin','moderator'];
     }
 }

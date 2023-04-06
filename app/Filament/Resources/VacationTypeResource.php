@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\VacationTypeResource\Pages;
 use App\Filament\Resources\VacationTypeResource\RelationManagers;
 use App\Models\VacationType;
+use App\Traits\RolesOnlyResources;
 use Filament\Forms;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Form;
@@ -17,6 +18,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class VacationTypeResource extends Resource
 {
+    use RolesOnlyResources;
     protected static ?string $model = VacationType::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-tag';
@@ -56,5 +58,10 @@ class VacationTypeResource extends Resource
         return [
             'index' => Pages\ManageVacationTypes::route('/'),
         ];
+    }
+
+    public static function canAccessMe(): array
+    {
+        return ['super-admin','moderator'];
     }
 }
