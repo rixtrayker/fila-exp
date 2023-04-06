@@ -54,7 +54,7 @@ class CreateVisit extends CreateRecord
                 $visit->call_type_id = $data['call_type_id'];
                 $visit->next_visit = $data['next_visit'];
                 $visit->comment = $data['comment'];
-                $visit->save()
+                $visit->save();
 
                 if($visit->status == 'visited'){
                     if($visit->deleted_at)
