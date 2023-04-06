@@ -17,11 +17,10 @@ use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-
+use Str;
 class ClientResource extends Resource
 {
     protected static ?string $model = Client::class;
-
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
     protected static ?int $navigationSort = 3;
 
@@ -48,17 +47,16 @@ class ClientResource extends Resource
                 Select::make('city_id')
                     ->label('City')
                     ->searchable()
-                    ->relationship('city','name')
+                    ->options(City::get()->pluck('zone_code', 'id'))
+                    ->getSearchResultsUsing(fn(string $search)=>ClientResource::searchCity($search))
                     ->preload()
                     ->required(),
                 Select::make('grade')
                     ->label('Grade')
                     ->options(['A'=>'A','B'=>'B','C'=>'C','N'=>'N','PH'=>'PH'])
-                    ->getOptionLabelUsing(fn ($value): ?string => $value)
                     ->required(),
                 Select::make('shift')
                     ->options(['AM'=>'AM','PM'=>'PM'])
-                    ->getOptionLabelUsing(fn ($value): ?string => $value)
                     ->label('Shift'),
                 Select::make('client_type_id')
                     ->label('Type')
@@ -132,17 +130,23 @@ class ClientResource extends Resource
         ];
     }
 
-    public static function getTranslatableLocales(): array
-    {
-        return ['en', 'ar'];
-    }
-
     public static function getPages(): array
     {
         return [
             'index' => Pages\ListClients::route('/'),
             'create' => Pages\CreateClient::route('/create'),
+            'view' => Pages\ViewClient::route('/{record}'),
             'edit' => Pages\EditClient::route('/{record}/edit'),
         ];
+    }
+
+    public static function searchCity(string $search)
+    {
+        return collect(City::get())
+            ->filter(
+                function ($record) use ($search) {
+                    return Str::contains($record->zone_code,$search);
+                }
+            )->pluck('zone_code', 'id');
     }
 }

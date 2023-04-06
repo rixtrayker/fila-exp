@@ -18,19 +18,6 @@ class ViewPlan extends ViewRecord
         ];
     }
 
-    public static function shiftDefault($id,$day,$period)
-    {
-        $record = Plan::find($id);
-
-        $shift = $record->shiftClient($day);
-        if(!$shift)
-            return '';
-        if($period == 'am')
-            return $shift->am_shift;
-        if($period == 'pm')
-            return $shift->pm_shift;
-    }
-
     protected function mutateFormDataBeforeFill(array $data): array
     {
         $days = ['sat','sun','mon','tues','wednes','thurs','fri'];
@@ -48,11 +35,5 @@ class ViewPlan extends ViewRecord
         }
         return $data;
     }
-
-    public static function isCreatePage(): bool
-    {
-        return false;
-    }
-
 
 }
