@@ -3,13 +3,15 @@
 namespace App\Models;
 
 use App\Models\Scopes\GetMineScope;
+use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Visit extends Model
 {
     use HasFactory;
-
+    use SoftDeletes;
     protected $fillable = [
         'user_id',
         'plan_id',
@@ -25,6 +27,11 @@ class Visit extends Model
     public function client()
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public function scopeVisited(Builder $query): Builder
+    {
+        return $query->where('status','visited');
     }
 
     public function user()

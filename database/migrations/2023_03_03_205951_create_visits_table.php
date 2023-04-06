@@ -32,6 +32,7 @@ return new class extends Migration
             $table->text('comment')->nullable();
             $table->double('lat')->nullable();
             $table->double('lng')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

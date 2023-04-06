@@ -103,6 +103,8 @@ class UserResource extends Resource
             ->actions([
                 EditAction::make(),
                 DeleteAction::make(),
+                Tables\Actions\RestoreAction::make()
+                    ->hidden(fn($record) => $record->deleted_at == null),
             ])
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),

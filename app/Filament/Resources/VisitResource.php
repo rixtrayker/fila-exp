@@ -22,6 +22,7 @@ use Filament\Resources\Resource;
 use Filament\Resources\Table;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\TrashedFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
@@ -138,16 +139,20 @@ class VisitResource extends Resource
                     ->wrap(),
             ])
             ->filters([
-
+                TrashedFilter::make(),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\DeleteAction::make()->hidden(
                     auth()->user()->hasRole('medical-rep')
-                )
-            ])
-            ->bulkActions([
-                // Tables\Actions\DeleteBulkAction::make(),
+                ),
+                Tables\Actions\RestoreAction::make()
+                    ->hidden(fn($record) => $record->deleted_at == null)
+                ])
+                ->bulkActions([
+                Tables\Actions\DeleteBulkAction::make(),
+                Tables\Actions\RestoreBulkAction::make(),
+                Tables\Actions\ForceDeleteBulkAction::make(),
             ]);
     }
 
@@ -156,6 +161,15 @@ class VisitResource extends Resource
         return [
 
         ];
+    }
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+        ->withoutGlobalScopes([
+            SoftDeletingScope::class,
+        ])->scopes([
+                'visited'
+        ]);
     }
 
     public static function getPages(): array
