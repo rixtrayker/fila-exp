@@ -14,7 +14,7 @@ class VacationRequest extends Model
 
     public function repUser()
     {
-        return $this->belongsTo(User::class,'user_id');
+        return $this->belongsTo(User::class);
     }
 
     public function vacationType()
