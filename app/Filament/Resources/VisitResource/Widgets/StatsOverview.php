@@ -50,7 +50,7 @@ class StatsOverview extends BaseWidget
     private function remainingVacations()
     {
         $vacations = 0;
-        $userVacations = VacationRequest::where('rep_id',auth()->id())->where('approved',true)->get();
+        $userVacations = VacationRequest::where('user_id',auth()->id())->where('approved',true)->get();
 
         foreach ($userVacations as $vacation) {
             $date1 = new DateTime($vacation->start);

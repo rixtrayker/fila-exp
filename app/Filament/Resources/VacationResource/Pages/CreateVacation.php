@@ -14,7 +14,7 @@ class CreateVacation extends CreateRecord
     {
         $data['manager_id'] = 0;
         if(auth()->user()->hasRole('medical-rep')){
-            $data['rep_id'] = auth()->id();
+            $data['user_id'] = auth()->id();
         }
         return $data;
     }

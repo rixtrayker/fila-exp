@@ -14,14 +14,14 @@ class VacationRequest extends Model
 
     public function repUser()
     {
-        return $this->belongsTo(User::class,'rep_id');
+        return $this->belongsTo(User::class,'user_id');
     }
 
     public function vacationType()
     {
         return $this->belongsTo(VacationType::class);
     }
-    
+
     public static function boot()
     {
         parent::boot();

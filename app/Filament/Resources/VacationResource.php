@@ -32,7 +32,7 @@ class VacationResource extends Resource
     {
         return $form
             ->schema([
-                Select::make('rep_id')
+                Select::make('user_id')
                     ->label('Medical Rep')
                     ->searchable()
                     ->placeholder('Search name')
