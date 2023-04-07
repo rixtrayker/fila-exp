@@ -14,10 +14,14 @@ class Expenses extends Model
 
     protected $fillable = [
         'user_id',
-        'distance',
-        'amount',
         'date',
-        'is_trasporation',
+        'trasporation',
+        'lodging',
+        'mileage',
+        'telephone_postage',
+        'daily_allowance',
+        'medical_expenses',
+        'others',
         'comment',
     ];
 

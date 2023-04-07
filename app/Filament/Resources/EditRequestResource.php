@@ -40,7 +40,8 @@ class EditRequestResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('user.name')
-                    ->label('Editor'),
+                    ->label('Editor')
+                    ->searchable(),
                 TextColumn::make('changedFields')
                     ->Label('Changed Fields'),
                 TextColumn::make('editable_type')

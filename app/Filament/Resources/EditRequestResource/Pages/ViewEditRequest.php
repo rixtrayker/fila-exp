@@ -68,14 +68,14 @@ class ViewEditRequest extends ViewRecord
 
         if(Str::contains(request()->path(), 'edit-requests')) {
             return [
-                ApproveAction::make('approve')
-                    ->label('Approve')
-                    ->color('success')
-                    // ->using(fn($record)=> $record->approveBatch())
-                    // ->redirect(ViewEditRequest::getUrl('index'))
-                    ->groupedIcon('heroicon-o-check')
-                    ->successNotificationTitle('Approved successfully')
-                    ->icon('heroicon-s-check'),
+                // ApproveAction::make('approve')
+                //     ->label('Approve')
+                //     ->color('success')
+                //     // ->using(fn($record)=> $record->approveBatch())
+                //     // ->redirect(ViewEditRequest::getUrl('index'))
+                //     ->groupedIcon('heroicon-o-check')
+                //     ->successNotificationTitle('Approved successfully')
+                //     ->icon('heroicon-s-check'),
 
 
             ];

@@ -17,10 +17,14 @@ return new class extends Migration
         Schema::create('expenses', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(User::class);
-            $table->double('distance');
-            $table->double('amount');
+            $table->double('trasporation')->nullable();
+            $table->double('lodging')->nullable();
+            $table->double('mileage')->nullable();
+            $table->double('telephone_postage')->nullable();
+            $table->double('daily_allowance')->nullable();
+            $table->double('medical_expenses')->nullable();
+            $table->double('others')->nullable();
             $table->date('date');
-            $table->boolean('is_trasporation')->default(1);
             $table->text('comment')->nullable();
             $table->timestamps();
         });

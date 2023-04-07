@@ -22,9 +22,7 @@ class GetMineScope implements Scope
             $builder->where('user_id', '=', auth()->id());
         }
 
-
-
-        if(auth()->user() && auth()->user()->hasRole(['super-admin','country-manager','area-manager','district-manager'])) {
+        if(auth()->user() && auth()->user()->hasRole(['country-manager','area-manager','district-manager'])) {
             $query = DB::table('users')
             ->selectRaw('id')
                 ->where('manager_id',auth()->id())

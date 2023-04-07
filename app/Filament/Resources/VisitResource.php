@@ -79,6 +79,7 @@ class VisitResource extends Resource
                 DatePicker::make('next_visit')
                     ->label('Next call time')
                     ->closeOnDateSelection()
+                    ->minDate(today()->addDay())
                     ->required(),
                 DatePicker::make('visit_date')
                     ->default(today())

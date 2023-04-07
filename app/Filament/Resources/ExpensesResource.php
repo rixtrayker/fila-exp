@@ -38,25 +38,42 @@ class ExpensesResource extends Resource
                     ->label('Medical Rep')
                     ->searchable()
                     ->placeholder('Search name')
-                    ->getSearchResultsUsing(fn (string $search) => User::role('medical-rep')->where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'))
-                    ->options(User::role('medical-rep')->pluck('name', 'id'))
-                    ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
+                    ->getSearchResultsUsing(fn (string $search) => User::where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'))
+                    ->options(User::pluck('name', 'id'))
                     ->preload()
                     ->hidden(auth()->user()->hasRole('medical-rep')),
                 DatePicker::make('date')
                     ->label('Date')
                     ->closeOnDateSelection()
                     ->required(),
-                TextInput::make('distance')
+                TextInput::make('trasporation')
+                    ->label('Trasporation')
                     ->numeric()
-                    ->requiredWithout('amount'),
-                TextInput::make('amount')
+                    ->minValue(1),
+                TextInput::make('lodging')
+                    ->label('Lodging')
                     ->numeric()
-                    ->minValue(1)
-                    ->requiredWithout('distance'),
-                Toggle::make('is_trasporation')
-                    ->default(1)
-                    ->requiredWith('amount'),
+                    ->minValue(1),
+                TextInput::make('mileage')
+                    ->label('Mileage')
+                    ->numeric()
+                    ->minValue(1),
+                TextInput::make('telephone_postage')
+                    ->label('Postage/Telephone/Fax')
+                    ->numeric()
+                    ->minValue(1),
+                TextInput::make('daily_allowance')
+                    ->label('Daily Allowance')
+                    ->numeric()
+                    ->minValue(1),
+                TextInput::make('medical_expenses')
+                    ->label('Medical Expenses')
+                    ->numeric()
+                    ->minValue(1),
+                TextInput::make('others')
+                    ->label('Others')
+                    ->numeric()
+                    ->minValue(1),
                 Textarea::make('comment')
                     ->label('Comment')
                     ->columnSpan('full')
@@ -72,14 +89,34 @@ class ExpensesResource extends Resource
                     ->label('M.Rep')
                     ->hidden(auth()->user()->hasRole('medical-rep'))
                     ->sortable(),
-                TextColumn::make('distance')
+                TextColumn::make('trasporation')
+                    ->label('Trasporation')
                     ->sortable()
                     ->searchable(),
-                TextColumn::make('amount')
+                TextColumn::make('lodging')
+                    ->label('Lodging')
                     ->sortable()
                     ->searchable(),
-                IconColumn::make('is_trasporation')
-                    ->sortable(),
+                TextColumn::make('mileage')
+                    ->label('Mileage')
+                    ->sortable()
+                    ->searchable(),
+                TextColumn::make('telephone_postage')
+                    ->label('Postage/Telephone/Fax')
+                    ->sortable()
+                    ->searchable(),
+                TextColumn::make('daily_allowance')
+                    ->label('Daily Allowance')
+                    ->sortable()
+                    ->searchable(),
+                TextColumn::make('medical_expenses')
+                    ->label('Medical Expenses')
+                    ->sortable()
+                    ->searchable(),
+                TextColumn::make('others')
+                    ->label('Others')
+                    ->sortable()
+                    ->searchable(),
                 TextColumn::make('date')
                     ->dateTime('d-M-Y')
                     ->sortable()
