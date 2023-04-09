@@ -12,12 +12,13 @@ class Region extends Model
 
     protected $fillable = [
         'name',
+        'country_id',
     ];
 
     public function governorates(){
         return $this->hasMany(Governorate::class);
     }
-    
+
     public function cities(){
         return $this->hasManyThrough(City::class, Governorate::class);
     }
