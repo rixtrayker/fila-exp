@@ -16,4 +16,9 @@ class EditVacation extends EditRecord
             Actions\DeleteAction::make(),
         ];
     }
+
+    protected function getRedirectUrl(): string
+    {
+        return VacationResource::getUrl('index');
+    }
 }

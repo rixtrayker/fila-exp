@@ -18,4 +18,9 @@ class CreateVacation extends CreateRecord
         }
         return $data;
     }
+
+    protected function getRedirectUrl(): string
+    {
+        return VacationResource::getUrl('index');
+    }
 }

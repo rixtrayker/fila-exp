@@ -8,8 +8,10 @@ use App\Models\User;
 use App\Models\Vacation;
 use App\Models\VacationRequest;
 use App\Models\VacationType;
+use Awcodes\FilamentTableRepeater\Components\TableRepeater;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Resources\Form;
 use Filament\Resources\Resource;
@@ -46,12 +48,42 @@ class VacationResource extends Resource
                     ->options(VacationType::all()->pluck('name', 'id'))
                     ->preload()
                     ->required(),
-                DatePicker::make('start')
-                    ->label('Start date')
-                    ->closeOnDateSelection(),
-                DatePicker::make('end')
-                    ->label('End date')
-                    ->closeOnDateSelection(),
+                Section::make('Durations')
+                    ->disableLabel()
+                    ->schema([
+                        TableRepeater::make('vacationDurations')
+                            ->relationship('vacationDurations')
+                            ->reactive()
+                            ->disableLabel()
+                            ->headers(['Start date','End date' , 'Start shift', 'End Shift'])
+                            ->emptyLabel('There is no vacation duration added.')
+                            ->columnWidths([
+                                'start' => '240px',
+                                'end' => '240px',
+                                'price' => '140px',
+                                'product_id' => '140px',
+                                'row_actions' => '20px',
+                            ])
+                        ->schema([
+                            DatePicker::make('start')
+                                ->disableLabel()
+                                ->closeOnDateSelection()
+                                ->required(),
+                            DatePicker::make('end')
+                                ->disableLabel()
+                                ->closeOnDateSelection()
+                                ->required(),
+                            Select::make('start_shift')
+                                ->disableLabel()
+                                ->options(['AM'=>'AM','PM'=>'PM'])
+                                ->required(),
+                            Select::make('end_shift')
+                                ->disableLabel()
+                                ->options(['AM'=>'AM','PM'=>'PM'])
+                                ->required(),
+                        ])->disableItemMovement()
+                        ->defaultItems(1),
+                    ])->compact(),
             ]);
     }
 
@@ -60,15 +92,15 @@ class VacationResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('repUser.name')
-                    ->label('Client')
+                    ->label('Medical Rep')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('start')
-                    ->label('Start date')
+                TextColumn::make('start_at')
+                    ->label('Start date') // todo:
                     ->dateTime('d-M-Y')
                     ->sortable()
                     ->searchable(),
-                TextColumn::make('end')
+                TextColumn::make('end_at')
                     ->label('End date')
                     ->dateTime('d-M-Y')
                     ->sortable()
