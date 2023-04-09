@@ -66,11 +66,12 @@ class OrderResource extends Resource
                         ->relationship('products')
                         ->reactive()
                         ->disableLabel()
-                        ->headers(['Product', 'Sample Count'])
+                        ->headers(['Product', 'Quantity'])
                         ->emptyLabel('There is no product added.')
                         ->columnWidths([
                             'count' => '140px',
                             'cost' => '140px',
+                            'price' => '140px',
                             'product_id' => '440px',
                             'row_actions' => '20px',
                         ])
@@ -87,6 +88,11 @@ class OrderResource extends Resource
                                         if($product && $get('count'))
                                             $cost = $product->price * $get('count');
 
+                                        $price = 0;
+                                        if($product)
+                                            $price = $product->price;
+
+                                        $set('price',$price);
                                         $set('cost',$cost);
                                         self::updateTotal($get);
                                     }
@@ -104,10 +110,16 @@ class OrderResource extends Resource
                                             $cost = $product->price * $get('count');
 
                                         $set('cost',$cost);
-                                        OrderResource::updateTotal($get);
+                                        self::updateTotal($get);
                                     }
                                 ),
-                            TextInput::make('cost')
+                            TextInput::make('price')
+                                ->numeric()
+                                ->minValue(1)
+                                ->disabled()
+                                ->disableLabel()
+                                ->reactive(),
+                            TextInput::make('item total')
                                 ->dehydrateStateUsing(function($get) {
                                     $product = Product::find($get('product_id'));
                                     return $product && $get('count')? $product->price * $get('count') : 0;
