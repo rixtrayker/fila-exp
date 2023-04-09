@@ -25,6 +25,7 @@ class CountryResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-collection';
 
     protected static ?string $navigationGroup = 'Zone management';
+    protected static ?int $navigationSort = 4;
 
     public static function form(Form $form): Form
     {
