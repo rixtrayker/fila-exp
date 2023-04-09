@@ -18,6 +18,7 @@ class CreatePlan extends CreateRecord
     protected static string $resource = PlanResource::class;
     protected static bool $canCreateAnother = false;
     protected $plan;
+    private $creationStatus;
     public function create(bool $another = false): void
     {
         $this->authorizeAccess();
@@ -33,7 +34,12 @@ class CreatePlan extends CreateRecord
 
             $this->callHook('beforeCreate');
 
-            $this->saveVisits($data);
+            $this->creationStatus = $this->saveVisits($data);
+            if($this->creationStatus  == -1){
+                $this->getCreatedNotification()?->icon('heroicon-s-exclamation')->iconColor('warning')->send();
+                $this->redirect(PlanResource::getUrl('index'));
+                return;
+            }
             $this->saveShifts($data);
 
             $this->callHook('afterCreate');
@@ -70,7 +76,7 @@ class CreatePlan extends CreateRecord
 
         if ($existedPlan){
             $this->plan = $existedPlan;
-            $this->redirect(PlanResource::getUrl('index'));
+            return -1;
         }
 
         $this->plan = Plan::create([
@@ -96,6 +102,7 @@ class CreatePlan extends CreateRecord
         }
 
         Visit::insert($visits);
+        return 1;
     }
 
     public function saveShifts($data)
@@ -117,6 +124,16 @@ class CreatePlan extends CreateRecord
                 'pm_time' => $data[$days[$i].'_time_pm'],
             ]);
         }
+    }
+    protected function getCreatedNotificationMessage(): ?string
+    {
+        if($this->creationStatus === 1)
+        {
+            return __('filament::resources/pages/create-record.messages.created');
+        } else if($this->creationStatus === -1){
+            return 'Plan already created';
+        }
+        return '';
     }
 
 }
