@@ -18,10 +18,12 @@ class Expenses extends Model
         'trasporation',
         'lodging',
         'mileage',
+        'meal',
         'telephone_postage',
         'daily_allowance',
         'medical_expenses',
         'others',
+        'others_description',
         'comment',
     ];
 

@@ -58,12 +58,12 @@ class ExpensesResource extends Resource
                     ->label('Mileage')
                     ->numeric()
                     ->minValue(1),
-                TextInput::make('telephone_postage')
-                    ->label('Postage/Telephone/Fax')
+                TextInput::make('meal')
+                    ->label('Meal')
                     ->numeric()
                     ->minValue(1),
-                TextInput::make('daily_allowance')
-                    ->label('Daily Allowance')
+                TextInput::make('telephone_postage')
+                    ->label('Postage/Telephone/Fax')
                     ->numeric()
                     ->minValue(1),
                 TextInput::make('medical_expenses')
@@ -74,6 +74,9 @@ class ExpensesResource extends Resource
                     ->label('Others')
                     ->numeric()
                     ->minValue(1),
+                TextInput::make('others_description')
+                    ->label('Others description')
+                    ->requiredWith('others'),
                 Textarea::make('comment')
                     ->label('Comment')
                     ->columnSpan('full')
@@ -101,6 +104,10 @@ class ExpensesResource extends Resource
                     ->label('Mileage')
                     ->sortable()
                     ->searchable(),
+                TextColumn::make('meal')
+                    ->label('Meal')
+                    ->sortable()
+                    ->searchable(),
                 TextColumn::make('telephone_postage')
                     ->label('Postage/Telephone/Fax')
                     ->sortable()
@@ -115,6 +122,10 @@ class ExpensesResource extends Resource
                     ->searchable(),
                 TextColumn::make('others')
                     ->label('Others')
+                    ->sortable()
+                    ->searchable(),
+                TextColumn::make('others_description')
+                    ->label('Others description')
                     ->sortable()
                     ->searchable(),
                 TextColumn::make('date')

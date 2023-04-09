@@ -20,10 +20,12 @@ return new class extends Migration
             $table->double('trasporation')->nullable();
             $table->double('lodging')->nullable();
             $table->double('mileage')->nullable();
+            $table->double('meal')->nullable();
             $table->double('telephone_postage')->nullable();
             $table->double('daily_allowance')->nullable();
             $table->double('medical_expenses')->nullable();
             $table->double('others')->nullable();
+            $table->string('others_description')->nullable();
             $table->date('date');
             $table->text('comment')->nullable();
             $table->timestamps();
