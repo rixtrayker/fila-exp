@@ -9,6 +9,7 @@ use Filament\Facades\Filament;
 use Filament\Navigation\NavigationBuilder;
 use Filament\Navigation\NavigationItem;
 use Filament\Navigation\UserMenuItem;
+use Illuminate\Foundation\Vite;
 use Illuminate\Support\ServiceProvider;
 use Yepsua\Filament\Themes\Filament\Forms\Components\ThemesSelect;
 
@@ -41,7 +42,13 @@ class FilamentServiceProvider extends ServiceProvider
         //         ...UserResource::getNavigationItems(),
         //     ]);
         // });
+
         Filament::serving(function() {
+
+            Filament::registerTheme(
+                app(Vite::class)('resources/css/app.css'),
+            );
+
             if(auth()->user() && auth()->user()->is_admin === 1 && auth()->user()->hasAnyRole(['super-admin','admin','moderator'])){
                 Filament::registerUserMenuItems([
                     UserMenuItem::make()
