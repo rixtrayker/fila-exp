@@ -26,6 +26,10 @@ class City extends Model
     {
         return $this->belongsToThrough(Region::class, Governorate::class);
     }
+    public function country()
+    {
+        return $this->belongsToThrough(Country::class, [Region::class,Governorate::class]);
+    }
     public function clients()
     {
         return $this->hasMany(Client::class);
@@ -39,6 +43,6 @@ class City extends Model
         return $this->hasManyThrough(Visit::class, Client::class);
     }
     public function getZoneCodeAttribute(){
-        return $this->name.'-'.$this->governorate->name.'-'.$this->region->name;
+        return $this->name.'-'.$this->governorate->name.'-'.$this->region->name.'-'.$this->country->name;
     }
 }
