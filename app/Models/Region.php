@@ -18,6 +18,9 @@ class Region extends Model
     public function governorates(){
         return $this->hasMany(Governorate::class);
     }
+    public function country(){
+        return $this->belongsTo(Country::class);
+    }
 
     public function cities(){
         return $this->hasManyThrough(City::class, Governorate::class);
