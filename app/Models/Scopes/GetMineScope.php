@@ -36,6 +36,7 @@ class GetMineScope implements Scope
                 ->withRecursiveExpression('tree', $query)
                 ->pluck('id')->toArray();
 
+            $tree[] = auth()->id();
             $builder->whereIn('user_id', $tree);
         }
 
