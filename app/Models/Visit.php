@@ -16,6 +16,7 @@ class Visit extends Model
         'user_id',
         'plan_id',
         'place',
+        'atendees_number',
         'second_user_id',
         'client_id',
         'visit_type_id',

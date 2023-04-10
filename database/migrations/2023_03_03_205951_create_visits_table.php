@@ -30,6 +30,7 @@ return new class extends Migration
             $table->foreignIdFor(CallType::class);
             $table->foreignIdFor(VisitType::class);
             $table->string('place')->nullable();
+            $table->integer('atendees_number')->nullable();
             $table->text('comment')->nullable();
             $table->double('lat')->nullable();
             $table->double('lng')->nullable();

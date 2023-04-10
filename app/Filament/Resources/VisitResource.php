@@ -93,7 +93,12 @@ class VisitResource extends Resource
                     ->hidden(fn ($get) => $get('visit_type_id') === 1),
                 TextInput::make('place')
                     ->label('Place')
-                    ->hidden(fn ($get) => $get('visit_type_id') === 1 || fn ($get) => $get('visit_type_id') === 3),
+                    ->hidden(fn ($get) => $get('visit_type_id') === 1),
+                TextInput::make('atendees_number')
+                    ->label('Number of Atendee')
+                    ->numeric()
+                    ->minValue(1)
+                    ->hidden(fn ($get) => $get('visit_type_id') !== 3),
                 Section::make('products')
                     ->disableLabel()
                     ->schema([
