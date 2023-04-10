@@ -60,8 +60,8 @@ class VacationResource extends Resource
                             ->columnWidths([
                                 'start' => '240px',
                                 'end' => '240px',
-                                'price' => '140px',
-                                'product_id' => '140px',
+                                'start_shift' => '140px',
+                                'end_shift' => '140px',
                                 'row_actions' => '20px',
                             ])
                         ->schema([
@@ -75,10 +75,12 @@ class VacationResource extends Resource
                                 ->required(),
                             Select::make('start_shift')
                                 ->disableLabel()
+                                ->default('AM')
                                 ->options(['AM'=>'AM','PM'=>'PM'])
                                 ->required(),
                             Select::make('end_shift')
                                 ->disableLabel()
+                                ->default('PM')
                                 ->options(['AM'=>'AM','PM'=>'PM'])
                                 ->required(),
                         ])->disableItemMovement()

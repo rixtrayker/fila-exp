@@ -26,7 +26,7 @@ return new class extends Migration
             $table->foreignIdFor(Client::class);
             $table->date('visit_date');
             $table->date('next_visit')->nullable();
-            $table->enum('status',['pending','verified','visited','cancelled'])->default('pending');
+            $table->enum('status',['pending','verified','visited','cancelled','planned'])->default('pending');
             $table->foreignIdFor(CallType::class);
             $table->foreignIdFor(VisitType::class);
             $table->string('place')->nullable();

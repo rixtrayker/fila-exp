@@ -138,7 +138,7 @@ class VisitResource extends Resource
         ->withoutGlobalScopes([
             SoftDeletingScope::class,
         ])->scopes([
-                'visited'
+                'all'
         ]);
     }
 
