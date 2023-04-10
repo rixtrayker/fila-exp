@@ -15,10 +15,32 @@ class CreateVisit extends CreateRecord
 
     protected function mutateFormDataBeforeCreate($data): array
     {
-        // if(auth()->user()->hasRole('medical-rep'))
-            $data['user_id'] = auth()->id();
+        $templates = [
+            'Regular' => 1,
+            'HealthDay' => 2,
+            'GroupMeeting' => 3,
+            'Conference' => 4,
+        ];
 
-        $data['visit_date'] = today();
+        foreach($data['temp_content'] as $key => $value)
+        {
+            $data['visit_type_id'] = $templates[$key];
+            foreach($value as $key2 => $value2) {
+                $data[$key2] = $value2;
+            }
+        }
+
+        unset($data['temp_content']);
+        unset($data['template']);
+
+        $data['user_id'] = auth()->id();
+        $data['status'] = 'visited';
+
+
+        if(auth()->user()->hasRole('medical-rep') &&  $data['visit_type_id'] == 1){
+            $data['visit_date'] = today();
+        }
+
         return $data;
     }
     public function afterCreate()
@@ -40,11 +62,15 @@ class CreateVisit extends CreateRecord
 
             $data = $this->mutateFormDataBeforeCreate($data);
 
-            $visit = Visit::withTrashed()
-                ->where('user_id',$data['user_id'])
-                ->where('client_id',$data['client_id'])
-                ->where('visit_date',$data['visit_date'])
-                ->first();
+            $visit = null;
+
+            if(isset($data['client_id'])){
+                $visit = Visit::withTrashed()
+                    ->where('user_id',$data['user_id'])
+                    ->where('client_id',$data['client_id'])
+                    ->where('visit_date',$data['visit_date'])
+                    ->first();
+            }
 
             if($visit){
                 $this->record = $visit;
@@ -101,6 +127,10 @@ class CreateVisit extends CreateRecord
 
     private function saveProducts($data, $visit)
     {
+        if(!isset($data['products'])){
+            return;
+        }
+
         $products = $data['products'];
         $visitId = $visit->id;
 

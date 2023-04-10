@@ -14,6 +14,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
 use App\Models\Role;
+use App\Models\Scopes\GetMineScope;
 use Spatie\Permission\PermissionRegistrar;
 use Spatie\Permission\Traits\HasRoles;
 use \Staudenmeir\LaravelMergedRelations\Eloquent\HasMergedRelationships;
@@ -132,6 +133,11 @@ class User extends Authenticatable implements FilamentUser
         )->limit(1);
     }
 
+    public static function boot()
+    {
+        parent::boot();
+        static::addGlobalScope(new GetMineScope);
+    }
     public function roles(): BelongsToMany
     {
         $relation = $this->morphToMany(

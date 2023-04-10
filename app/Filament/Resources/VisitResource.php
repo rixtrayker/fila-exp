@@ -4,19 +4,12 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\VisitResource\Pages;
 use App\Filament\Resources\VisitResource\RelationManagers;
-use App\Models\CallType;
-use App\Models\Client;
-use App\Models\Product;
-use App\Models\User;
 use App\Models\Visit;
 use App\Models\VisitType;
 use Awcodes\FilamentTableRepeater\Components\TableRepeater;
+use Closure;
 use Filament\Forms;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\TextInput;
 use Filament\Resources\Form;
 use Filament\Resources\Resource;
 use Filament\Resources\Table;
@@ -25,7 +18,10 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-
+use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Collection;
+use SplFileInfo;
+use Str;
 class VisitResource extends Resource
 {
     protected static ?string $model = Visit::class;
@@ -35,103 +31,25 @@ class VisitResource extends Resource
     // protected static bool $shouldRegisterNavigation = false;
     protected static ?int $navigationSort = 1;
 
+    protected static $templates = [
+        1 =>'Regular',
+        2 =>'HealthDay',
+        3 =>'GroupMeeting',
+        4 =>'Conference',
+    ];
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Select::make('user_id')
-                    ->label('Medical Rep')
-                    ->searchable()
-                    ->placeholder('Search name')
-                    ->getSearchResultsUsing(fn (string $search) => User::role('medical-rep')->where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'))
-                    ->options(User::role('medical-rep')->pluck('name', 'id'))
-                    ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
-                    ->preload()
-                    ->hidden(auth()->user()->hasRole('medical-rep') || fn ($get) => $get('visit_type_id') !== 1  ),
-                Select::make('second_user_id')
-                    ->label('2nd Medical Rep')
-                    ->searchable()
-                    ->placeholder('Search name')
-                    ->getSearchResultsUsing(fn (string $search) => User::role('medical-rep')->where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'))
-                    ->options(User::role('medical-rep')->pluck('name', 'id'))
-                    ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
-                    ->hidden(fn ($get) => $get('visit_type_id') !== 1 )
-                    ->preload(),
-                Select::make('client_id')
-                    ->label('Client')
-                    ->searchable()
-                    ->placeholder('You can search both arabic and english name')
-                    ->getSearchResultsUsing(fn (string $search) => Client::where('name_en', 'like', "%{$search}%")->orWhere('name_ar', 'like', "%{$search}%")->limit(50)->pluck('name_en', 'id'))
-                    ->options(Client::pluck('name_en', 'id'))
-                    ->getOptionLabelUsing(fn ($value): ?string => Client::find($value)?->name)
-                    ->preload()
-                    ->hidden(fn ($get) => $get('visit_type_id') !== 1 )
-                    ->required(fn ($get) => $get('visit_type_id') === 1),
-                Select::make('visit_type_id')
+                Select::make('template')
                     ->label('Visit Type')
-                    ->default(1)
-                    ->options(VisitType::all()->pluck('name', 'id'))
-                    ->preload()
                     ->reactive()
-                    ->required(),
-                Select::make('call_type_id')
-                    ->label('Call Type')
-                    ->options(CallType::all()->pluck('name', 'id'))
-                    ->preload()
-                    ->hidden(fn ($get) => $get('visit_type_id') !== 1 )
-                    ->required(fn ($get) => $get('visit_type_id') === 1),
-                DatePicker::make('next_visit')
-                    ->label('Next call time')
-                    ->closeOnDateSelection()
-                    ->minDate(today()->addDay())
-                    ->hidden(fn ($get) => $get('visit_type_id') !== 1 )
-                    ->required(fn ($get) => $get('visit_type_id') === 1),
-                DatePicker::make('visit_date')
-                    ->label(fn ($get) => VisitType::find($get('visit_type_id'))->name.' Date')
-                    ->default(today())
-                    ->hidden(fn ($get) => $get('visit_type_id') === 1),
-                TextInput::make('place')
-                    ->label('Place')
-                    ->hidden(fn ($get) => $get('visit_type_id') === 1),
-                TextInput::make('atendees_number')
-                    ->label('Number of Atendee')
-                    ->numeric()
-                    ->minValue(1)
-                    ->hidden(fn ($get) => $get('visit_type_id') !== 3),
-                Section::make('products')
-                    ->disableLabel()
-                    ->schema([
-                        TableRepeater::make('products')
-                        ->relationship('products')
-                        ->disableLabel()
-                        ->headers(['Product', 'Sample Count'])
-                        ->emptyLabel('There is no product added.')
-                        ->columnWidths([
-                            'count' => '40px',
-                            'product_id' => '180px',
-                            'row_actions' => '20px',
-                        ])
-                        ->schema([
-                            Select::make('product_id')
-                                ->disableLabel()
-                                ->placeholder('select a product')
-                                ->options(Product::pluck('name','id')),
-                            TextInput::make('count')
-                                ->numeric()
-                                ->minValue(1)
-                                ->disableLabel(),
-                        ])
-                        ->disableItemMovement()
-                        ->defaultItems(1),
-                    ])->compact()
-                    ->hidden(fn ($get) => $get('visit_type_id') !== 1 ),
-
-                Textarea::make('comment')
-                    ->label('Comment')
-                    ->columnSpan('full')
-                    ->required(),
-            ]);
+                    ->default(1)
+                    ->columnSpan(1)
+                    ->options(VisitType::pluck('name','id')),
+                ...static::getTemplateSchemas(),
+            ])->columns(2);
     }
 
     public static function table(Table $table): Table
@@ -180,6 +98,40 @@ class VisitResource extends Resource
 
         ];
     }
+
+    public static function getTemplateClasses(): Collection
+    {
+        $filesystem = app(Filesystem::class);
+
+        return collect($filesystem->allFiles(app_path('Filament/Templates/Visit')))
+            ->map(function (SplFileInfo $file): string {
+                return (string) Str::of('App\\Filament\\Templates\\Visit')
+                    ->append('\\', $file->getRelativePathname())
+                    ->replace(['/', '.php'], ['\\', '']);
+            });
+    }
+    public static function getTemplates(): Collection
+    {
+        return static::getTemplateClasses()->mapWithKeys(fn ($class) => [$class => $class::title()]);
+    }
+    public static function getTemplateSchemas(): array
+    {
+        return static::getTemplateClasses()
+            ->map(fn ($class) =>
+                Forms\Components\Group::make($class::schema())
+                    ->columnSpanFull(1)
+                    ->afterStateHydrated(fn ($component, $state) => $component->getChildComponentContainer()->fill($state))
+                    ->statePath('temp_content.' . static::getTemplateName($class))
+                    ->visible(function ($get,$context)use($class){
+                        if($context === 'create')
+                            return Str::contains($class,self::$templates[$get('template')]);
+                        else{
+                            return Str::contains($class,self::$templates[$get('template')]);
+                        }
+                    })
+            )
+            ->toArray();
+    }
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
@@ -188,6 +140,15 @@ class VisitResource extends Resource
         ])->scopes([
                 'visited'
         ]);
+    }
+
+    protected static function getTemplateName($class = null){
+        if(!$class){
+            return 'Regular';
+        }
+        $array = explode('\\',$class);
+
+        return $array[count($array)-1];
     }
 
     public static function getPages(): array
