@@ -29,6 +29,7 @@ return new class extends Migration
             $table->enum('status',['pending','verified','visited','cancelled'])->default('pending');
             $table->foreignIdFor(CallType::class);
             $table->foreignIdFor(VisitType::class);
+            $table->string('place')->nullable();
             $table->text('comment')->nullable();
             $table->double('lat')->nullable();
             $table->double('lng')->nullable();

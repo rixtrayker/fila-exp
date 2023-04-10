@@ -15,7 +15,7 @@ class CreateVisit extends CreateRecord
 
     protected function mutateFormDataBeforeCreate($data): array
     {
-        if(auth()->user()->hasRole('medical-rep'))
+        // if(auth()->user()->hasRole('medical-rep'))
             $data['user_id'] = auth()->id();
 
         $data['visit_date'] = today();

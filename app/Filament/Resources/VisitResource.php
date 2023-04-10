@@ -48,7 +48,7 @@ class VisitResource extends Resource
                     ->options(User::role('medical-rep')->pluck('name', 'id'))
                     ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
                     ->preload()
-                    ->hidden(auth()->user()->hasRole('medical-rep')),
+                    ->hidden(auth()->user()->hasRole('medical-rep') || fn ($get) => $get('visit_type_id') !== 1  ),
                 Select::make('second_user_id')
                     ->label('2nd Medical Rep')
                     ->searchable()
@@ -56,6 +56,7 @@ class VisitResource extends Resource
                     ->getSearchResultsUsing(fn (string $search) => User::role('medical-rep')->where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'))
                     ->options(User::role('medical-rep')->pluck('name', 'id'))
                     ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
+                    ->hidden(fn ($get) => $get('visit_type_id') !== 1 )
                     ->preload(),
                 Select::make('client_id')
                     ->label('Client')
@@ -65,25 +66,34 @@ class VisitResource extends Resource
                     ->options(Client::pluck('name_en', 'id'))
                     ->getOptionLabelUsing(fn ($value): ?string => Client::find($value)?->name)
                     ->preload()
-                    ->required(),
+                    ->hidden(fn ($get) => $get('visit_type_id') !== 1 )
+                    ->required(fn ($get) => $get('visit_type_id') === 1),
                 Select::make('visit_type_id')
                     ->label('Visit Type')
+                    ->default(1)
                     ->options(VisitType::all()->pluck('name', 'id'))
                     ->preload()
+                    ->reactive()
                     ->required(),
                 Select::make('call_type_id')
                     ->label('Call Type')
                     ->options(CallType::all()->pluck('name', 'id'))
                     ->preload()
-                    ->required(),
+                    ->hidden(fn ($get) => $get('visit_type_id') !== 1 )
+                    ->required(fn ($get) => $get('visit_type_id') === 1),
                 DatePicker::make('next_visit')
                     ->label('Next call time')
                     ->closeOnDateSelection()
                     ->minDate(today()->addDay())
-                    ->required(),
+                    ->hidden(fn ($get) => $get('visit_type_id') !== 1 )
+                    ->required(fn ($get) => $get('visit_type_id') === 1),
                 DatePicker::make('visit_date')
+                    ->label(fn ($get) => VisitType::find($get('visit_type_id'))->name.' Date')
                     ->default(today())
-                    ->hidden(),
+                    ->hidden(fn ($get) => $get('visit_type_id') === 1),
+                TextInput::make('place')
+                    ->label('Place')
+                    ->hidden(fn ($get) => $get('visit_type_id') === 1 || fn ($get) => $get('visit_type_id') === 3),
                 Section::make('products')
                     ->disableLabel()
                     ->schema([
@@ -109,7 +119,9 @@ class VisitResource extends Resource
                         ])
                         ->disableItemMovement()
                         ->defaultItems(1),
-                    ])->compact(),
+                    ])->compact()
+                    ->hidden(fn ($get) => $get('visit_type_id') !== 1 ),
+
                 Textarea::make('comment')
                     ->label('Comment')
                     ->columnSpan('full')

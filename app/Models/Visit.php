@@ -15,6 +15,7 @@ class Visit extends Model
     protected $fillable = [
         'user_id',
         'plan_id',
+        'place',
         'second_user_id',
         'client_id',
         'visit_type_id',
