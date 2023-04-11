@@ -18,7 +18,9 @@ class MultiSelect2Sides extends MultiselectTwoSides
 
     public function selectOption(string $value): void
     {
+        if(Str::contains(request()->fingerprint['name'],'list-plans')) return;
         if(Str::contains(request()->fingerprint['name'],'view-plan')) return;
+
         $state = array_unique(array_merge($this->getState(), [$value]));
         $this->state($state);
     }
@@ -26,6 +28,8 @@ class MultiSelect2Sides extends MultiselectTwoSides
     public function unselectOption(string $value): void
     {
         if(Str::contains(request()->fingerprint['name'],'view-plan')) return;
+        if(Str::contains(request()->fingerprint['name'],'list-plans')) return;
+
         $state = $this->getState();
         unset($state[array_search($value, $state)]);
         $this->state($state);
@@ -34,12 +38,29 @@ class MultiSelect2Sides extends MultiselectTwoSides
     public function selectAll(): void
     {
         if(Str::contains(request()->fingerprint['name'],'view-plan')) return;
+        if(Str::contains(request()->fingerprint['name'],'list-plans')) return;
+
         $this->state(array_keys($this->getOptions()));
     }
 
     public function unselectAll(): void
     {
         if(Str::contains(request()->fingerprint['name'],'view-plan')) return;
+        if(Str::contains(request()->fingerprint['name'],'list-plans')) return;
+
         $this->state([]);
     }
+    public function getSelectableLabel(): string
+    {
+        if(request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans'))
+            return 'Coming visits';
+        return $this->selectableLabel;
+    }
+    public function getSelectedLabel(): string
+    {
+        if(request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans'))
+            return 'Done';
+        return $this->selectedLabel;
+    }
+
 }

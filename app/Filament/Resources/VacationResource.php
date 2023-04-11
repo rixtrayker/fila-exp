@@ -34,15 +34,15 @@ class VacationResource extends Resource
     {
         return $form
             ->schema([
-                Select::make('user_id')
-                    ->label('Medical Rep')
-                    ->searchable()
-                    ->placeholder('Search name')
-                    ->getSearchResultsUsing(fn (string $search) => User::role('medical-rep')->where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'))
-                    ->options(User::role('medical-rep')->pluck('name', 'id'))
-                    ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
-                    ->preload()
-                    ->hidden(auth()->user()->hasRole('medical-rep')),
+                // Select::make('user_id')
+                //     ->label('Medical Rep')
+                //     ->searchable()
+                //     ->placeholder('Search name')
+                //     ->getSearchResultsUsing(fn (string $search) => User::mine()->where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'))
+                //     ->options(User::role('medical-rep')->pluck('name', 'id'))
+                //     ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
+                //     ->preload()
+                //     ->hidden(auth()->user()->hasRole('medical-rep')),
                 Select::make('vacation_type_id')
                     ->label('Vacation Type')
                     ->options(VacationType::all()->pluck('name', 'id'))
@@ -55,7 +55,7 @@ class VacationResource extends Resource
                             ->relationship('vacationDurations')
                             ->reactive()
                             ->disableLabel()
-                            ->headers(['Start date','End date' , 'Start shift', 'End Shift'])
+                            ->headers(['Start date','End date' , 'From shift', 'To Shift'])
                             ->emptyLabel('There is no vacation duration added.')
                             ->columnWidths([
                                 'start' => '240px',

@@ -22,6 +22,7 @@ use App\Http\Livewire\MultiSelect2Sides as MultiselectTwoSides;
 use App\Models\Plan;
 use App\Models\Visit;
 use Closure;
+use Str;
 use Filament\Forms\Components\TimePicker;
 use Filament\Pages\Page;
 use Filament\Tables\Columns\TextColumn;
@@ -66,6 +67,19 @@ class PlanResource extends Resource
             ])
             ->actions([
             Tables\Actions\ViewAction::make(),
+            Tables\Actions\Action::make('show Achieved')
+                // ->
+                ->color('primary')
+                ->icon('heroicon-s-clipboard-check')
+                ->action(fn()=>Log::channel('debugging')->info(request()->fingerprint['name']))
+                ->form([
+                    Select::make('user_id')
+                        ->label('Agent (medical rep)')
+                        ->relationship('user','name')
+                        ->default(fn($record)=>$record->user_id)
+                        ->disabled(),
+                    static::makeForm(),
+                ])->modalWidth('5xl'),
             ])
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),
@@ -154,8 +168,41 @@ class PlanResource extends Resource
                     ->label('PM time')
                     ->withoutSeconds(),
                 MultiselectTwoSides::make('clients_'.$day)
-                    ->defaultSelectOptions(fn($record)=>self::getPlanDayState($record, $key))
-                    ->options(self::getClients()),
+                    ->disableLabel()
+                    ->defaultSelectOptions(
+                        function($record) use ($key){
+                            if(request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans')){
+                                $options = Visit::withoutGlobalScope('all')
+                                    ->where('user_id',$record->user_id)
+                                    ->where('status','visited')
+                                    ->where('visit_date',self::dates()[$key])
+                                    ->pluck('client_id')->toArray();
+
+                                return $options;
+                            }
+
+                            return self::getPlanDayState($record, $key);
+                        })
+                    ->options(
+                        function($record) use ($key){
+                            if(request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans')){
+                                $visits = Visit::withoutGlobalScope('all')
+                                    ->where('user_id',$record->user_id)
+                                    ->whereIn('status',['visited','planned'])
+                                    ->where('visit_date',self::dates()[$key])
+                                    ->get();
+
+                                $clientIds = $visits->pluck('client_id')->toArray();
+                                $clients = Client::orderBy('name_en')->whereIn('id',$clientIds)->get()->pluck('name', 'id')->toArray();
+                                $options = [];
+                                foreach($clients as $key => $client){
+                                    $firstClientVisit = $visits->where('client_id',$key)->first();
+                                    $options[$key] =  $firstClientVisit && $firstClientVisit->plan_id !== null ? $client : $client.' ( not planned ).';
+                                }
+                                return $options;
+                            }
+                            return self::getClients($record, $key);
+                        }),
             ]);
     }
 }

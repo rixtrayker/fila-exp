@@ -73,7 +73,7 @@ final class Regular
                     TableRepeater::make('products')
                         ->relationship('products')
                         ->disableLabel()
-                        ->headers(['Product', 'Sample Count'])
+                        // ->headers(['Product', 'Sample Count'])
                         ->emptyLabel('There is no product added.')
                         ->columnWidths([
                             'count' => '40px',
@@ -82,13 +82,14 @@ final class Regular
                         ])
                         ->schema([
                             Select::make('product_id')
-                                ->disableLabel()
+                                ->label('Product')
                                 ->placeholder('select a product')
                                 ->options(Product::pluck('name','id')),
                             TextInput::make('count')
                                 ->numeric()
-                                ->minValue(1)
-                                ->disableLabel(),
+                                ->label('Sample count')
+                                ->minValue(1),
+
                         ])
                         ->disableItemMovement()
                         ->defaultItems(1),
