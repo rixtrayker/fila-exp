@@ -152,19 +152,27 @@ class PlanResource extends Resource
                 Select::make($day.'_am')
                     ->label('AM shift')
                     ->searchable()
+                    ->disabled(fn()=>request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans'))
+                    ->default(fn($record)=> request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans') ? $record->shiftClient($days[$key])->am_shift : null)
                     ->getSearchResultsUsing(fn (string $search) => Client::where('name_en', 'like', "%{$search}%")->orWhere('name_ar', 'like', "%{$search}%")->limit(50)->pluck('name_en', 'id'))
                     ->options(Client::pluck('name_en', 'id'))
                     ->preload(),
                 TimePicker::make($day.'_time_am')
+                    ->disabled(fn()=>request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans'))
+                    ->default(fn($record)=> request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans') ? $record->shiftClient($days[$key])->am_time : null)
                     ->label('AM time')
                     ->withoutSeconds(),
                 Select::make($day.'_pm')
                     ->label('PM shift')
                     ->searchable()
+                    ->disabled(fn()=>request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans'))
+                    ->default(fn($record)=> request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans') ? $record->shiftClient($days[$key])->pm_shift : null)
                     ->getSearchResultsUsing(fn (string $search) => Client::where('name_en', 'like', "%{$search}%")->orWhere('name_ar', 'like', "%{$search}%")->limit(50)->pluck('name_en', 'id'))
                     ->options(Client::pluck('name_en', 'id'))
                     ->preload(),
                 TimePicker::make($day.'_time_pm')
+                    ->disabled(fn()=>request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans'))
+                    ->default(fn($record)=> request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans') ? $record->shiftClient($days[$key])->pm_time : null)
                     ->label('PM time')
                     ->withoutSeconds(),
                 MultiselectTwoSides::make('clients_'.$day)
