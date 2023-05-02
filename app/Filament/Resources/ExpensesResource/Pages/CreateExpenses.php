@@ -13,19 +13,39 @@ class CreateExpenses extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        // $data['user_id'] = auth()->id();
+        $dailyAllowance = 0;
+        $kmPrice = 0;
 
         if(auth()->user()->hasRole('medial-rep')){
-            $dailyAllowance = Setting::where('name','medical-rep-daily-allowance')->first();
-            if($dailyAllowance)
-                $data['daily_allowance'] = $dailyAllowance->value;
+            $dailyAllowanceSetting = Setting::where('name','medical-rep-daily-allowance')->first();
+            $kmPriceSetting = Setting::where('name','medical-rep-km-price')->first();
+
+            if($dailyAllowanceSetting)
+                 $dailyAllowance = $dailyAllowanceSetting->value;
+            if($kmPriceSetting)
+                 $kmPrice = $kmPriceSetting->value;
         }
 
         if(auth()->user()->hasRole('district-manager')){
-            $dailyAllowance = Setting::where('name','district-manager-daily-allowance')->first();
-            if($dailyAllowance)
-                $data['daily_allowance'] = $dailyAllowance->value;
+            $dailyAllowanceSetting = Setting::where('name','district-manager-daily-allowance')->first();
+            $kmPriceSetting = Setting::where('name','district-manager-km-price')->first();
+
+            if($dailyAllowanceSetting)
+                $data['daily_allowance'] = $dailyAllowanceSetting->value;
+            if($kmPriceSetting)
+                $kmPrice = $kmPriceSetting->value;
         }
+
+        $data['daily_allowance'] = $dailyAllowance;
+
+        $data['total'] = $data['trasporation']
+            +$data['lodging']
+            +(($data['mileage']-$dailyAllowance) * $kmPrice)
+            +$data['meal']
+            +$data['telephone_postage']
+            +$data['daily_allowance']
+            +$data['medical_expenses']
+            +$data['others'];
 
         return $data;
     }
