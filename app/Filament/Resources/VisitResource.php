@@ -66,12 +66,13 @@ class VisitResource extends Resource
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('secondRep.name')
-                    ->label('M.Rep 2nd'),
+                    ->label('Double name'),
                 TextColumn::make('created_at')
                     ->dateTime('d-M-Y')
                     ->sortable()
                     ->searchable(),
                 TextColumn::make('comment')
+                    ->limit(100)
                     ->wrap(),
             ])
             ->filters([
@@ -123,11 +124,8 @@ class VisitResource extends Resource
                     ->afterStateHydrated(fn ($component, $state) => $component->getChildComponentContainer()->fill($state))
                     ->statePath('temp_content.' . static::getTemplateName($class))
                     ->visible(function ($get,$context)use($class){
-                        if($context === 'create')
-                            return Str::contains($class,self::$templates[$get('template')]);
-                        else{
-                            return Str::contains($class,self::$templates[$get('template')]);
-                        }
+                        $index = $get('template');
+                        return Str::contains($class, $index ? self::$templates[$index] : 'Regular');
                     })
             )
             ->toArray();

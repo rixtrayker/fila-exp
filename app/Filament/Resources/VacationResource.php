@@ -110,7 +110,7 @@ class VacationResource extends Resource
                 IconColumn::make('approved')
                     ->boolean(),
                 TextColumn::make('approved_at')
-                    ->label('End date')
+                    ->label('Approved at')
                     ->dateTime('d-M-Y')
                     ->sortable()
                     ->searchable(),
@@ -120,6 +120,18 @@ class VacationResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('approve')
+                    ->label('Approve')
+                    ->color('success')
+                    ->icon('heroicon-o-check')
+                    ->visible(fn($record)=>$record->approved === null)
+                    ->action(fn($record)=> $record->approve()),
+                Tables\Actions\Action::make('reject')
+                    ->label('Reject')
+                    ->color('danger')
+                    ->icon('heroicon-s-x')
+                    ->visible(fn($record)=>$record->approved === null)
+                    ->action(fn($record)=> $record->reject()),
             ])
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),

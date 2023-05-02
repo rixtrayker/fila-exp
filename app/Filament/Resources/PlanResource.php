@@ -53,6 +53,9 @@ class PlanResource extends Resource
     {
         return $table
             ->columns([
+                TextColumn::make('user.name_en')
+                    ->sortable()
+                    ->searchable(),
                 TextColumn::make('start_at')
                 ->dateTime('d-M-Y')
                 ->sortable()
@@ -66,10 +69,25 @@ class PlanResource extends Resource
                 //
             ])
             ->actions([
-            Tables\Actions\ViewAction::make(),
+            Tables\Actions\ViewAction::make()
+                ->visible(fn($record)=>$record->approved !== 1),
+            Tables\Actions\Action::make('approve')
+                ->label('Approve')
+                ->color('success')
+                ->icon('heroicon-o-check')
+                ->visible(fn($record)=>$record->approved === null)
+                ->action(fn($record)=> $record->approve()),
+            Tables\Actions\Action::make('reject')
+                ->label('Reject & Delete')
+                ->color('danger')
+                ->icon('heroicon-s-x')
+                ->visible(fn($record)=>$record->approved === null)
+                ->requiresConfirmation()
+                ->action(fn($record)=> $record->delete()),
             Tables\Actions\Action::make('show Achieved')
                 // ->
                 ->color('primary')
+                ->visible(fn($record)=>$record->approved === 1)
                 ->icon('heroicon-s-clipboard-check')
                 ->action(fn()=>Log::channel('debugging')->info(request()->fingerprint['name']))
                 ->form([

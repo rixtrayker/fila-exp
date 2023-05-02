@@ -42,4 +42,15 @@ class VacationRequest extends Model
         $vacationDuration =  $this->vacationDurations()->latest()->first();
         return $vacationDuration->end;
     }
+    public function approve()
+    {
+        $this->approved = 1;
+        $this->approved_at = now();
+        $this->save();
+    }
+    public function reject()
+    {
+        $this->approved = 0;
+        $this->save();
+    }
 }

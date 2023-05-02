@@ -94,6 +94,7 @@ class OrderResource extends Resource
 
                                         $set('price',$price);
                                         $set('cost',$cost);
+                                        $set('item_total',$cost);
                                         self::updateTotal($get);
                                     }
                                 ),
@@ -109,6 +110,7 @@ class OrderResource extends Resource
                                         if($product && $get('count'))
                                             $cost = $product->price * $get('count');
 
+                                        $set('item_total',$cost);
                                         $set('cost',$cost);
                                         self::updateTotal($get);
                                     }
@@ -119,7 +121,8 @@ class OrderResource extends Resource
                                 ->disabled()
                                 ->disableLabel()
                                 ->reactive(),
-                            TextInput::make('item total')
+                            TextInput::make('item_total')
+                                ->label('Item total')
                                 ->dehydrateStateUsing(function($get) {
                                     $product = Product::find($get('product_id'));
                                     return $product && $get('count')? $product->price * $get('count') : 0;
@@ -131,7 +134,6 @@ class OrderResource extends Resource
                         ])->disableItemMovement()
                         ->defaultItems(1),
                         self::$totalField,
-                            // ->disabled(),
                     ])->compact(),
                 ]);
     }

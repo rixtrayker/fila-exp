@@ -25,6 +25,7 @@ return new class extends Migration
             $table->double('daily_allowance')->nullable();
             $table->double('medical_expenses')->nullable();
             $table->double('others')->nullable();
+            $table->double('total')->nullable();
             $table->string('others_description')->nullable();
             $table->date('date');
             $table->text('comment')->nullable();

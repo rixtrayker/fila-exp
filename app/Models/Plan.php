@@ -20,11 +20,6 @@ class Plan extends Model
         'approved',
     ];
 
-    public function approve()
-    {
-        $this->status = 'approved';
-        $this->save();
-    }
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -54,5 +49,16 @@ class Plan extends Model
         $shift = $this->shifts()->where('day', $day)->first();
 
         return $shift;
+    }
+
+    public function approve()
+    {
+        $this->approved = 1;
+        $this->save();
+    }
+    
+    public function reject()
+    {
+        $this->delete();
     }
 }

@@ -59,8 +59,13 @@ class MultiSelect2Sides extends MultiselectTwoSides
     public function getSelectedLabel(): string
     {
         if(request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans'))
-            return 'Done';
+            return 'Done Visits';
         return $this->selectedLabel;
     }
-
+    public function showArrows(): string
+    {
+        if(request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans'))
+            return false;
+        return true;
+    }
 }

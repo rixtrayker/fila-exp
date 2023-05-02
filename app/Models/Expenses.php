@@ -24,6 +24,7 @@ class Expenses extends Model
         'medical_expenses',
         'others',
         'others_description',
+        'total',
         'comment',
     ];
 

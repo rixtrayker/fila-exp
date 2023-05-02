@@ -44,11 +44,13 @@ class ExpensesResource extends Resource
                     ->hidden(auth()->user()->hasRole('medical-rep')),
                 DatePicker::make('date')
                     ->label('Date')
+                    ->default(today())
                     ->closeOnDateSelection()
                     ->required(),
                 TextInput::make('trasporation')
                     ->label('Trasporation')
                     ->numeric()
+                    ->helperText('Money value of trasporation')
                     ->minValue(1),
                 TextInput::make('lodging')
                     ->label('Lodging')
@@ -77,6 +79,9 @@ class ExpensesResource extends Resource
                 TextInput::make('others_description')
                     ->label('Others description')
                     ->requiredWith('others'),
+                TextInput::make('total')
+                    ->label('Total')
+                    ->hidden(fn($context)=>$context !== 'view'),
                 Textarea::make('comment')
                     ->label('Comment')
                     ->columnSpan('full')
@@ -92,6 +97,10 @@ class ExpensesResource extends Resource
                     ->label('M.Rep')
                     ->hidden(auth()->user()->hasRole('medical-rep'))
                     ->sortable(),
+                TextColumn::make('total')
+                    ->label('Total')
+                    ->sortable()
+                    ->searchable(),
                 TextColumn::make('trasporation')
                     ->label('Trasporation')
                     ->sortable()

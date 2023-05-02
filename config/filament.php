@@ -265,8 +265,7 @@ return [
     | This is the path to the favicon used for pages in the admin panel.
     |
     */
-
-    'favicon' => asset('images/favicon.png'),
+    'favicon' => 'favicon.png',
 
     /*
     |--------------------------------------------------------------------------
