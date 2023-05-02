@@ -85,6 +85,8 @@
 
         {{-- Arrow Actions --}}
         <div class="justify-center flex flex-col px-2 space-y-2 translate-y-4">
+            @if($showArrows())
+
             <p
                 wire:click="dispatchFormEvent('ms-two-sides::selectAllOptions', '{{ $getStatePath() }}')"
                 class="cursor-pointer p-1 hover:bg-primary-500 group"
@@ -94,8 +96,11 @@
             <p
                 wire:click="dispatchFormEvent('ms-two-sides::unselectAllOptions', '{{ $getStatePath() }}')"
                 class="cursor-pointer p-1 hover:bg-primary-500 group">
+
                 <x-heroicon-o-chevron-double-left class="w-5 h-5 text-primary-500 group-hover:text-white"/>
             </p>
+            @endif
+
         </div>
 
         {{-- Selected Options --}}
