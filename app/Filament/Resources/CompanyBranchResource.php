@@ -21,6 +21,7 @@ class CompanyBranchResource extends Resource
     protected static ?string $model = CompanyBranch::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-collection';
+    protected static ?string $navigationGroup = 'Companies management';
 
     public static function form(Form $form): Form
     {

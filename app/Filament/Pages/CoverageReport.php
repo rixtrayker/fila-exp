@@ -16,6 +16,7 @@ class CoverageReport extends Page
     protected static ?string $navigationLabel = 'Cover report';
     // protected static ?string $navigationIcon = 'heroicon-o-calendar';
     protected static ?string $slug = 'cover-report';
+    protected static ?string $navigationGroup = 'Reports';
 
     protected static ?int $navigationSort = 11;
     public $visited;

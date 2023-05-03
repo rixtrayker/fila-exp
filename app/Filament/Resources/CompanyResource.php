@@ -20,7 +20,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class CompanyResource extends Resource
 {
     protected static ?string $model = Company::class;
-
+    protected static ?string $navigationGroup = 'Companies management';
     protected static ?string $navigationIcon = 'heroicon-o-collection';
 
     public static function form(Form $form): Form
