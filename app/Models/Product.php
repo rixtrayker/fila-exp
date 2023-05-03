@@ -40,4 +40,8 @@ class Product extends Model
     {
         return $this->belongsToMany(Visit::class,'order_visits');
     }
+    public function branches()
+    {
+        return $this->belongsToMany(CompanyBranch::class,'company_branch_product');
+    }
 }

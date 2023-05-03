@@ -40,7 +40,7 @@ final class Regular
                 Select::make('second_user_id')
                     ->label('2nd Medical Rep')
                     ->searchable()
-                    ->placeholder('Search name')
+                    ->placeholder('Search name') //todo: search using speciality
                     ->getSearchResultsUsing(fn (string $search) => User::role('medical-rep')->mine()->where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'))
                     ->options(User::role('medical-rep')->mine()->pluck('name', 'id'))
                     ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)

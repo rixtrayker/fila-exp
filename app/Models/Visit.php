@@ -39,6 +39,10 @@ class Visit extends Model
     {
         return $query->where('status','pending');
     }
+    public function scopeMissed(Builder $query): Builder
+    {
+        return $query->where('status','cancelled');
+    }
     public function scopeAll(Builder $query): Builder
     {
         return $query->where(column:'status',operator:'!=',value:'planned');

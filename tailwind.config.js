@@ -19,6 +19,12 @@ module.exports = {
                 primary: colors.emerald,
                 success: colors.green,
                 warning: colors.amber,
+                chartblue: '#DAECFC',
+                chartgreen: '#DAF5F5',
+                chartred: '#FFE1E6',
+                chartblueB: '#35A2EB',
+                chartgreenB: '#21CFCF',
+                chartredB: '#FF4069',
             },
             fontFamily: {
                 // sans: ['DM Sans', ...defaultTheme.fontFamily.sans],

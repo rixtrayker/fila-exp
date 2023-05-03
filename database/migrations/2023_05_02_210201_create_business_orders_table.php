@@ -1,6 +1,9 @@
 <?php
 
-use App\Models\Company;
+use App\Models\Client;
+use App\Models\CompanyBranch;
+use App\Models\Product;
+use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -14,11 +17,12 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('company_branches', function (Blueprint $table) {
+        Schema::create('business_orders', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('code');
-            $table->foreignIdFor(Company::class);
+            $table->foreignIdFor(CompanyBranch::class);
+            $table->foreignIdFor(Product::class);
+            $table->date('date')->nullable();
+            $table->integer('quantity');
             $table->timestamps();
         });
     }
@@ -30,6 +34,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('company_branches');
+        Schema::dropIfExists('orders');
     }
 };

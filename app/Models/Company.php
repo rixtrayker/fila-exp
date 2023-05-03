@@ -14,4 +14,8 @@ class Company extends Model
     public function branches() {
         return $this->hasMany(CompanyBranch::class);
     }
+    public function companyProducts()
+    {
+        return $this->hasMany(CompanyProduct::class);
+    }
 }
