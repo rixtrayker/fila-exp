@@ -48,8 +48,15 @@ final class Regular
                 Select::make('client_id')
                     ->label('Client')
                     ->searchable()
-                    ->placeholder('Search client name')
-                    ->getSearchResultsUsing(fn (string $search) => Client::where('name_en', 'like', "%{$search}%")->orWhere('name_ar', 'like', "%{$search}%")->limit(50)->pluck('name_en', 'id'))
+                    ->placeholder('Search by name or phone or speciality')
+                    ->getSearchResultsUsing(function(string $search){
+                        return Client::where('name_en', 'like', "%{$search}%")
+                            ->orWhere('name_ar', 'like', "%{$search}%")
+                            ->orWhere('phone', 'like', "%{$search}%")
+                            ->orWhereHas('speciality', function ($q) use ($search) {
+                                $q->where('name','like', "%{$search}%");
+                            })->limit(50)->pluck('name_en', 'id');
+                    })
                     ->options(Client::pluck('name_en', 'id'))
                     ->getOptionLabelUsing(fn ($value): ?string => Client::find($value)?->name)
                     ->preload()
