@@ -47,6 +47,7 @@ class VisitResource extends Resource
                     ->reactive()
                     ->default(1)
                     ->columnSpan(1)
+                    ->disabled(Str::contains(request()->path(),'daily-visits'))
                     ->options(VisitType::pluck('name','id')),
                 ...static::getTemplateSchemas(),
             ])->columns(2);

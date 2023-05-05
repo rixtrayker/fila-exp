@@ -16,6 +16,7 @@ use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Str;
 
 final class Regular
 {
@@ -32,15 +33,18 @@ final class Regular
             Select::make('user_id')
                     ->label('Medical Rep')
                     ->searchable()
+                    ->relationship('user','name')
                     ->placeholder('Search name')
                     ->getSearchResultsUsing(fn (string $search) => User::role('medical-rep')->mine()->where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'))
                     ->options(User::role('medical-rep')->mine()->pluck('name', 'id'))
                     ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
+                    ->disabled(Str::contains(request()->path(),'daily-visits'))
                     ->preload(),
                 Select::make('second_user_id')
                     ->label('2nd Medical Rep')
+                    ->relationship('secondRep','name')
                     ->searchable()
-                    ->placeholder('Search name') //todo: search using speciality
+                    ->placeholder('Search name')
                     ->getSearchResultsUsing(fn (string $search) => User::role('medical-rep')->mine()->where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'))
                     ->options(User::role('medical-rep')->mine()->pluck('name', 'id'))
                     ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
@@ -48,7 +52,9 @@ final class Regular
                 Select::make('client_id')
                     ->label('Client')
                     ->searchable()
+                    ->relationship('client','name')
                     ->placeholder('Search by name or phone or speciality')
+                    ->disabled(Str::contains(request()->path(),'daily-visits'))
                     ->getSearchResultsUsing(function(string $search){
                         return Client::where('name_en', 'like', "%{$search}%")
                             ->orWhere('name_ar', 'like', "%{$search}%")
@@ -60,7 +66,7 @@ final class Regular
                     ->options(Client::pluck('name_en', 'id'))
                     ->getOptionLabelUsing(fn ($value): ?string => Client::find($value)?->name)
                     ->preload()
-                    ->required(),
+                    ->required(!Str::contains(request()->path(),'daily-visits')),
                 Select::make('call_type_id')
                     ->label('Call Type')
                     ->options(CallType::all()->pluck('name', 'id'))

@@ -5,10 +5,17 @@ namespace App\Filament\Pages;
 use App\Filament\Widgets\FilterFormWidget;
 use App\Filament\Widgets\OverallChart;
 use App\Models\Visit;
+use App\Exports\ExportVisits;
+use Filament\Pages\Actions\Action;
 use Filament\Pages\Page;
+use Filament\Pages\Concerns\HasFormActions;
+use Filament\Pages\Contracts\HasFormActions as HasFormActionsContract;
+use Maatwebsite\Excel\Excel;
 
-class CoverageReport extends Page
+class CoverageReport extends Page implements HasFormActionsContract
 {
+    use HasFormActions;
+
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
 
     protected static string $view = 'filament.pages.coverage-report';
@@ -18,40 +25,48 @@ class CoverageReport extends Page
     protected static ?string $slug = 'cover-report';
     protected static ?string $navigationGroup = 'Reports';
 
-    protected static ?int $navigationSort = 11;
+    // protected static ?int $navigationSort = 11;
     public $visited;
     public $pending;
     public $missed;
     public $from;
     public $to;
-    public $ids = [];
+    public $user_id = [];
     public $query = [];
-    public function queryString(){
 
+    public function queryString(){
         return [
             'from' => ['except' => ''],
             'to' => ['except' => ''],
-            'ids' => ['except' => ''],
+            'user_id' => ['except' => ''],
         ];
+    }
+
+    protected $listeners = [
+        'updateVisitsList' => 'updateVisitsList',
+    ];
+    public function updateVisitsList($from, $to, $user_id)
+    {
+        $this->from = $from;
+        $this->to = $to;
+        $this->user_id = $user_id;
+        $this->initData();
     }
 
     public function __construct()
     {
-        $this->ids = [auth()->id()];
-        $this->from = '2023-01-01';
-        $this->to = '2023-12-31';
-
-        $this->visited = $this->getVisits()->visited()->get();
-        $this->pending = $this->getVisits()->pending()->get();
-        $this->missed = $this->getVisits()->missed()->get();
+        $this->initData();
     }
 
     public function getVisits(){
         $query =  Visit::query();
 
-        if($this->ids){
+        if($this->user_id){
 
-            $query->whereIn('user_id',$this->ids)->orWhereIn('second_user_id',$this->ids);
+            $query->where(function($q) {
+                $q->whereIn('user_id',$this->user_id);
+                $q->orWhereIn('second_user_id',$this->user_id);
+            });
         }
 
         if($this->from){
@@ -59,18 +74,26 @@ class CoverageReport extends Page
         }
 
         if($this->to){
-            $query->whereDate('visit_date','<',$this->to);
+            $query->whereDate('visit_date','<=',$this->to);
         }
 
         return $query;
     }
-    // public static function getPages(): array
-    // {
-    //     return [
-    //         // ...
-    //         'cover-report' => CoverageReport::route('/cover-report'),
-    //     ];
-    // }
+
+    public function updatedFrom(){
+        $this->initData();
+    }
+    public function updatedUserId(){
+        $this->initData();
+    }
+    public function updatedTo(){
+        $this->initData();
+    }
+    public function updatedMissed(){
+    }
+    public function updatedPending(){
+    }
+
     protected function getHeaderWidgets(): array
     {
         return [
@@ -79,10 +102,23 @@ class CoverageReport extends Page
         ];
     }
 
-    // protected function getViewData(): array
-    // {
-    //     return [
-    //         OverallChart::class,
-    //     ];
-    // }
+    public function initData()
+    {
+        $this->visited = $this->getVisits()->with('client')->visited()->get();
+        $this->pending = $this->getVisits()->pending('client')->get();
+        $this->missed = $this->getVisits()->missed('client')->get();
+    }
+
+    protected function getActions(): array
+    {
+        return [
+            Action::make('Export')
+                ->icon('heroicon-o-document-report')
+                ->color('warning')
+                ->action(function(){
+                    return (new ExportVisits($this->visited, $this->pending, $this->missed))->download('visits-'.now().'.xlsx');
+                }),
+        ];
+    }
+
 }

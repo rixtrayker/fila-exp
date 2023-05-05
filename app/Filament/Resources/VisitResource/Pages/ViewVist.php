@@ -21,8 +21,10 @@ class ViewVist extends ViewRecord
     {
 
         $data['template'] = $data['visit_type_id'];
-
-        $data['temp_content'][self::$templates[$data['visit_type_id']]] = $data;
+        if(in_array($data['visit_type_id'],[1,2,3,4]))
+            $data['temp_content'][self::$templates[$data['visit_type_id']]] = $data;
+        else
+            $data['temp_content']['Regular'] = $data;
 
         // $data['temp_content'][] = $data['content'];
         // unset($data['content']);
@@ -30,12 +32,4 @@ class ViewVist extends ViewRecord
         return $data;
     }
 
-    // protected static function getTemplateName($class = null){
-    //     if(!$class){
-    //         return 'Regular';
-    //     }
-    //     $array = explode('\\',$class);
-
-    //     return $array[count($array)-1];
-    // }
 }

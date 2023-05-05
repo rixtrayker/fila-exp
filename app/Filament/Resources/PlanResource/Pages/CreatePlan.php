@@ -97,6 +97,7 @@ class CreatePlan extends CreateRecord
                     'client_id' => $clientId,
                     'plan_id' => $this->plan->id,
                     'visit_date' => $visitDates[$dayKey],
+                    'visit_type_id' => 1,
                     'status' => 'planned',
                 ];
             }

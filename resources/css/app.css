@@ -48,3 +48,41 @@
 .filament-forms-section-header-wrapper{
     @apply bg-primary-100;
 }
+/* .select2-selection {
+    overflow: hidden;
+}
+
+.select2-selection__rendered[title] {
+    @apply text-black !important;
+}
+
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+    @apply bg-primary-100  text-black hover:text-black border-primary-600  !important;
+}
+
+.select2-container--default .select2-results__option--selected {
+    @apply bg-primary-100 hover:text-black !important;
+}
+
+.select2-container--default .select2-selection--multiple .select2-selection__choice__remove
+{
+    @apply text-primary-600 hover:text-danger-600 !important;
+}
+
+.select2-container--default.select2-container--focus .select2-selection--multiple {
+    @apply border-primary-500 !important;
+    border-width: 2px !important;
+}
+
+.select2-container--default.select2-container .select2-selection--multiple {
+    @apply border-black;
+    min-height: 37px !important;
+}
+
+.select2-container--default .select2-results__option--highlighted.select2-results__option--selectable{
+    @apply text-black !important;
+} */
+.filament-body
+{
+    @apply bg-primary-50;
+}

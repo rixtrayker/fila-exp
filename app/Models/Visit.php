@@ -12,9 +12,13 @@ class Visit extends Model
 {
     use HasFactory;
     use SoftDeletes;
+    protected $casts = [
+        'visit_date' => 'date'
+    ];
     protected $fillable = [
         'user_id',
         'plan_id',
+        'status',
         'place',
         'atendees_number',
         'second_user_id',
@@ -38,6 +42,10 @@ class Visit extends Model
     public function scopePending(Builder $query): Builder
     {
         return $query->where('status','pending');
+    }
+    public function scopeDaily(Builder $query): Builder
+    {
+        return $query->where('status','pending')->whereDate('visit_date',today());
     }
     public function scopeMissed(Builder $query): Builder
     {

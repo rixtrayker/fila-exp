@@ -12,16 +12,20 @@ class OverallChart extends PieChartWidget
     public $users;
     public $from;
     public $to;
-    public $ids;
-    public $ddd=10;
+    public $user_id;
     protected static ?string $maxHeight = '300px';
 
-    protected static string $view = 'filament.widgets.chart-widget';
 
     protected $listeners = [
-        'updateUsersList',
-        'updateFromToDates,'
+        'updateVisitsList' => 'updateVisitsList',
     ];
+    public function updateVisitsList($from, $to, $user_id)
+    {
+        $this->from = $from;
+        $this->to = $to;
+        $this->user_id = $user_id;
+        $this->updateChartData();
+    }
 
     protected $backgroundColor = [
         'rgba(75, 192, 192, 0.2)',
@@ -45,15 +49,6 @@ class OverallChart extends PieChartWidget
     {
         return 1;
     }
-    public function updatedFrom(){
-        $this->updateChartData();
-    }
-    public function updatedIds(){
-        $this->updateChartData();
-    }
-    public function updatedTo(){
-        $this->updateChartData();
-    }
 
     protected function getData(): array
     {
@@ -69,14 +64,16 @@ class OverallChart extends PieChartWidget
 
     private function getDataSets()
     {
+        $data = [
+            $this->getVisits()->visited()->count(),
+            $this->getVisits()->missed()->count(),
+            $this->getVisits()->pending()->count()
+        ];
+
         $datasets = [
         [
             'label' => 'Visit type',
-            'data'=> [
-                $this->ddd,
-               30,30
-
-            ],
+            'data'=> $data,
             'backgroundColor' => $this->backgroundColor,
             'borderColor' => $this->borderColor,
         ],
@@ -92,9 +89,8 @@ class OverallChart extends PieChartWidget
     public function getVisits(){
         $query =  Visit::query();
 
-        if($this->ids){
-
-            $query->whereIn('user_id',$this->ids)->orWhereIn('second_user_id',$this->ids);
+        if($this->user_id){
+            $query->whereIn('user_id',$this->user_id)->orWhereIn('second_user_id',$this->user_id);
         }
 
         if($this->from){
@@ -104,12 +100,10 @@ class OverallChart extends PieChartWidget
         if($this->to){
             $query->whereDate('visit_date','<',$this->to);
         }
+        return $query;
     }
 
 
-    protected static ?array $options = [
-        'offset'=>2,
-    ];
 
     public function updateChartData()
     {
@@ -119,7 +113,7 @@ class OverallChart extends PieChartWidget
             $this->dataChecksum = $newDataChecksum;
 
             $this->emitSelf('updateChartData', [
-                'data' => $this->getCachedData(),
+                'data' => $this->getData(),
             ]);
         }
     }
