@@ -6,6 +6,7 @@ use App\Models\Visit;
 use Filament\Widgets\PieChartWidget;
 use Illuminate\Contracts\Session\Session;
 use Illuminate\Support\Facades\Log;
+use Str;
 
 class OverallChart extends PieChartWidget
 {
@@ -116,5 +117,10 @@ class OverallChart extends PieChartWidget
                 'data' => $this->getData(),
             ]);
         }
+    }
+
+    public static function canView(): bool
+    {
+        return Str::contains(request()->path(),'cover-report');
     }
 }

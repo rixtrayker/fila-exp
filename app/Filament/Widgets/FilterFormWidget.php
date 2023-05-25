@@ -15,7 +15,7 @@ use Filament\Widgets\Widget;
 use Illuminate\Contracts\View\View;
 use Livewire\Component;
 use Livewire\TemporaryUploadedFile;
-
+use Str;
 class FilterFormWidget extends Widget implements HasForms
 {
     use InteractsWithForms;
@@ -61,5 +61,10 @@ class FilterFormWidget extends Widget implements HasForms
                 ->maxDate(today()),
 
         ];
+    }
+
+    public static function canView(): bool
+    {
+        return Str::contains(request()->path(),'cover-report');
     }
 }

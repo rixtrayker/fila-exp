@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\BusinessOrder;
 use App\Models\Company;
 use App\Models\Order;
 use Filament\Widgets\BarChartWidget;
@@ -89,9 +90,9 @@ class MonthlySalesChart extends BarChartWidget
 
         foreach ($this->getYearPeriod() as $date)
         {
-            $data[] = Order::query()
+            $data[] = BusinessOrder::query()
             ->whereIn('company_branch_id',$branchesId)
-            ->whereBetween('order_date',[$date->startOfMonth()->format('Y-m-d'),$date->endOfMonth()->format('Y-m-d')])
+            ->whereBetween('date',[$date->startOfMonth()->format('Y-m-d'),$date->endOfMonth()->format('Y-m-d')])
             ->count();
         }
         return $data;
