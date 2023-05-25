@@ -55,7 +55,6 @@ class CompanyResource extends Resource
     {
         return [
             BranchesRelationManager::class,
-            CompanyProductsRelationManager::class,
         ];
     }
 
