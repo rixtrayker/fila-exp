@@ -11,4 +11,9 @@ class BusinessOrder extends Model
 
     protected $table = 'business_orders';
     protected $guarded = [];
+
+    public function companyBranch()
+    {
+        return $this->belongsTo(CompanyBranch::class);
+    }
 }

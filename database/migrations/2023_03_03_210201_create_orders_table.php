@@ -20,7 +20,6 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(Client::class);
             $table->foreignIdFor(User::class);
-            $table->foreignIdFor(CompanyBranch::class);
             $table->date('order_date')->nullable();
             $table->timestamps();
         });
