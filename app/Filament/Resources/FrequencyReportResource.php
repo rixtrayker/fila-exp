@@ -5,7 +5,6 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\FrequencyReportResource\Pages;
 use App\Filament\Resources\FrequencyReportResource\RelationManagers;
 use App\Models\Client;
-use App\Models\FrequencyReport;
 use App\Models\Visit;
 use Filament\Forms;
 use Filament\Resources\Form;
@@ -24,22 +23,6 @@ class FrequencyReportResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
 
-    // public static $gradeAVG = [
-    //     'A'=>static::getGradeAVG('A'),
-    //     'B'=>static::getGradeAVG('B'),
-    //     'C'=>static::getGradeAVG('C'),
-    //     'N'=>static::getGradeAVG('N'),
-    //     'PH'=>static::getGradeAVG('PH'),
-    // ];
-
-    public static function getGradeAVG($grade)
-    {
-        $count = Visit::whereHas('client',function($q) use($grade){
-            $q->where('grade',$grade);
-        })->count();
-
-        return $count;
-    }
 
 
     // public static function form(Form $form): Form
@@ -55,14 +38,21 @@ class FrequencyReportResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')
+                    ->searchable()
                     ->label('Name'),
-                TextColumn::make('visits_count')
-                    ->label('Total Visits Count'),
-                TextColumn::make('missed_visits_count')
-                    ->label('Missed Visits Count'),
+                    TextColumn::make('done_visits_count')
+                        ->label('Done Visits Count'),
+                    TextColumn::make('pending_visits_count')
+                        ->label('Pending Visits Count'),
+                    TextColumn::make('missed_visits_count')
+                        ->label('Missed Visits Count'),
+                    TextColumn::make('visits_count')
+                        ->label('Total Visits Count'),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('grade')
+                    ->options(static::gradeAVG()),
+
             ])
             ->actions([
                 // Tables\Actions\EditAction::make(),
@@ -82,5 +72,26 @@ class FrequencyReportResource extends Resource
     public static function canCreate(): bool
     {
         return false;
+    }
+
+    private static function gradeAVG(): array
+    {
+        $result = [];
+        foreach(['A','B','C','N','PH'] as $grade){
+            $visits = Visit::select('status')->whereHas('client', function ($q) use ($grade)
+            {
+                $q->where('grade', $grade);
+            })->get();
+
+            $doneVisits = $visits->where('status','visited')->count();
+            $missedVisits = $visits->where('status','cancelled')->count();
+
+            $total = $doneVisits+$missedVisits;
+            if($total)
+                $result[$grade] = $grade.' - '.round($doneVisits/$total,4)*100 . ' %' ;
+            else
+                $result[$grade] = $grade.' - 0 %';
+        }
+        return $result;
     }
 }

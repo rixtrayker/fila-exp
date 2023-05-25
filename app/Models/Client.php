@@ -79,6 +79,10 @@ class Client extends Model
     {
         return $this->visits()->where('status','cancelled')->count();
     }
+    public function getPendingVisitsCountAttribute()
+    {
+        return $this->visits()->where('status','pending')->count();
+    }
     public function getDoneVisitsCountAttribute()
     {
         return $this->visits()->where('status','visited')->count();
