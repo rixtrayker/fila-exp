@@ -21,6 +21,10 @@ class City extends Model
     {
         return $this->belongsTo(Governorate::class);
     }
+    public function bricks()
+    {
+        return $this->hasMany(Brick::class);
+    }
 
     public function region()
     {

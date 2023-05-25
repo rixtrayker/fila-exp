@@ -2,11 +2,9 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\CityResource\Pages;
-use App\Filament\Resources\CityResource\RelationManagers;
-use App\Filament\Resources\CityResource\RelationManagers\BricksRelationManager;
-use App\Models\City;
-use App\Traits\RolesOnlyResources;
+use App\Filament\Resources\BrickResource\Pages;
+use App\Filament\Resources\BrickResource\RelationManagers;
+use App\Models\Brick;
 use Filament\Forms;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -18,29 +16,26 @@ use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class CityResource extends Resource
+class BrickResource extends Resource
 {
-    use RolesOnlyResources;
-    protected static ?string $model = City::class;
+    protected static ?string $model = Brick::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-collection';
-
     protected static ?string $navigationGroup = 'Zone management';
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
                 TextInput::make('name')
-                ->label('Name')
-                ->required(),
-                Select::make('governorate_id')
-                    ->label('Governorate name')
-                    ->relationship('governorate','name')
+                    ->required(),
+                Select::make('city_id')
+                    ->label('City name')
+                    ->relationship('city','name')
                     ->preload()
                     ->required(),
-                ]);
+            ]);
     }
 
     public static function table(Table $table): Table
@@ -49,15 +44,14 @@ class CityResource extends Resource
             ->columns([
                 TextColumn::make('name')
                 ->label('Name'),
-                TextColumn::make('governorate.name')
-                    ->label('Governorate name'),
-                ])
+                TextColumn::make('city.name')
+                    ->label('City name'),
+            ])
             ->filters([
                 //
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),
@@ -67,21 +61,16 @@ class CityResource extends Resource
     public static function getRelations(): array
     {
         return [
-            BricksRelationManager::class
+            //
         ];
     }
 
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListCities::route('/'),
-            'create' => Pages\CreateCity::route('/create'),
-            'edit' => Pages\EditCity::route('/{record}/edit'),
+            'index' => Pages\ListBricks::route('/'),
+            'create' => Pages\CreateBrick::route('/create'),
+            'edit' => Pages\EditBrick::route('/{record}/edit'),
         ];
-    }
-
-    public static function canAccessMe(): array
-    {
-        return ['super-admin','moderator'];
     }
 }
