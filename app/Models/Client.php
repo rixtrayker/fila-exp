@@ -18,7 +18,7 @@ class Client extends Model
         'email',
         'phone',
         'address',
-        'city_id',
+        'brick_id',
         'grade',
         'shift',
         'client_type_id',
@@ -30,7 +30,7 @@ class Client extends Model
         'email',
         'phone',
         'address',
-        'city_id',
+        'brick_id',
         'grade',
         'shift',
         'client_type_id',
@@ -41,9 +41,9 @@ class Client extends Model
     {
         return $this->hasMany(Visit::class);
     }
-    public function city()
+    public function brick()
     {
-        return $this->belongsTo(City::class);
+        return $this->belongsTo(Brick::class);
     }
     public function clientType()
     {

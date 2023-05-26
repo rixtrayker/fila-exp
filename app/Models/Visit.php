@@ -75,10 +75,9 @@ class Visit extends Model
     {
         return $this->belongsTo(CallType::class);
     }
-
-    public function city()
+    public function brick()
     {
-        return $this->belongsTo(City::class);
+        return $this->belongsTo(Brick::class);
     }
     public function plan()
     {

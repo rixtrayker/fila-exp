@@ -71,7 +71,7 @@ class DailyVisitResource extends Resource
     {
         return parent::getEloquentQuery()
             ->scopes([
-                'pending',
+                'daily',
             ]);
     }
 

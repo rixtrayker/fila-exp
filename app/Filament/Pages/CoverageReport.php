@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Pages;
+namespace App\Filament\Pages\Custom;
 
 use App\Filament\Widgets\FilterFormWidget;
 use App\Filament\Widgets\OverallChart;

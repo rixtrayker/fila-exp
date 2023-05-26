@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ClientResource\Pages;
 use App\Filament\Resources\ClientResource\RelationManagers;
+use App\Models\Brick;
 use App\Models\City;
 use App\Models\Client;
 use Filament\Forms;
@@ -44,10 +45,10 @@ class ClientResource extends Resource
                 TextInput::make('address')
                     ->label('Address')
                     ->required(),
-                Select::make('city_id')
-                    ->label('City')
+                Select::make('brick_id')
+                    ->label('Brick')
                     ->searchable()
-                    ->options(City::get()->pluck('zone_code', 'id'))
+                    ->options(Brick::get()->pluck('zone_code', 'id'))
                     ->getSearchResultsUsing(fn(string $search)=>ClientResource::searchCity($search))
                     ->preload()
                     ->required(),
@@ -94,9 +95,9 @@ class ClientResource extends Resource
                     ->sortable()
                     ->searchable()
                     ->label('Address'),
-                TextColumn::make('city.name')
+                TextColumn::make('brick.name')
                     ->sortable()
-                    ->label('City'),
+                    ->label('Brick'),
                 TextColumn::make('grade')
                     ->sortable()
                     ->searchable()

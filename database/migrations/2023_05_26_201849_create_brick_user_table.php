@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\Company;
-use App\Models\Product;
+use App\Models\Brick;
+use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -15,12 +15,10 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('company_product', function (Blueprint $table) {
+        Schema::create('brick_user', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(Company::class);
-            $table->foreignIdFor(Product::class);
-            $table->string('code');
-            $table->unique(['product_id','company_id']);
+            $table->foreignIdFor(Brick::class);
+            $table->foreignIdFor(User::class);
             $table->timestamps();
         });
     }
@@ -32,6 +30,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('orders');
+        Schema::dropIfExists('city_user');
     }
 };

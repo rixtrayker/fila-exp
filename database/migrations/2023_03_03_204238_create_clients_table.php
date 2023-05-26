@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\City;
+use App\Models\Brick;
 use App\Models\ClientType;
 use App\Models\Speciality;
 use Illuminate\Database\Migrations\Migration;
@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('name_ar');
             $table->string('email')->nullable();
             $table->string('phone');
-            $table->foreignIdFor(City::class);
+            $table->foreignIdFor(Brick::class);
             $table->string('address');
             $table->enum('grade',['A','B','C','N','PH']);
             $table->enum('shift',['AM','PM']);
