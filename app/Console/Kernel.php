@@ -2,8 +2,10 @@
 
 namespace App\Console;
 
+use App\Jobs\CancelMissedVisitsJob;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use Illuminate\Support\Facades\Log;
 
 class Kernel extends ConsoleKernel
 {
@@ -15,7 +17,11 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+        try {
+            $schedule->job(new CancelMissedVisitsJob)->daily()->at('10:01');
+        } catch (\Exception $e) {
+            Log::channel('daily')->info("job scheduling failed, " . $e->getMessage());
+        }
     }
 
     /**
