@@ -62,7 +62,7 @@ class EditVisit extends EditRecord
         $data['status'] = 'visited';
 
 
-        if(auth()->user()->hasRole('medical-rep') &&  $data['visit_type_id'] == 1){
+        if(auth()->user()->hasRole('medical-rep') &&  $data['visit_type_id'] == 1 && !isset($data['visit_date'])){
             $data['visit_date'] = today();
         }
 

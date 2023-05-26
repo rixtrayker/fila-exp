@@ -31,13 +31,22 @@ class OrderResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-shopping-cart';
     protected static ?int $navigationSort = 5;
+    protected static $subTotalField;
     protected static $totalField;
 
+    protected static function makeSubTotalField(){
+        self::$subTotalField = TextInput::make('sub_total')
+            ->disabled()->default(0);
+    }
     protected static function makeTotalField(){
-        self::$totalField = TextInput::make('total')->disabled()->default(0);
+        self::$totalField = TextInput::make('total')
+            ->disabled()
+            ->default(0)
+            ->hidden(auth()->user()->hasRole('medical-rep'));
     }
     public static function form(Form $form): Form
     {
+        self::makeSubTotalField();
         self::makeTotalField();
         return $form
             ->schema([
@@ -102,7 +111,7 @@ class OrderResource extends Resource
                                         $set('price',$price);
                                         $set('cost',$cost);
                                         $set('item_total',$cost);
-                                        self::updateTotal($get);
+                                        self::updateSubTotal($get);
                                     }
                                 ),
                             TextInput::make('count')
@@ -119,7 +128,7 @@ class OrderResource extends Resource
 
                                         $set('item_total',$cost);
                                         $set('cost',$cost);
-                                        self::updateTotal($get);
+                                        self::updateSubTotal($get);
                                     }
                                 ),
                             TextInput::make('price')
@@ -135,13 +144,48 @@ class OrderResource extends Resource
                                     return $product && $get('count')? $product->price * $get('count') : 0;
                                 }) // todo load from DB directly if found
                                 ->numeric()
-                                ->minValue(1)
                                 ->disabled()
                                 ->disableLabel(),
                         ])->disableItemMovement()
+                        ->columnSpanFull()
                         ->defaultItems(1),
+                        Select::make('discount_type')
+                                ->options(['percentage'=>'Percentage','amount'=>'Amount'])
+                                ->default('amount')
+                                ->reactive()
+                                ->label('Discount Type')
+                                ->hidden(auth()->user()->hasRole('medical-rep'))
+                                ->afterStateUpdated(
+                                    function($get){
+                                        self::updateSubTotal($get, false);
+                                    }
+                                ),
+                        TextInput::make('discount')
+                            ->label('Discount')
+                            ->reactive()
+                            ->numeric()
+                            ->minValue(0)
+                            ->maxValue(
+                                function ($get)
+                                {
+                                    return $get('discount_type') == 'percentage' ? 100 : $get('sub_total');
+                                }
+                            )
+                            ->placeholder(function($get) {
+                                $result = 'please enter discount '
+                                    . $get('discount_type')
+                                    . $get('discount_type') == 'percentage' ? ' %' : '';
+                                return $result;
+                            })
+                            ->hidden(auth()->user()->hasRole('medical-rep'))
+                            ->afterStateUpdated(
+                                function($get){
+                                    self::updateSubTotal($get, false);
+                                }
+                            ),
+                        self::$subTotalField,
                         self::$totalField,
-                    ])->compact(),
+                    ])->compact()->columns(4),
                 ]);
     }
 
@@ -199,16 +243,38 @@ class OrderResource extends Resource
             'edit' => Pages\EditOrder::route('/{record}/edit'),
         ];
     }
-    public static function updateTotal($get)
+    public static function updateSubTotal($get, $isFromProducts = true)
     {
-        $total = 0;
-
-        foreach($get('../../products') as $item){
+        $subTotal = 0;
+        $productsArray = $isFromProducts ? $get('../../products') : $get('products');
+        foreach($productsArray as $item){
             $product = Product::find($item['product_id']);
             if($product && $item['count'])
-            $total += $product->price * $item['count'];
+            $subTotal += $product->price * $item['count'];
         }
 
+        self::$subTotalField->state($subTotal);
+
+        $discountType = $get('discount_type');
+        $discount = $get('discount')?  $get('discount') : 0;
+        $total = $subTotal;
+        if($discountType == 'percentage'){
+            $total = $total - ($total * ($discount/100));
+        } else {
+            $total = $total - $discount;
+        }
         self::$totalField->state($total);
     }
+    // public static function updateTotal($get)
+    // {
+    //     $total = 0;
+
+    //     foreach($get('../../products') as $item){
+    //         $product = Product::find($item['product_id']);
+    //         if($product && $item['count'])
+    //         $total += $product->price * $item['count'];
+    //     }
+
+    //     self::$subTotalField->state($total);
+    // }
 }

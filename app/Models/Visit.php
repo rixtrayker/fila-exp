@@ -45,7 +45,12 @@ class Visit extends Model
     }
     public function scopeDaily(Builder $query): Builder
     {
-        return $query->where('status','pending')->whereDate('visit_date',today());
+        return $query->where('status','pending')->where(function($q) {
+            $q->whereDate('visit_date',today())->orWhere(function($q) {
+                if(now()->isBefore(today()->addHours(10)))
+                    $q->whereDate('visit_date',today()->subDay());
+            });
+        });
     }
     public function scopeMissed(Builder $query): Builder
     {

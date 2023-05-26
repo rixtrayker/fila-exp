@@ -21,6 +21,10 @@ return new class extends Migration
             $table->foreignIdFor(Client::class);
             $table->foreignIdFor(User::class);
             $table->date('order_date')->nullable();
+            $table->double('discount')->default(0);
+            $table->enum('discount_type',['amount','percentage'])->default('amount');
+            $table->double('sub_total');
+            $table->double('total');
             $table->timestamps();
         });
     }
