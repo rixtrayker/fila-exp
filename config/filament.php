@@ -1,5 +1,6 @@
 <?php
 
+use App\Filament\Pages\Custom\CoverageReport;
 use App\Filament\Resources\VisitResource\Widgets\StatsOverview;
 use App\Filament\Resources\VisitResource\Widgets\YearVisitsChart;
 use App\Filament\Widgets\MonthlySalesChart;
@@ -109,7 +110,7 @@ return [
         'path' => app_path('Filament/Pages'),
         'register' => [
             Pages\Dashboard::class,
-            // CoverageReport::class,
+            CoverageReport::class,
         ],
     ],
 
