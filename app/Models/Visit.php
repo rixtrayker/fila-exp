@@ -6,6 +6,7 @@ use App\Models\Scopes\GetMineScope;
 use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Visit extends Model
@@ -96,5 +97,10 @@ class Visit extends Model
     {
         parent::boot();
         static::addGlobalScope(new GetMineScope);
+    }
+
+    public function nullRelation(): HasOne
+    {
+        return new HasOne($this->newQuery(), $this, 'id', '', '');
     }
 }

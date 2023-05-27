@@ -84,7 +84,15 @@ final class Regular
                     ->disableLabel()
                     ->schema([
                     TableRepeater::make('products')
-                        ->relationship('products')
+                        ->createItemButtonLabel('Add product')
+                        ->relationship(function(){
+                            if(
+                                Str::contains(request()->path(),'create')
+                                ||
+                                Str::contains(request()->path(),'edit')
+                            ) return 'nullRelation';
+                            return 'products';
+                        })
                         ->disableLabel()
                         // ->headers(['Product', 'Sample Count'])
                         ->emptyLabel('There is no product added.')

@@ -12,7 +12,7 @@ use Filament\Support\Exceptions\Halt;
 class CreateVisit extends CreateRecord
 {
     protected static string $resource = VisitResource::class;
-
+    protected $isRegularVisit;
     protected function mutateFormDataBeforeCreate($data): array
     {
         $templates = [
@@ -21,19 +21,28 @@ class CreateVisit extends CreateRecord
             'GroupMeeting' => 3,
             'Conference' => 4,
         ];
+        $templatesRev = [
+             1 => 'Regular',
+             2 => 'HealthDay',
+             3 => 'GroupMeeting',
+             4 => 'Conference',
+        ];
 
         foreach($data['temp_content'] as $key => $value)
         {
-            $data['visit_type_id'] = $templates[$key];
             foreach($value as $key2 => $value2) {
                 $data[$key2] = $value2;
             }
         }
 
-        unset($data['temp_content']);
-        unset($data['template']);
+        $this->isRegularVisit = $data['template'] == 1;
 
-        $data['user_id'] = auth()->id();
+        $temp = $data['template'];
+        $data = $data['temp_content'][$templatesRev[$temp]];
+        $data['visit_type_id'] = $temp;
+
+        if(auth()->user()->hasRole('medical-rep') )
+            $data['user_id'] = auth()->id();
         $data['status'] = 'visited';
 
 
@@ -45,8 +54,8 @@ class CreateVisit extends CreateRecord
     }
     public function afterCreate()
     {
-        $data = $this->form->getRawState();
-        $this->saveProducts($data, $this->record);
+        if($this->isRegularVisit)
+            $this->saveProducts($this->record);
     }
 
     public function create(bool $another = false): void
@@ -125,8 +134,10 @@ class CreateVisit extends CreateRecord
         $this->redirect($this->getRedirectUrl());
     }
 
-    private function saveProducts($data, $visit)
+    private function saveProducts($visit)
     {
+        $data = $this->form->getRawState()['temp_content']['Regular'];
+
         if(!isset($data['products'])){
             return;
         }

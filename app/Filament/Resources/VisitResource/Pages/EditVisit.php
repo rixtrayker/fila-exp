@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\VisitResource\Pages;
 
 use App\Filament\Resources\VisitResource;
+use App\Models\ProductVisit;
 use Filament\Pages\Actions;
 use Filament\Resources\Pages\EditRecord;
 
@@ -17,6 +18,7 @@ class EditVisit extends EditRecord
         ];
     }
 
+    protected  $isRegularVisit;
     protected static $templates = [
         1 =>'Regular',
         2 =>'GroupMeeting',
@@ -47,6 +49,13 @@ class EditVisit extends EditRecord
             'Conference' => 4,
         ];
 
+        $templatesRev = [
+            1 => 'Regular',
+            2 => 'HealthDay',
+            3 => 'GroupMeeting',
+            4 => 'Conference',
+       ];
+
         foreach($data['temp_content'] as $key => $value)
         {
             $data['visit_type_id'] = $templates[$key];
@@ -55,10 +64,14 @@ class EditVisit extends EditRecord
             }
         }
 
-        unset($data['temp_content']);
-        unset($data['template']);
+        $this->isRegularVisit = $data['template'] == 1;
 
-        $data['user_id'] = auth()->id();
+        $temp = $data['template'];
+        $data = $data['temp_content'][$templatesRev[$temp]];
+        $data['visit_type_id'] = $temp;
+
+        if(auth()->user()->hasRole('medical-rep') )
+            $data['user_id'] = auth()->id();
         $data['status'] = 'visited';
 
 
@@ -69,5 +82,36 @@ class EditVisit extends EditRecord
         return $data;
     }
 
+    public function afterValidate()
+    {
+        $data = $this->form->getRawState();
+        if($this->isRegularVisit)
+            $this->saveProducts($data, $this->record);
+    }
+
+    private function saveProducts($data, $visit)
+    {
+        if(!isset($data['products'])){
+            return;
+        }
+
+        $products = $data['products'];
+        $visitId = $visit->id;
+
+        $insertData = [];
+        $now = now();
+
+        foreach($products as $product){
+            $insertData[] = [
+                'visit_id' => $visitId,
+                'product_id' =>  $product['product_id'],
+                'count' => $product['count'],
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
+        ProductVisit::insert($insertData);
+    }
     // todo sync products
 }
