@@ -14,8 +14,6 @@ class CreateOrder extends CreateRecord
 
     protected function mutateFormDataBeforeCreate($data): array
     {
-        // unset($data['total']);
-        dd($data);
         if(auth()->user()->hasRole('medical-rep'))
             $data['user_id'] = auth()->id();
         $data['order_date'] = today();

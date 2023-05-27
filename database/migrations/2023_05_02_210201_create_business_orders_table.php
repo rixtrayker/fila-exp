@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Client;
+use App\Models\Company;
 use App\Models\CompanyBranch;
 use App\Models\Product;
 use App\Models\User;
@@ -19,6 +20,7 @@ return new class extends Migration
     {
         Schema::create('business_orders', function (Blueprint $table) {
             $table->id();
+            $table->foreignIdFor(Company::class);
             $table->foreignIdFor(CompanyBranch::class);
             $table->foreignIdFor(Product::class);
             $table->date('date')->nullable();
