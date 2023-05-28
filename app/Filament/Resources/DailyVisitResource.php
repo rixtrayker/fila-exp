@@ -83,4 +83,9 @@ class DailyVisitResource extends Resource
             'edit' => Pages\EditDailyVisit::route('/{record}/edit'),
         ];
     }
+
+    public static function canCreate(): bool
+    {
+        return false;
+    }
 }
