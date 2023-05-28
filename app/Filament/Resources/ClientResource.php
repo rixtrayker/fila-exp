@@ -141,9 +141,9 @@ class ClientResource extends Resource
         ];
     }
 
-    public static function searchCity(string $search)
+    public static function searchBrick(string $search)
     {
-        return collect(City::get())
+        return collect(Brick::get())
             ->filter(
                 function ($record) use ($search) {
                     return Str::contains($record->zone_code,$search);
