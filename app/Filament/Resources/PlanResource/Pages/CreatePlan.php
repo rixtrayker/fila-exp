@@ -86,6 +86,7 @@ class CreatePlan extends CreateRecord
 
         $fieldName = ['clients_sat','clients_sun','clients_mon','clients_tues','clients_wednes','clients_thurs','clients_fri'];
 
+        $now = now();
 
         foreach($fieldName as $dayKey => $field){
             if(!isset($data[$field]))
@@ -99,6 +100,8 @@ class CreatePlan extends CreateRecord
                     'visit_date' => $visitDates[$dayKey],
                     'visit_type_id' => 1,
                     'status' => 'planned',
+                    'created_at' => $now,
+                    'updated_at' => $now,
                 ];
             }
         }

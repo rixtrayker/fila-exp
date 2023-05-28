@@ -75,13 +75,13 @@ class PlanResource extends Resource
                 ->label('Approve')
                 ->color('success')
                 ->icon('heroicon-o-check')
-                ->visible(fn($record)=>$record->approved === null)
+                ->visible(fn($record)=> $record->approved !== 1 && !auth()->user()->hasRole('medical-rep'))
                 ->action(fn($record)=> $record->approve()),
             Tables\Actions\Action::make('reject')
                 ->label('Reject & Delete')
                 ->color('danger')
                 ->icon('heroicon-s-x')
-                ->visible(fn($record)=>$record->approved === null)
+                ->visible(fn($record)=> $record->approved !== 1 && !auth()->user()->hasRole('medical-rep'))
                 ->requiresConfirmation()
                 ->action(fn($record)=> $record->delete()),
             Tables\Actions\Action::make('show Achieved')

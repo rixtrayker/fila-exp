@@ -54,9 +54,10 @@ class Plan extends Model
     public function approve()
     {
         $this->approved = 1;
+        $this->visits()->update(['status' => 'pending']);
         $this->save();
     }
-    
+
     public function reject()
     {
         $this->delete();
