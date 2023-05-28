@@ -17,6 +17,10 @@ class BusinessOrder extends Model
     {
         return $this->belongsTo(CompanyBranch::class);
     }
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
     public static function getImportColumns(): array
     {
         return [

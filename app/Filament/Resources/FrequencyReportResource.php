@@ -52,7 +52,26 @@ class FrequencyReportResource extends Resource
             ->filters([
                 Tables\Filters\SelectFilter::make('grade')
                     ->options(static::gradeAVG()),
-
+                Tables\Filters\Filter::make('visit_date')
+                    ->form([
+                        Forms\Components\DatePicker::make('from_date'),
+                        Forms\Components\DatePicker::make('to_date'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['from_date'],
+                                fn (Builder $query, $date): Builder => $query->whereHas('visits',function ($q) use ($date){
+                                    $q->whereDate('visit_date', '>=', $date);
+                                }),
+                            )
+                            ->when(
+                                $data['to_date'],
+                                fn (Builder $query, $date): Builder => $query->whereHas('visits',function ($q) use ($date){
+                                    $q->whereDate('visit_date', '<=', $date);
+                                }),
+                            );
+                    })
             ])
             ->actions([
                 // Tables\Actions\EditAction::make(),

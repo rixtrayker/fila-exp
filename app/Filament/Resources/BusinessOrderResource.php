@@ -12,6 +12,7 @@ use Filament\Resources\Form;
 use Filament\Resources\Resource;
 use Filament\Resources\Table;
 use Filament\Tables;
+use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
@@ -33,7 +34,23 @@ class BusinessOrderResource extends Resource
     {
         return $table
             ->columns([
-                //
+                TextColumn::make('company.name')
+                    ->label('Company')
+                    ->sortable()
+                    ->searchable(),
+                TextColumn::make('companyBranch.name')
+                    ->label('Company Branch')
+                    ->sortable()
+                    ->searchable(),
+                TextColumn::make('quantity')
+                    ->label('Quantity')
+                    ->sortable()
+                    ->searchable(),
+                TextColumn::make('date')
+                    ->label('Date')
+                    ->dateTime('d-M-Y')
+                    ->sortable()
+                    ->searchable(),
             ])
             ->filters([
                 //
