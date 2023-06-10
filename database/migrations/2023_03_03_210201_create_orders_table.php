@@ -25,6 +25,7 @@ return new class extends Migration
             $table->enum('discount_type',['amount','percentage'])->default('amount');
             $table->double('sub_total');
             $table->double('total');
+            $table->tinyInteger('approved')->default(0);
             $table->timestamps();
         });
     }

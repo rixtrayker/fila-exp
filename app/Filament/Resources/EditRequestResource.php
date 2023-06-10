@@ -97,7 +97,7 @@ class EditRequestResource extends Resource
     }
     public static function getModelName()
     {
-        $editRequest = EditRequest::find(self::getModelId());
+        $editRequest = EditRequest::find(self::getModelId()); // todo: optimize
 
         if(!$editRequest)
             return 'EditRequest';

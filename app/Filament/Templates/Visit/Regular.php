@@ -35,8 +35,8 @@ final class Regular
                     ->searchable()
                     ->relationship('user','name')
                     ->placeholder('Search name')
-                    ->getSearchResultsUsing(fn (string $search) => User::role('medical-rep')->mine()->where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'))
-                    ->options(User::role('medical-rep')->mine()->pluck('name', 'id'))
+                    ->getSearchResultsUsing(fn (string $search) => User::mine()->where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'))
+                    ->options(User::mine()->pluck('name', 'id'))
                     ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
                     ->disabled(Str::contains(request()->path(),'daily-visits'))
                     ->preload(),
@@ -45,8 +45,8 @@ final class Regular
                     ->relationship('secondRep','name')
                     ->searchable()
                     ->placeholder('Search name')
-                    ->getSearchResultsUsing(fn (string $search) => User::role('medical-rep')->mine()->where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'))
-                    ->options(User::role('medical-rep')->mine()->pluck('name', 'id'))
+                    ->getSearchResultsUsing(fn (string $search) => User::mine()->where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'))
+                    ->options(User::mine()->pluck('name', 'id'))
                     ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
                     ->preload(),
                 Select::make('client_id')

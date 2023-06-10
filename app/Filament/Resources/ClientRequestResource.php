@@ -40,8 +40,8 @@ class ClientRequestResource extends Resource
                     ->label('Medical Rep')
                     ->searchable()
                     ->placeholder('Search name')
-                    ->getSearchResultsUsing(fn (string $search) => User::role('medical-rep')->where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'))
-                    ->options(User::role('medical-rep')->pluck('name', 'id'))
+                    ->getSearchResultsUsing(fn (string $search) => User::where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'))
+                    ->options(User::pluck('name', 'id'))
                     ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
                     ->preload()
                     ->hidden(auth()->user()->hasRole('medical-rep')),

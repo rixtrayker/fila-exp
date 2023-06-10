@@ -25,6 +25,44 @@ class Order extends Model
     {
         return $this->hasMany(OrderProduct::class);
     }
+    
+    function approve() {
+        if(auth()->user()->hasRole('district-manager'))
+        {
+            $this->approved = 1;
+            $this->saveQuietly();
+        }
+        if(auth()->user()->hasRole('area-manager'))
+        {
+            $this->approved = 2;
+            $this->saveQuietly();
+        }
+        if(auth()->user()->hasRole('country-manager'))
+        {
+            $this->approved = 4;
+            $this->saveQuietly();
+        }
+    }
+
+    function decline() {
+        $this->approved = -1;
+        $this->saveQuietly();
+
+    }
+
+    function getApprovalAttribute(): bool {
+        return $this->approved === 4;
+    }
+
+    function getProductListAttribute(): string {
+        $products = $this->orderProducts;
+        $list = [];
+        foreach ($products as $product) {
+            $list[] = $product->count.'x '.$product->product->name;
+        }
+
+        return implode(' , ',$list);
+    }
 
     public function user()
     {

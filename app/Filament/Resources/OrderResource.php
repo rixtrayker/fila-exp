@@ -19,6 +19,7 @@ use Filament\Resources\Form;
 use Filament\Resources\Resource;
 use Filament\Resources\Table;
 use Filament\Tables;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -54,8 +55,8 @@ class OrderResource extends Resource
                     ->label('Medical Rep')
                     ->searchable()
                     ->placeholder('Search name')
-                    ->getSearchResultsUsing(fn (string $search) => User::role('medical-rep')->where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'))
-                    ->options(User::role('medical-rep')->pluck('name', 'id'))
+                    ->getSearchResultsUsing(fn (string $search) => User::where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'))
+                    ->options(User::pluck('name', 'id'))
                     ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
                     ->preload()
                     ->hidden(auth()->user()->hasRole('medical-rep')),
@@ -200,9 +201,22 @@ class OrderResource extends Resource
                 TextColumn::make('client.name')
                     ->label('Client')
                     ->sortable(),
-                TextColumn::make('branch.name')
-                    ->label('Branch name')
+                TextColumn::make('total')
+                    ->label('Total')
                     ->sortable(),
+                TextColumn::make('product_list')
+                    ->label('Product List')
+                    ->sortable(),
+                IconColumn::make('approved')
+                    ->colors([
+                        'danger'=>-1,
+                        'success'=>4
+                    ])
+                    ->options([
+                        'heroicon-o-clock',
+                        'heroicon-o-x-circle'=>-1,
+                        'heroicon-o-check-circle' => 4,
+                    ]),
                 TextColumn::make('order_date')
                     ->dateTime('d-M-Y')
                     ->sortable()
@@ -213,6 +227,18 @@ class OrderResource extends Resource
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
+                Tables\Actions\Action::make('approve')
+                ->label('Approve')
+                ->color('success')
+                ->icon('heroicon-o-check')
+                ->hidden(fn($record)=> $record->approved === -1 || $record->approved === 4 || auth()->user()->hasRole('medical-rep') || $record->approved === 1 && auth()->user()->hasRole('district-manager') ||  $record->approved === 2 && auth()->user()->hasRole('area-manager')) //  ||  $record->approved === 4 && auth()->user()->hasRole('country-manager')
+                ->action(fn($record)=> $record->approve()),
+                Tables\Actions\Action::make('decline')
+                ->label('Decline')
+                ->color('danger')
+                ->icon('heroicon-s-x')
+                ->hidden(fn($record)=> $record->approved === -1 || $record->approved === 4 || auth()->user()->hasRole('medical-rep') || $record->approved === 1 && auth()->user()->hasRole('district-manager') ||  $record->approved === 2 && auth()->user()->hasRole('area-manager'))
+                ->action(fn($record)=> $record->decline()),
             ])
             ->bulkActions([
                 Tables\Actions\RestoreBulkAction::make(),
