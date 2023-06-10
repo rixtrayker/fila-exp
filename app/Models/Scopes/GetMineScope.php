@@ -2,10 +2,12 @@
 
 namespace App\Models\Scopes;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Scope;
 use Illuminate\Support\Facades\DB;
+use Staudenmeir\LaravelCte\Query\Builder as Cte;
 
 class GetMineScope implements Scope
 {
@@ -23,16 +25,16 @@ class GetMineScope implements Scope
         }
 
         if(auth()->user() && auth()->user()->hasRole(['country-manager','area-manager','district-manager'])) {
+
             $query = DB::table('users')
-            ->selectRaw('id')
-                ->where('manager_id',auth()->id())
+                ->where('id',auth()->id())
                 ->unionAll(
                     DB::table('users')
-                        ->select('users.id')
+                        ->select('users.*')
                         ->join('tree', 'tree.id', '=', 'users.manager_id')
                 );
 
-            $tree = DB::table('tree')
+            $tree = DB::table('users')
                 ->withRecursiveExpression('tree', $query)
                 ->pluck('id')->toArray();
 

@@ -14,6 +14,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
 use App\Models\Role;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\PermissionRegistrar;
 use Spatie\Permission\Traits\HasRoles;
 use \Staudenmeir\LaravelMergedRelations\Eloquent\HasMergedRelationships;
@@ -148,7 +149,7 @@ class User extends Authenticatable implements FilamentUser
                         ->join('tree', 'tree.id', '=', 'users.manager_id')
                 );
 
-            $tree = DB::table('tree')
+            $tree = DB::table('users')
                 ->withRecursiveExpression('tree', $query)
                 ->pluck('id')->toArray();
 
