@@ -17,6 +17,6 @@ class Brick extends Model
     }
 
     public function getZoneCodeAttribute(){
-        return $this->name.'-'.$this->city->name.'-'.$this->city->governorate->name.'-'.$this->region->name.'-'.$this->country->name;
+        return $this->name.'-'.$this->city?->name.'-'.$this->city?->governorate?->name.'-'.$this->region?->name.'-'.$this->country?->name;
     }
 }

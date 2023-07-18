@@ -22,7 +22,7 @@ class FrequencyReportResource extends Resource
     protected static ?string $navigationGroup = 'Reports';
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
-
+    protected static ?string $slug = 'frequency-report';
 
 
     // public static function form(Form $form): Form

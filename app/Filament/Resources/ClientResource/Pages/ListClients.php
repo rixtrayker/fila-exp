@@ -5,8 +5,6 @@ namespace App\Filament\Resources\ClientResource\Pages;
 use App\Filament\Resources\ClientResource;
 use Filament\Pages\Actions;
 use Filament\Resources\Pages\ListRecords;
-use Filament\Tables\Concerns\InteractsWithTable;
-use Illuminate\Contracts\Database\Eloquent\Builder;
 
 class ListClients extends ListRecords
 {
@@ -23,5 +21,4 @@ class ListClients extends ListRecords
     {
         return true;
     }
-
 }
