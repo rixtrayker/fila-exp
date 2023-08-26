@@ -31,7 +31,6 @@ class ClientFactory extends Factory
             'email' => $this->faker->unique()->safeEmail(),
             'phone' => $this->faker->unique()->phoneNumber(),
             'address' => $this->faker->streetAddress(),
-            'city_id' => $this->faker->randomElement(City::pluck('id')),
             'client_type_id' => $this->faker->randomElement(ClientType::pluck('id')),
             'speciality_id' => $this->faker->randomElement(Speciality::pluck('id')),
             'shift' => $this->faker->randomElement(['AM','PM']),

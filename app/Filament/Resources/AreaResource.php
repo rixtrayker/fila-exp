@@ -39,24 +39,6 @@ class AreaResource extends Resource
                     ->multiple()
                     ->preload()
                     ->relationship('bricks','name'),
-
-                    // Section::make('bricks')
-                    //     ->disableLabel()
-                    //     ->schema([
-                    //         TableRepeater::make('bricks')
-                    //             ->createItemButtonLabel('Add Brick')
-                    //             ->relationship('areaBricks')
-                    //             ->disableLabel()
-                    //             ->emptyLabel('There is no Bricks added.')
-                    //             ->schema([
-                    //                 Select::make('brick_id')
-                    //                     ->label('Brick')
-                    //                     ->placeholder('select a brick')
-                    //                     ->options(Brick::pluck('name','id')),
-                    //             ])
-                    //             ->disableItemMovement()
-                    //             ->defaultItems(1),
-                    //     ])->compact(),
             ]);
     }
 

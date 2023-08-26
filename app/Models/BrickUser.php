@@ -15,8 +15,4 @@ class BrickUser extends Model
         'brick_id',
         'user_id',
     ];
-
-    // public function setAreaIdAttribute($value){
-    //     return;
-    // }
 }

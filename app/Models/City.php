@@ -9,7 +9,6 @@ class City extends Model
 {
     use HasFactory;
     use BelongsToThrough;
-    // protected $appends = ['zone_code'];
     protected $fillable = [
         'name',
         'governorate_id',

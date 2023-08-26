@@ -79,11 +79,6 @@ class User extends Authenticatable implements FilamentUser
     {
         return true;
     }
-
-    public function cities()
-    {
-        return $this->belongsToMany(City::class);
-    }
     public function bricks()
     {
         return $this->belongsToMany(Brick::class);
@@ -105,12 +100,6 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(Expenses::class);
     }
 
-    // public function userBricks(){
-    //     return $this->hasMany(BrickUser::class);
-    // }
-    // public function userAreas(){
-    //     return $this->hasMany(AreaUser::class);
-    // }
     public function userMessages()
     {
         return $this->belongsToMany(Message::class);
