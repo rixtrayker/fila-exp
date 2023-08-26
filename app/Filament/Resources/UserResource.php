@@ -56,10 +56,6 @@ class UserResource extends Resource
                     ->email()
                     ->required()
                     ->maxLength(255),
-                Select::make('cities')
-                    ->relationship('cities','name')
-                    ->multiple()
-                    ->preload(),
                 Select::make('parent_id')
                     ->label('Manager')
                     ->searchable()
