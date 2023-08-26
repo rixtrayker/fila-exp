@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Kalnoy\Nestedset\NodeTrait;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
@@ -21,6 +22,8 @@ use \Staudenmeir\LaravelMergedRelations\Eloquent\HasMergedRelationships;
 
 class User extends Authenticatable implements FilamentUser
 {
+    use NodeTrait;
+
     use \Staudenmeir\EloquentHasManyDeep\HasRelationships;
     use HasApiTokens;
     use HasFactory;
@@ -81,6 +84,14 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->belongsToMany(City::class);
     }
+    public function bricks()
+    {
+        return $this->belongsToMany(Brick::class);
+    }
+    public function areas()
+    {
+        return $this->belongsToMany(Area::class);
+    }
     public function clientRequests()
     {
         return $this->hasMany(ClientRequest::class);
@@ -93,6 +104,13 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->hasMany(Expenses::class);
     }
+
+    // public function userBricks(){
+    //     return $this->hasMany(BrickUser::class);
+    // }
+    // public function userAreas(){
+    //     return $this->hasMany(AreaUser::class);
+    // }
     public function userMessages()
     {
         return $this->belongsToMany(Message::class);
@@ -120,7 +138,7 @@ class User extends Authenticatable implements FilamentUser
     }
     public function manager()
     {
-        return $this->belongsTo(User::class,'manager_id');
+        return $this->belongsTo(User::class,'parent_id');
     }
     public function firstRole()
     {
@@ -133,31 +151,19 @@ class User extends Authenticatable implements FilamentUser
         )->limit(1);
     }
 
-    public function scopeMine( $query){
-        $column_name = 'id';
+    public function scopeGetMine($builder)
+    {
         if(auth()->user() && auth()->user()->hasRole('medical-rep')){
-            $query->where($column_name, '=', auth()->id());
+            return $builder->where('id', '=', auth()->id());
         }
 
         if(auth()->user() && auth()->user()->hasRole(['country-manager','area-manager','district-manager'])) {
-            $query = DB::table('users')
-            ->selectRaw('id')
-                ->where('manager_id',auth()->id())
-                ->unionAll(
-                    DB::table('users')
-                        ->select('users.id')
-                        ->join('tree', 'tree.id', '=', 'users.manager_id')
-                );
-
-            $tree = DB::table('users')
-                ->withRecursiveExpression('tree', $query)
-                ->pluck('id')->toArray();
-
-            $tree[] = auth()->id();
-            $query->whereIn($column_name, $tree);
+            $ids = User::descendantsAndSelf(auth()->user())->pluck('id')->toArray();
+             return $builder->whereIn('id', $ids);
         }
-    }
 
+        return $builder;
+    }
     public function roles(): BelongsToMany
     {
         $relation = $this->morphToMany(

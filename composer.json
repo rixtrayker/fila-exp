@@ -13,6 +13,7 @@
         "filament/filament": "^2.16",
         "filament/spatie-laravel-translatable-plugin": "^2.0",
         "guzzlehttp/guzzle": "^7.2",
+        "kalnoy/nestedset": "^6.0",
         "kirschbaum-development/eloquent-power-joins": "^3.0",
         "laravel/framework": "^9.19",
         "laravel/jetstream": "^2.14",

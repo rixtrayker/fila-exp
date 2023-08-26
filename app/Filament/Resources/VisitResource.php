@@ -134,11 +134,9 @@ class VisitResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-        ->withoutGlobalScopes([
-            SoftDeletingScope::class,
-        ])->scopes([
-                'all',
-        ]);
+            ->withoutGlobalScopes([
+                SoftDeletingScope::class,
+            ]);
     }
 
     protected static function getTemplateName($class = null){

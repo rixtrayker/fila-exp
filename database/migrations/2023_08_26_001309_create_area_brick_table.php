@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\User;
-use App\Models\VacationType;
+use App\Models\Area;
+use App\Models\Brick;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -15,13 +15,11 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('vacation_requests', function (Blueprint $table) {
+        Schema::create('area_brick', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(User::class, 'user_id');
-            $table->foreignIdFor(User::class, 'parent_id');
-            $table->foreignIdFor(VacationType::class);
-            $table->boolean('approved')->default(0);
-            $table->dateTime('approved_at')->nullable();
+            $table->foreignIdFor(Area::class);
+            $table->foreignIdFor(Brick::class);
+            $table->unique(['area_id', 'brick_id']);
             $table->timestamps();
         });
     }
@@ -33,6 +31,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('vacation_requests');
+        Schema::dropIfExists('area_brick');
     }
 };

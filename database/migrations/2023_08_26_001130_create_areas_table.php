@@ -1,7 +1,5 @@
 <?php
 
-use App\Models\User;
-use App\Models\VacationType;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -15,13 +13,9 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('vacation_requests', function (Blueprint $table) {
+        Schema::create('areas', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(User::class, 'user_id');
-            $table->foreignIdFor(User::class, 'parent_id');
-            $table->foreignIdFor(VacationType::class);
-            $table->boolean('approved')->default(0);
-            $table->dateTime('approved_at')->nullable();
+            $table->string('name');
             $table->timestamps();
         });
     }
@@ -33,6 +27,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('vacation_requests');
+        Schema::dropIfExists('areas');
     }
 };

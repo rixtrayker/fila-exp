@@ -22,25 +22,13 @@ class GetMineScope implements Scope
     {
         if(auth()->user() && auth()->user()->hasRole('medical-rep')){
             $builder->where('user_id', '=', auth()->id());
+            return;
         }
 
         if(auth()->user() && auth()->user()->hasRole(['country-manager','area-manager','district-manager'])) {
-
-            $query = DB::table('users')
-                ->where('id',auth()->id())
-                ->unionAll(
-                    DB::table('users')
-                        ->select('users.*')
-                        ->join('tree', 'tree.id', '=', 'users.manager_id')
-                );
-
-            $tree = DB::table('users')
-                ->withRecursiveExpression('tree', $query)
-                ->pluck('id')->toArray();
-
-            $tree[] = auth()->id();
-            $builder->whereIn('user_id', $tree);
+            $ids = User::descendantsAndSelf(auth()->user())->pluck('id')->toArray();
+            $builder->whereIn('user_id', $ids);
         }
-
+        return $builder;
     }
 }

@@ -87,4 +87,24 @@ class Client extends Model
     {
         return $this->visits()->where('status','visited')->count();
     }
+
+    public function scopeInMyAreas($builder)
+    {
+        if(!auth()->user()){
+            return;
+        }
+
+        if(auth()->user()->hasRole('medical-rep')){
+            $ids = auth()->user()->bricks()->pluck('bricks.id');
+            return $builder->whereIn('brick_id', $ids);
+        }
+
+        $myAreas = auth()->user()->areas;
+        $ids = [];
+        foreach($myAreas as $area){
+            $ids = $ids + $area->bricks()->pluck('bricks.id')->toArray();
+        }
+
+        return $builder->whereIn('brick_id', $ids);
+    }
 }

@@ -16,6 +16,7 @@ use Filament\Resources\Resource;
 use Filament\Resources\Table;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
+use Illuminate\Database\Eloquent\Builder;
 use Str;
 
 class ClientResource extends Resource
@@ -33,16 +34,14 @@ class ClientResource extends Resource
                     ->label('Name')
                     ->required(),
                 TextInput::make('name_ar')
-                    ->label('Name (العربية)')
-                    ->required(),
+                    ->label('Name (العربية)'),
                 TextInput::make('email')
                     ->email()
                     ->label('Email'),
                 TextInput::make('phone')
-                    ->label('Phone')
-                    ->required(),
-                TextInput::make('address')
-                    ->label('Address')
+                    ->label('Phone'),
+                TextInput::make('am_work')
+                    ->label('AM work')
                     ->required(),
                 Select::make('brick_id')
                     ->label('Brick')
@@ -90,10 +89,14 @@ class ClientResource extends Resource
                     ->sortable()
                     ->searchable()
                     ->label('Phone'),
-                TextColumn::make('address')
+                TextColumn::make('am_work')
                     ->sortable()
                     ->searchable()
-                    ->label('Address'),
+                    ->label('AM work'),
+                TextColumn::make('related_pharmacy')
+                    ->sortable()
+                    ->searchable()
+                    ->label('Related Pharmacy'),
                 TextColumn::make('brick.name')
                     ->sortable()
                     ->label('Brick'),
@@ -128,6 +131,13 @@ class ClientResource extends Resource
         return [
             //
         ];
+    }
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+          ->scopes([
+            'inMyAreas',
+          ]);
     }
 
     public static function getPages(): array

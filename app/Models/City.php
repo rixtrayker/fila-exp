@@ -9,6 +9,7 @@ class City extends Model
 {
     use HasFactory;
     use BelongsToThrough;
+    // protected $appends = ['zone_code'];
     protected $fillable = [
         'name',
         'governorate_id',
@@ -47,6 +48,6 @@ class City extends Model
         return $this->hasManyThrough(Visit::class, Client::class);
     }
     public function getZoneCodeAttribute(){
-        return $this->name.'-'.$this->governorate->name.'-'.$this->region->name.'-'.$this->country->name;
+        return $this->name.'-'.$this->governorate->name.'-'.$this->region->name;
     }
 }

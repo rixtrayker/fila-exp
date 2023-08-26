@@ -16,6 +16,10 @@ class Brick extends Model
         return $this->belongsTo(City::class);
     }
 
+    public function areas(){
+        return $this->belongsToMany(Area::class);
+    }
+
     public function getZoneCodeAttribute(){
         return $this->name.'-'.$this->city?->name.'-'.$this->city?->governorate?->name.'-'.$this->region?->name.'-'.$this->country?->name;
     }

@@ -21,9 +21,11 @@ return new class extends Migration
             $table->string('name_en');
             $table->string('name_ar');
             $table->string('email')->nullable();
-            $table->string('phone');
+            $table->string('phone')->nullable();
             $table->foreignIdFor(Brick::class);
-            $table->string('address');
+            $table->string('address')->nullable();
+            $table->string('am_work')->nullable();
+            $table->string('related_pharmacy')->nullable();
             $table->enum('grade',['A','B','C','N','PH']);
             $table->enum('shift',['AM','PM']);
             $table->foreignIdFor(ClientType::class);

@@ -5,8 +5,11 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\UserResource\Pages;
 use App\Filament\Resources\UserResource\RelationManagers;
 use App\Filament\Resources\UserResource\RelationManagers\RolesRelationManager;
+use App\Models\Area;
+use App\Models\Brick;
 use App\Models\User;
 use App\Traits\RolesOnlyResources;
+use Awcodes\FilamentTableRepeater\Components\TableRepeater;
 use Filament\Forms;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Resources\Form;
@@ -18,6 +21,7 @@ use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Pages\Page;
 use Filament\Tables\Columns\TextColumn;
@@ -56,7 +60,7 @@ class UserResource extends Resource
                     ->relationship('cities','name')
                     ->multiple()
                     ->preload(),
-                Select::make('manager_id')
+                Select::make('parent_id')
                     ->label('Manager')
                     ->searchable()
                     ->placeholder('Search name')
@@ -76,6 +80,58 @@ class UserResource extends Resource
                     ->columns(2)
                     ->helperText('Only choose one!')
                     ->required(),
+                Select::make('bricks')
+                    ->label('Bricks')
+                    ->visible(fn($record) => $record->hasRole('medical-rep') && !Str::contains(request()->path(),'create'))
+                    ->multiple()
+                    ->preload()
+                    ->relationship('bricks','name'),
+                Select::make('areas')
+                    ->label('Areas')
+                    ->visible(fn($record) => !$record->hasRole('medical-rep') && !Str::contains(request()->path(),'create'))
+                    ->multiple()
+                    ->preload()
+                    ->relationship('areas','name'),
+                // Section::make('bricks')
+                //     ->visible(auth()->user()->hasRole('medical-rep'))
+                //     ->disableLabel()
+                //     ->schema([
+                //         TableRepeater::make('bricks')
+                //             ->createItemButtonLabel('Add Brick')
+                //             ->relationship('userBricks')
+                //             ->disableLabel()
+                //             ->emptyLabel('There is no Bricks added.')
+                //             ->schema([
+                //                 Select::make('area_id')
+                //                     ->label('Area')
+                //                     ->placeholder('select an area')
+                //                     ->options(Area::pluck('name','id')),
+                //                 Select::make('brick_id')
+                //                     ->label('Brick')
+                //                     ->placeholder('select a brick')
+                //                     ->options(Brick::pluck('name','id')),
+                //             ])
+                //             ->disableItemMovement()
+                //             ->defaultItems(1),
+                //     ])->compact(),
+                // Section::make('area')
+                //     ->disableLabel()
+                //     ->hidden(auth()->user()->hasRole('medical-rep'))
+                //     ->schema([
+                //         TableRepeater::make('area')
+                //             ->createItemButtonLabel('Add an area')
+                //             ->relationship('userAreas')
+                //             ->disableLabel()
+                //             ->emptyLabel('There is no Areas added.')
+                //             ->schema([
+                //                 Select::make('area_id')
+                //                     ->label('Area')
+                //                     ->placeholder('select an area')
+                //                     ->options(Area::pluck('name','id')),
+                //             ])
+                //             ->disableItemMovement()
+                //             ->defaultItems(1),
+                //     ])->compact(),
             ]);
     }
 

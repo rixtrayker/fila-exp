@@ -149,6 +149,9 @@ class CreateVisit extends CreateRecord
         $now = now();
 
         foreach($products as $product){
+            if(!$product['product_id'] || !$product['count'])
+                continue;
+
             $insertData[] = [
                 'visit_id' => $visitId,
                 'product_id' =>  $product['product_id'],
