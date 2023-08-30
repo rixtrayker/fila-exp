@@ -28,6 +28,9 @@ class CreateOrder extends CreateRecord
         $insertData = [];
         $now = now();
         foreach($products as $product){
+            if(!$product['product_id']){
+                continue;
+            }
             $insertData[] = [
                 'order_id' => $orderId,
                 'product_id' =>  $product['product_id'],

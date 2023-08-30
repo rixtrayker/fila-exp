@@ -23,7 +23,6 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Illuminate\Support\Facades\Log;
 
 class OrderResource extends Resource
 {
@@ -97,6 +96,7 @@ class OrderResource extends Resource
                                 ->disableLabel()
                                 ->placeholder('select a product')
                                 ->options(Product::pluck('name','id'))
+                                ->required()
                                 ->reactive()
                                 ->afterStateUpdated(
                                     function($set, $get){
@@ -117,6 +117,7 @@ class OrderResource extends Resource
                                 ),
                             TextInput::make('count')
                                 ->numeric()
+                                ->required()
                                 ->minValue(1)
                                 ->disableLabel()
                                 ->reactive()
@@ -151,8 +152,8 @@ class OrderResource extends Resource
                         ->columnSpanFull()
                         ->defaultItems(1),
                         Select::make('discount_type')
-                                ->options(['percentage'=>'Percentage','amount'=>'Amount'])
-                                ->default('amount')
+                                ->options(['percentage'=>'Percentage','value'=>'Value'])
+                                ->default('value')
                                 ->reactive()
                                 ->label('Discount Type')
                                 ->hidden(auth()->user()->hasRole('medical-rep'))
@@ -210,12 +211,12 @@ class OrderResource extends Resource
                 IconColumn::make('approved')
                     ->colors([
                         'danger'=>-1,
-                        'success'=>4
+                        'success'=>1,
                     ])
                     ->options([
                         'heroicon-o-clock',
-                        'heroicon-o-x-circle'=>-1,
-                        'heroicon-o-check-circle' => 4,
+                        'heroicon-o-x-circle' => -1,
+                        'heroicon-o-check-circle' => 1,
                     ]),
                 TextColumn::make('order_date')
                     ->dateTime('d-M-Y')
@@ -228,17 +229,17 @@ class OrderResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\Action::make('approve')
-                ->label('Approve')
-                ->color('success')
-                ->icon('heroicon-o-check')
-                ->hidden(fn($record)=> $record->approved === -1 || $record->approved === 4 || auth()->user()->hasRole('medical-rep') || $record->approved === 1 && auth()->user()->hasRole('district-manager') ||  $record->approved === 2 && auth()->user()->hasRole('area-manager')) //  ||  $record->approved === 4 && auth()->user()->hasRole('country-manager')
-                ->action(fn($record)=> $record->approve()),
+                    ->label('Approve')
+                    ->color('success')
+                    ->icon('heroicon-o-check')
+                    ->hidden(fn($record)=> $record->approved === -1 || auth()->user()->hasRole('medical-rep') || $record->approved === 1)
+                    ->action(fn($record)=> $record->approve()),
                 Tables\Actions\Action::make('decline')
-                ->label('Decline')
-                ->color('danger')
-                ->icon('heroicon-s-x')
-                ->hidden(fn($record)=> $record->approved === -1 || $record->approved === 4 || auth()->user()->hasRole('medical-rep') || $record->approved === 1 && auth()->user()->hasRole('district-manager') ||  $record->approved === 2 && auth()->user()->hasRole('area-manager'))
-                ->action(fn($record)=> $record->decline()),
+                    ->label('Decline')
+                    ->color('danger')
+                    ->icon('heroicon-s-x')
+                    ->hidden(fn($record)=> $record->approved === -1 || auth()->user()->hasRole('medical-rep') || $record->approved === 1)
+                    ->action(fn($record)=> $record->decline()),
             ])
             ->bulkActions([
                 Tables\Actions\RestoreBulkAction::make(),

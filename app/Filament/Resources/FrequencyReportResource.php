@@ -18,9 +18,9 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class FrequencyReportResource extends Resource
 {
     protected static ?string $model = Client::class;
-    protected static ?string $label = 'Frequency Report';
+    protected static ?string $label = 'Frequency report';
 
-    protected static ?string $navigationLabel = 'Frequency Report';
+    protected static ?string $navigationLabel = 'Frequency report';
     protected static ?string $navigationGroup = 'Reports';
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';

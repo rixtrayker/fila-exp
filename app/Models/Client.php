@@ -99,6 +99,10 @@ class Client extends Model
             return $builder->whereIn('brick_id', $ids);
         }
 
+        if(auth()->user()->hasRole('super-admin')){
+            return $builder;
+        }
+
         $myAreas = auth()->user()->areas;
         $ids = [];
         foreach($myAreas as $area){

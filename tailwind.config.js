@@ -11,14 +11,12 @@ module.exports = {
         './storage/framework/views/*.php',
         './resources/views/**/*.blade.php',
     ],
-    darkMode: 'class',
+    // darkMode: 'class',
     theme: {
         extend: {
             colors: {
                 danger: colors.rose,
-                primary: colors.emerald,
                 success: colors.green,
-                warning: colors.amber,
                 chartblue: '#DAECFC',
                 chartgreen: '#DAF5F5',
                 chartred: '#FFE1E6',

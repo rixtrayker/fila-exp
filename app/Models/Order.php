@@ -14,6 +14,10 @@ class Order extends Model
     protected $fillable = [
         'user_id',
         'client_id',
+        'discount_type',
+        'sub_total',
+        'total',
+        'approved',
     ];
 
     public function products()
@@ -25,29 +29,15 @@ class Order extends Model
     {
         return $this->hasMany(OrderProduct::class);
     }
-    
+
     function approve() {
-        if(auth()->user()->hasRole('district-manager'))
-        {
-            $this->approved = 1;
-            $this->saveQuietly();
-        }
-        if(auth()->user()->hasRole('area-manager'))
-        {
-            $this->approved = 2;
-            $this->saveQuietly();
-        }
-        if(auth()->user()->hasRole('country-manager'))
-        {
-            $this->approved = 4;
-            $this->saveQuietly();
-        }
+        $this->approved = 1;
+        $this->saveQuietly();
     }
 
     function decline() {
         $this->approved = -1;
         $this->saveQuietly();
-
     }
 
     function getApprovalAttribute(): bool {

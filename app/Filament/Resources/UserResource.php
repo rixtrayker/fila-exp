@@ -79,13 +79,13 @@ class UserResource extends Resource
                     ->required(),
                 Select::make('bricks')
                     ->label('Bricks')
-                    ->visible(fn($record) => $record->hasRole('medical-rep') && !Str::contains(request()->path(),'create'))
+                    ->visible(fn($record) => !Str::contains(request()->path(),'create') && $record->hasRole('medical-rep'))
                     ->multiple()
                     ->preload()
                     ->relationship('bricks','name'),
                 Select::make('areas')
                     ->label('Areas')
-                    ->visible(fn($record) => !$record->hasRole('medical-rep') && !Str::contains(request()->path(),'create'))
+                    ->visible(fn($record) => !Str::contains(request()->path(),'create') && !$record->hasRole('medical-rep'))
                     ->multiple()
                     ->preload()
                     ->relationship('areas','name'),

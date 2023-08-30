@@ -41,8 +41,7 @@ class ClientResource extends Resource
                 TextInput::make('phone')
                     ->label('Phone'),
                 TextInput::make('am_work')
-                    ->label('AM work')
-                    ->required(),
+                    ->label('AM work'),
                 Select::make('brick_id')
                     ->label('Brick')
                     ->searchable()

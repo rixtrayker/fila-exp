@@ -20,7 +20,7 @@ class CoverageReport extends Page implements HasFormActionsContract
 
     protected static string $view = 'filament.pages.coverage-report';
 
-    protected static ?string $navigationLabel = 'Cover report';
+    protected static ?string $navigationLabel = 'Coverage report';
     // protected static ?string $navigationIcon = 'heroicon-o-calendar';
     protected static ?string $slug = 'cover-report';
     protected static ?string $navigationGroup = 'Reports';

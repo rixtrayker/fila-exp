@@ -33,7 +33,7 @@ class PlanResource extends Resource
     // protected static bool $shouldRegisterNavigation = false;
 
     protected static ?string $model = Plan::class;
-    protected static ?string $navigationLabel = 'Weekly Plans';
+    protected static ?string $navigationLabel = 'Weekly plans';
     protected static ?string $navigationIcon = 'heroicon-o-calendar';
     protected static ?string $slug = 'plans';
     protected static ?int $navigationSort = 2;
