@@ -113,7 +113,7 @@ class PlanResource extends Resource
 
     public static function getClients(): array
     {
-        return Client::orderBy('name_en')->get()->pluck('name', 'id')->toArray();
+        return Client::inMyAreas->orderBy('name_en')->get()->pluck('name', 'id')->toArray();
     }
     public static function visitDates(): array{
         return [];
@@ -172,8 +172,8 @@ class PlanResource extends Resource
                     ->searchable()
                     ->disabled(fn()=>request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans'))
                     ->default(fn($record)=> request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans') ? $record->shiftClient($days[$key])->am_shift : null)
-                    ->getSearchResultsUsing(fn (string $search) => Client::where('name_en', 'like', "%{$search}%")->orWhere('name_ar', 'like', "%{$search}%")->limit(50)->pluck('name_en', 'id'))
-                    ->options(Client::pluck('name_en', 'id'))
+                    ->getSearchResultsUsing(fn (string $search) => Client::inMyAreas->where('name_en', 'like', "%{$search}%")->orWhere('name_ar', 'like', "%{$search}%")->limit(50)->pluck('name_en', 'id'))
+                    ->options(Client::inMyAreas->pluck('name_en', 'id'))
                     ->preload(),
                 TimePicker::make($day.'_time_am')
                     ->disabled(fn()=>request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans'))
@@ -185,8 +185,8 @@ class PlanResource extends Resource
                     ->searchable()
                     ->disabled(fn()=>request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans'))
                     ->default(fn($record)=> request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans') ? $record->shiftClient($days[$key])->pm_shift : null)
-                    ->getSearchResultsUsing(fn (string $search) => Client::where('name_en', 'like', "%{$search}%")->orWhere('name_ar', 'like', "%{$search}%")->limit(50)->pluck('name_en', 'id'))
-                    ->options(Client::pluck('name_en', 'id'))
+                    ->getSearchResultsUsing(fn (string $search) => Client::inMyAreas->where('name_en', 'like', "%{$search}%")->orWhere('name_ar', 'like', "%{$search}%")->limit(50)->pluck('name_en', 'id'))
+                    ->options(Client::inMyAreas->pluck('name_en', 'id'))
                     ->preload(),
                 TimePicker::make($day.'_time_pm')
                     ->disabled(fn()=>request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans'))
@@ -219,7 +219,7 @@ class PlanResource extends Resource
                                     ->get();
 
                                 $clientIds = $visits->pluck('client_id')->toArray();
-                                $clients = Client::orderBy('name_en')->whereIn('id',$clientIds)->get()->pluck('name', 'id')->toArray();
+                                $clients = Client::inMyAreas->orderBy('name_en')->whereIn('id',$clientIds)->get()->pluck('name', 'id')->toArray();
                                 $options = [];
                                 foreach($clients as $key => $client){
                                     $firstClientVisit = $visits->where('client_id',$key)->first();
