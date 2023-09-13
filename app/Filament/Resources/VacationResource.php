@@ -124,14 +124,14 @@ class VacationResource extends Resource
                     ->label('Approve')
                     ->color('success')
                     ->icon('heroicon-o-check')
-                    ->visible(fn($record)=>$record->approved === null)
-                    ->action(fn($record)=> $record->approve()),
+                    ->hidden(fn($record) => $record->isApproved())
+                    ->action(fn($record) => $record->approve()),
                 Tables\Actions\Action::make('reject')
                     ->label('Reject')
                     ->color('danger')
                     ->icon('heroicon-s-x')
-                    ->visible(fn($record)=>$record->approved === null)
-                    ->action(fn($record)=> $record->reject()),
+                    ->hidden(fn($record) => $record->approved())
+                    ->action(fn($record) => $record->reject()),
             ])
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),

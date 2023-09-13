@@ -15,9 +15,10 @@ class ViewOrder extends ViewRecord
     {
         $record = Order::find($data['id']);
         $total = 0;
+        $orderProducts = $record->orderProducts()->with('product')->get();
 
-        foreach($record->orderProducts as $item){
-            $total += $item->product->price * $item->count;
+        foreach($orderProducts as $item){
+            $total += $item->product?->price * $item->count;
         }
 
         $data['total'] = $total;

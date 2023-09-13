@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Scopes\GetMineScope;
+use App\Traits\CanApprove;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -11,6 +12,8 @@ class Order extends Model
 {
     use HasFactory;
     use SoftDeletes;
+    use CanApprove;
+
     protected $fillable = [
         'user_id',
         'client_id',
@@ -45,10 +48,10 @@ class Order extends Model
     }
 
     function getProductListAttribute(): string {
-        $products = $this->orderProducts;
+        $products = $this->orderProducts()->with('product')->get();
         $list = [];
         foreach ($products as $product) {
-            $list[] = $product->count.'x '.$product->product->name;
+            $list[] = $product->count.' x '.$product->product?->name;
         }
 
         return implode(' , ',$list);

@@ -39,7 +39,7 @@ class FrequencyReportResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('name')
+                TextColumn::make('name_en')
                     ->searchable()
                     ->label('Name'),
                     TextColumn::make('done_visits_count')

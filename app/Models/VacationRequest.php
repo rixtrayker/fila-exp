@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use App\Models\Scopes\GetMineScope;
+use App\Traits\CanApprove;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class VacationRequest extends Model
 {
     use HasFactory;
-
+    use CanApprove;
     protected $guarded = [];
 
     public function repUser()
@@ -41,16 +42,5 @@ class VacationRequest extends Model
     {
         $vacationDuration =  $this->vacationDurations()->latest()->first();
         return $vacationDuration->end;
-    }
-    public function approve()
-    {
-        $this->approved = 1;
-        $this->approved_at = now();
-        $this->save();
-    }
-    public function reject()
-    {
-        $this->approved = 0;
-        $this->save();
     }
 }

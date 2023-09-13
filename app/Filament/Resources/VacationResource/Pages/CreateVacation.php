@@ -12,7 +12,7 @@ class CreateVacation extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        $data['parent_id'] = 0;
+        // $data['parent_id'] = 0;
         // if(auth()->user()->hasRole('medical-rep')){
             $data['user_id'] = auth()->id();
         // }
