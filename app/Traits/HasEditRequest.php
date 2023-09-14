@@ -21,11 +21,18 @@ trait HasEditRequest{
         {
             $user = auth()->user();
 
-            if( !$user->hasRole('super-admin')){
+            if( $user->hasRole(['super-admin','country-manager','district-manager'])){
                 return true;
             }
 
             $editable = isset($model->editable) ? $model->editable : $model->fillable;
+
+            $modelName = get_class($model);
+            $hasEditables = EditRequest::where('status', 'pending')
+                ->where('editable_id', $model->id)
+                ->where('editable_type', $modelName)
+                ->withOutGlobalScopes()
+                ->get();
 
             $updatesList = [];
             $batchNumber = 'bt_'.time();
@@ -35,7 +42,22 @@ trait HasEditRequest{
                     continue;
                 }
 
-                array_push($updatesList,self::prepareEditRequest('changed', $model, $batchNumber, $key));
+                if(count($hasEditables)){
+                    if($hasEditables->first()->user_id != auth()->id())
+                        return false;
+
+                    $oldEditRequest = $hasEditables
+                        ->where('attribute', $key)
+                        ->first();
+
+                    if($oldEditRequest)
+                        $oldEditRequest->update(['to' => $model->{$key}]);
+                    else
+                        array_push($updatesList,self::prepareEditRequest('changed', $model, $hasEditables->first()->batchNumber, $key));
+
+                } else {
+                    array_push($updatesList,self::prepareEditRequest('changed', $model, $batchNumber, $key));
+                }
             }
 
             EditRequest::insert($updatesList);
