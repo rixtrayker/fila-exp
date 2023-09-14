@@ -33,16 +33,6 @@ class Order extends Model
         return $this->hasMany(OrderProduct::class);
     }
 
-    function approve() {
-        $this->approved = 1;
-        $this->saveQuietly();
-    }
-
-    function decline() {
-        $this->approved = -1;
-        $this->saveQuietly();
-    }
-
     function getApprovalAttribute(): bool {
         return $this->approved === 4;
     }
@@ -60,6 +50,11 @@ class Order extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function client()
+    {
+        return $this->belongsTo(Client::class);
     }
     public static function boot()
     {

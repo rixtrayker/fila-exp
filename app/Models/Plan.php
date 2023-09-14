@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use App\Models\Scopes\GetMineScope;
-use Carbon\Carbon;
+use App\Traits\CanApprove;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Plan extends Model
 {
     use HasFactory;
+    use CanApprove;
 
     protected $casts = [
         'start_at' => 'date'
@@ -51,15 +52,15 @@ class Plan extends Model
         return $shift;
     }
 
-    public function approve()
+    public function approvePlan()
     {
-        $this->approved = 1;
+        $this->approve();
         $this->visits()->update(['status' => 'pending']);
-        $this->save();
     }
 
-    public function reject()
+    public function rejectPlan()
     {
+        $this->reject();
         $this->delete();
     }
 }

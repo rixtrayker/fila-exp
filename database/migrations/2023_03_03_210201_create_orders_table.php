@@ -26,6 +26,7 @@ return new class extends Migration
             $table->double('sub_total');
             $table->double('total');
             $table->tinyInteger('approved')->default(0);
+            $table->dateTime('approved_at')->nullable();
             $table->timestamps();
         });
     }

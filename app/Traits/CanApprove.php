@@ -4,13 +4,16 @@ namespace App\Traits;
 
 trait CanApprove {
     protected function approvalOrder(){
-        $approvedBy = 0;
-
         if(auth()->user()->hasRole('district-manager'))
-            $approvedBy = 2;
+            return 2;
 
         if(auth()->user()->hasRole('country-manager'))
-            $approvedBy = 3;
+            return 3;
+
+        if(auth()->user()->hasRole('super-admin'))
+            return 5;
+
+        return 0;
     }
     public function approve()
     {
@@ -25,10 +28,26 @@ trait CanApprove {
         $this->save();
     }
 
-    public function isApproved()
+    public function canApprove()
     {
-        $roleApprovalOrder = $this->approvalOrder();
+        if(auth()->user()->hasRole('medical-rep') || auth()->user()->hasRole('area-manager'))
+            return false;
 
-        return abs($this->approved) <= $roleApprovalOrder;
+        if($this->approved !== 0 )
+            return false;
+
+        return true;
+    }
+
+    public function canDecline()
+    {
+        if(auth()->user()->hasRole('medical-rep') || auth()->user()->hasRole('area-manager'))
+            return false;
+
+        if($this->approved < 0)
+            return false;
+
+        $roleApprovalOrder = $this->approvalOrder();
+        return abs($this->approved) < $roleApprovalOrder;
     }
 }

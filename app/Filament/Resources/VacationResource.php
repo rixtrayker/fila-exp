@@ -108,7 +108,20 @@ class VacationResource extends Resource
                     ->sortable()
                     ->searchable(),
                 IconColumn::make('approved')
-                    ->boolean(),
+                    ->colors(function($record){
+                        if($record->approved > 0)
+                            return ['success' => $record->approved];
+                        if($record->approved < 0)
+                            return ['danger' => $record->approved];
+                        return ['secondary'];
+                    })
+                    ->options(function($record){
+                        if($record->approved > 0)
+                                return ['heroicon-o-check-circle' => $record->approved];
+                        if($record->approved < 0)
+                            return ['heroicon-o-x-circle' =>  $record->approved];
+                        return ['heroicon-o-clock'];
+                    }),
                 TextColumn::make('approved_at')
                     ->label('Approved at')
                     ->dateTime('d-M-Y')
@@ -124,13 +137,13 @@ class VacationResource extends Resource
                     ->label('Approve')
                     ->color('success')
                     ->icon('heroicon-o-check')
-                    ->hidden(fn($record) => $record->isApproved())
+                    ->visible(fn($record) => $record->canApprove())
                     ->action(fn($record) => $record->approve()),
                 Tables\Actions\Action::make('reject')
                     ->label('Reject')
                     ->color('danger')
                     ->icon('heroicon-s-x')
-                    ->hidden(fn($record) => $record->approved())
+                    ->visible(fn($record) => $record->canDecline())
                     ->action(fn($record) => $record->reject()),
             ])
             ->bulkActions([

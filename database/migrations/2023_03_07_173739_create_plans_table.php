@@ -18,6 +18,7 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(User::class);
             $table->boolean('approved')->default(0);
+            $table->dateTime('approved_at')->nullable();
             $table->date('start_at');
             $table->timestamps();
         });

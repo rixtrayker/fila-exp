@@ -199,7 +199,7 @@ class OrderResource extends Resource
                     ->label('M.Rep')
                     ->hidden(auth()->user()->hasRole('medical-rep'))
                     ->sortable(),
-                TextColumn::make('client.name')
+                TextColumn::make('client.name_en')
                     ->label('Client')
                     ->sortable(),
                 TextColumn::make('total')
@@ -209,15 +209,20 @@ class OrderResource extends Resource
                     ->label('Product List')
                     ->sortable(),
                 IconColumn::make('approved')
-                    ->colors([
-                        'danger'=> '-1',
-                        'success'=> '1',
-                    ])
-                    ->options([
-                        'heroicon-o-clock',
-                        'heroicon-o-x-circle' => '-1',
-                        'heroicon-o-check-circle' => '1',
-                    ]),
+                    ->colors(function($record){
+                        if($record->approved > 0)
+                            return ['success' => $record->approved];
+                        if($record->approved < 0)
+                            return ['danger' => $record->approved];
+                        return ['secondary'];
+                    })
+                    ->options(function($record){
+                        if($record->approved > 0)
+                                return ['heroicon-o-check-circle' => $record->approved];
+                        if($record->approved < 0)
+                            return ['heroicon-o-x-circle' =>  $record->approved];
+                        return ['heroicon-o-clock'];
+                    }),
                 TextColumn::make('order_date')
                     ->dateTime('d-M-Y')
                     ->sortable()
@@ -232,14 +237,14 @@ class OrderResource extends Resource
                     ->label('Approve')
                     ->color('success')
                     ->icon('heroicon-o-check')
-                    ->hidden(fn($record)=> $record->approved == -1 || auth()->user()->hasRole('medical-rep') || $record->approved == 1)
-                    ->action(fn($record)=> $record->approve()),
+                    ->visible(fn($record) => $record->canApprove())
+                    ->action(fn($record) => $record->approve()),
                 Tables\Actions\Action::make('decline')
                     ->label('Decline')
                     ->color('danger')
                     ->icon('heroicon-s-x')
-                    ->hidden(fn($record)=> $record->approved == -1 || auth()->user()->hasRole('medical-rep') || $record->approved == 1)
-                    ->action(fn($record)=> $record->decline()),
+                    ->visible(fn($record) => $record->canDecline())
+                    ->action(fn($record) => $record->reject()),
             ])
             ->bulkActions([
                 Tables\Actions\RestoreBulkAction::make(),
