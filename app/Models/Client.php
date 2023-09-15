@@ -21,6 +21,8 @@ class Client extends Model
         'brick_id',
         'grade',
         'shift',
+        'related_pharmacy',
+        'am_work',
         'client_type_id',
         'speciality_id',
     ];
@@ -33,6 +35,8 @@ class Client extends Model
         'brick_id',
         'grade',
         'shift',
+        'related_pharmacy',
+        'am_work',
         'client_type_id',
         'speciality_id',
     ];

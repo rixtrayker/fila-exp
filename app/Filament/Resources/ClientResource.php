@@ -42,6 +42,8 @@ class ClientResource extends Resource
                     ->label('Phone'),
                 TextInput::make('am_work')
                     ->label('AM work'),
+                TextInput::make('address')
+                    ->label('Address'),
                 Select::make('brick_id')
                     ->label('Brick')
                     ->searchable()
@@ -92,6 +94,10 @@ class ClientResource extends Resource
                     ->sortable()
                     ->searchable()
                     ->label('AM work'),
+                TextColumn::make('address')
+                    ->sortable()
+                    ->searchable()
+                    ->label('Address'),
                 TextColumn::make('related_pharmacy')
                     ->sortable()
                     ->searchable()

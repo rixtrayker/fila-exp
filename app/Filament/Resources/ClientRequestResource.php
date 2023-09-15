@@ -19,6 +19,7 @@ use Filament\Resources\Form;
 use Filament\Resources\Resource;
 use Filament\Resources\Table;
 use Filament\Tables;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -131,6 +132,21 @@ class ClientRequestResource extends Resource
                     ->dateTime('d-M-Y')
                     ->sortable()
                     ->searchable(),
+                IconColumn::make('approved')
+                    ->colors(function($record){
+                        if($record->approved > 0)
+                            return ['success' => $record->approved];
+                        if($record->approved < 0)
+                            return ['danger' => $record->approved];
+                        return ['secondary'];
+                    })
+                    ->options(function($record){
+                        if($record->approved > 0)
+                                return ['heroicon-o-check-circle' => $record->approved];
+                        if($record->approved < 0)
+                            return ['heroicon-o-x-circle' =>  $record->approved];
+                        return ['heroicon-o-clock'];
+                    }),
                 TextColumn::make('description')
                     ->label('Description')
                     ->limit(60),
@@ -140,6 +156,18 @@ class ClientRequestResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('approve')
+                    ->label('Approve')
+                    ->color('success')
+                    ->icon('heroicon-o-check')
+                    ->visible(fn($record) => $record->canApprove())
+                    ->action(fn($record) => $record->approve()),
+                Tables\Actions\Action::make('decline')
+                    ->label('Decline')
+                    ->color('danger')
+                    ->icon('heroicon-s-x')
+                    ->visible(fn($record) => $record->canDecline())
+                    ->action(fn($record) => $record->reject()),
             ])
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Scopes\GetMineScope;
+use App\Traits\CanApprove;
 use App\Traits\HasEditRequest;
 use App\Traits\HasRoleScopeTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 class ClientRequest extends Model
 {
     use HasFactory;
+    use CanApprove;
     use HasEditRequest;
     use HasRoleScopeTrait;
 

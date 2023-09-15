@@ -59,10 +59,10 @@ class ProductResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')
-                ->searchable()
-                ->sortable()
-                ->label('Name'),
-                TextColumn::make('category.name'),
+                    ->searchable()
+                    ->sortable()
+                    ->label('Name'),
+                TextColumn::make('productCategory.name'),
                 TextColumn::make('price'),
                 IconColumn::make('active')
                     ->boolean(),
