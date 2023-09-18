@@ -25,9 +25,11 @@ class ClientResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
     protected static ?int $navigationSort = 3;
 
-
+    protected static $bricks;
     public static function form(Form $form): Form
     {
+        self::$bricks = Brick::get()->pluck('zone_code', 'id')->toArray();
+
         return $form
             ->schema([
                 TextInput::make('name_en')
@@ -47,8 +49,8 @@ class ClientResource extends Resource
                 Select::make('brick_id')
                     ->label('Brick')
                     ->searchable()
-                    ->options(Brick::get()->pluck('zone_code', 'id'))
-                    ->getSearchResultsUsing(fn(string $search)=>ClientResource::searchCity($search))
+                    ->options(self::$bricks)
+                    ->getSearchResultsUsing(fn(string $search)=>ClientResource::searchBrick($search))
                     ->preload()
                     ->required(),
                 Select::make('grade')
@@ -157,11 +159,10 @@ class ClientResource extends Resource
 
     public static function searchBrick(string $search)
     {
-        return collect(Brick::get())
-            ->filter(
-                function ($record) use ($search) {
-                    return Str::contains($record->zone_code,$search);
-                }
-            )->pluck('zone_code', 'id');
+        $result = array_filter(self::$bricks, function ($value) use ($search) {
+            return strpos($value, $search) !== false;
+        });
+
+        return $result;
     }
 }

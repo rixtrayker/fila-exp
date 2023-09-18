@@ -223,6 +223,8 @@ class OrderResource extends Resource
                             return ['heroicon-o-x-circle' =>  $record->approved];
                         return ['heroicon-o-clock'];
                     }),
+                TextColumn::make('approved_by')
+                    ->label('Approved By'),
                 TextColumn::make('order_date')
                     ->dateTime('d-M-Y')
                     ->sortable()

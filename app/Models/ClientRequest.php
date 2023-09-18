@@ -28,6 +28,7 @@ class ClientRequest extends Model
         'from_date',
         'to_date',
         'rx_rate',
+        'approved',
         'ordered_before',
         'description',
     ];

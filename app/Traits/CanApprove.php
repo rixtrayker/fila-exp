@@ -50,4 +50,16 @@ trait CanApprove {
         $roleApprovalOrder = $this->approvalOrder();
         return abs($this->approved) < $roleApprovalOrder;
     }
+
+    public function getApprovedByAttribute(){
+        if(abs($this->approved) == 1)
+            return 'area-manager';
+        if(abs($this->approved) == 2)
+            return 'district-manager';
+        if(abs($this->approved) == 3)
+            return 'country-manager';
+        if(abs($this->approved) == 5)
+            return 'super-admin';
+        return '';
+    }
 }

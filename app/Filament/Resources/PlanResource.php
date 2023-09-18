@@ -56,6 +56,8 @@ class PlanResource extends Resource
                 TextColumn::make('user.name')
                     ->sortable()
                     ->searchable(),
+                TextColumn::make('approved_by')
+                    ->label('Approved By'),
                 TextColumn::make('start_at')
                 ->dateTime('d-M-Y')
                 ->sortable()
@@ -87,7 +89,6 @@ class PlanResource extends Resource
             Tables\Actions\Action::make('show Achieved')
                 // ->
                 ->color('primary')
-                ->visible(fn($record)=>$record->approved == 1)
                 ->icon('heroicon-s-clipboard-check')
                 ->action(fn()=>Log::channel('debugging')->info(request()->fingerprint['name']))
                 ->form([
@@ -197,13 +198,20 @@ class PlanResource extends Resource
                     ->disableLabel()
                     ->defaultSelectOptions(
                         function($record) use ($key){
+                            if( request()->path() && Str::contains(request()->path(),'/edit')){
+                                $options = Visit::with('client')
+                                    ->where('user_id',$record->user_id)
+                                    ->where('status','pending')
+                                    ->where('visit_date',self::dates()[$key])->get()
+                                    ->pluck('client.name','client_id')->toArray();
+                                return $options;
+                            }
                             if(request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans')){
-                                $options = Visit::withoutGlobalScope('all')
+                                $options = Visit::select('client_id')
                                     ->where('user_id',$record->user_id)
                                     ->where('status','visited')
                                     ->where('visit_date',self::dates()[$key])
-                                    ->pluck('client_id')->toArray();
-
+                                    ->get()->toArray();
                                 return $options;
                             }
 
@@ -211,14 +219,18 @@ class PlanResource extends Resource
                         })
                     ->options(
                         function($record) use ($key){
+                            if(request()->path() && Str::contains(request()->path(),'/edit')){
+                                return self::getClients($record, $key);
+                            }
                             if(request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans')){
                                 $visits = Visit::withoutGlobalScope('all')
+                                    ->with('client')
                                     ->where('user_id',$record->user_id)
                                     ->whereIn('status',['visited','planned'])
                                     ->where('visit_date',self::dates()[$key])
                                     ->get();
 
-                                $clientIds = $visits->pluck('client_id')->toArray();
+                                $clientIds = $visits->pluck('client.name','client_id')->toArray();
                                 $clients = Client::inMyAreas()->orderBy('name_en')->whereIn('id',$clientIds)->get()->pluck('name', 'id')->toArray();
                                 $options = [];
                                 foreach($clients as $key => $client){

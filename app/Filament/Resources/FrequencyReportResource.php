@@ -52,8 +52,15 @@ class FrequencyReportResource extends Resource
                         ->label('Total Visits Count'),
             ])
             ->filters([
+                Tables\Filters\Filter::make('has_visits')
+                    ->toggle()
+                    ->query(fn (Builder $query): Builder => $query->has('visits')),
                 Tables\Filters\SelectFilter::make('grade')
                     ->options(static::gradeAVG()),
+                Tables\Filters\SelectFilter::make('medical_rep')
+                    ->label('Medical Rep')
+                    ->multiple()
+                    ->relationship('visitedBy', 'name'),
                 Tables\Filters\Filter::make('visit_date')
                     ->form([
                         Forms\Components\DatePicker::make('from_date'),

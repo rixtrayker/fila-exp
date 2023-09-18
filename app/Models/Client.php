@@ -5,11 +5,13 @@ namespace App\Models;
 use App\Traits\HasEditRequest;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
 class Client extends Model
 {
     use HasFactory;
     use HasEditRequest;
+    use HasRelationships;
 
     protected $appends = ['name'];
     protected $fillable = [
@@ -44,6 +46,11 @@ class Client extends Model
     public function visits()
     {
         return $this->hasMany(Visit::class);
+    }
+
+    public function visitedBy()
+    {
+        return $this->hasManyDeepFromRelations($this->visits(), (new Visit())->user());
     }
     public function brick()
     {

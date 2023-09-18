@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Brick extends Model
 {
     use HasFactory;
-    protected $with = ['city'];
+    protected $with = ['city.governorate.region.country'];
 
     protected $guarded = [];
     public function city()
@@ -21,6 +21,9 @@ class Brick extends Model
     }
 
     public function getZoneCodeAttribute(){
-        return $this->name.'-'.$this->city?->name.'-'.$this->city?->governorate?->name.'-'.$this->region?->name.'-'.$this->country?->name;
+        return $this->name.'-'.$this->city?->name
+            .'-'.$this->city?->governorate?->name
+            .'-'.$this->city?->governorate?->region?->name
+            .'-'.$this->city?->governorate?->region?->country?->name;
     }
 }

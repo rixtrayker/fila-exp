@@ -122,6 +122,8 @@ class VacationResource extends Resource
                             return ['heroicon-o-x-circle' =>  $record->approved];
                         return ['heroicon-o-clock'];
                     }),
+                TextColumn::make('approved_by')
+                    ->label('Approved By'),
                 TextColumn::make('approved_at')
                     ->label('Approved at')
                     ->dateTime('d-M-Y')
