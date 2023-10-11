@@ -60,8 +60,8 @@ final class Regular
                     ])
                     ->required(fn($get)=> $get('call_type_id') == static::$doubleCallTypeId)
                     ->placeholder('Search name')
-                    ->getSearchResultsUsing(fn (string $search) => User::role('area-manager')->where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'))
-                    ->options(User::role('area-manager')->pluck('name', 'id'))
+                    ->getSearchResultsUsing(fn (string $search) => User::role('district-manager')->where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'))
+                    ->options(User::role('district-manager')->pluck('name', 'id'))
                     ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
                     ->preload(),
                 Select::make('client_id')

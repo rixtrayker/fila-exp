@@ -114,7 +114,7 @@ class PlanResource extends Resource
 
     public static function getClients(): array
     {
-        return Client::inMyAreas()->orderBy('name_en')->get()->pluck('name', 'id')->toArray();
+        return Client::inMyAreas()->orderBy('name_en')->get()->pluck('name_en', 'id')->toArray();
     }
     public static function visitDates(): array{
         return [];
@@ -230,8 +230,8 @@ class PlanResource extends Resource
                                     ->where('visit_date',self::dates()[$key])
                                     ->get();
 
-                                $clientIds = $visits->pluck('client.name','client_id')->toArray();
-                                $clients = Client::inMyAreas()->orderBy('name_en')->whereIn('id',$clientIds)->get()->pluck('name', 'id')->toArray();
+                                $clientIds = $visits->pluck('client.name_en','client_id')->toArray();
+                                $clients = Client::inMyAreas()->orderBy('name_en')->whereIn('id',$clientIds)->get()->pluck('name_en', 'id')->toArray();
                                 $options = [];
                                 foreach($clients as $key => $client){
                                     $firstClientVisit = $visits->where('client_id',$key)->first();
