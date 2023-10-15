@@ -121,6 +121,6 @@ class OverallChart extends PieChartWidget
 
     public static function canView(): bool
     {
-        return Str::contains(request()->path(),'cover-report');
+        return Str::contains(request()->path(),'cover-report') || Str::contains(request()->path(),'coverage-report');
     }
 }

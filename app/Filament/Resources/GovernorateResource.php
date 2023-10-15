@@ -81,6 +81,6 @@ class GovernorateResource extends Resource
     }
     public static function canAccessMe(): array
     {
-        return ['super-admin','moderator'];
+        return ['super-admin','moderator', 'district-manager'];
     }
 }

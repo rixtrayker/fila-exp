@@ -26,7 +26,7 @@ class DateHelper{
         $dates = [];
 
         // Get the start date of the current or next week depending on the current day
-        $startDate = self::getFirstOfWeek(today()->isFriday());
+        $startDate = self::getFirstOfWeek(today()->isWednesday());
 
         // Loop through the next 7 days, starting from the start date
         for($i = 0; $i < 7; $i++) {

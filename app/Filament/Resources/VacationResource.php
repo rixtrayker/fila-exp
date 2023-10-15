@@ -9,6 +9,8 @@ use App\Models\Vacation;
 use App\Models\VacationRequest;
 use App\Models\VacationType;
 use Awcodes\FilamentTableRepeater\Components\TableRepeater;
+use Carbon\Carbon;
+use Closure;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Section;
@@ -70,6 +72,17 @@ class VacationResource extends Resource
                                 ->closeOnDateSelection()
                                 ->required(),
                             DatePicker::make('end')
+                                ->rules([
+                                    function ($get) {
+                                        return function (string $attribute, $value, Closure $fail) use ($get) {
+                                            $start = Carbon::createFromDate($get('start'));
+                                            $end = Carbon::createFromDate($get('end'));
+                                            if ($end->isBefore($start)) {
+                                                $fail("The end date cannot be before start date.");
+                                            }
+                                        };
+                                    },
+                                ])
                                 ->disableLabel()
                                 ->closeOnDateSelection()
                                 ->required(),
@@ -82,6 +95,20 @@ class VacationResource extends Resource
                                 ->disableLabel()
                                 ->default('PM')
                                 ->options(['AM'=>'AM','PM'=>'PM'])
+                                ->rules([
+                                    function ($get) {
+                                        return function (string $attribute, $value, Closure $fail) use ($get) {
+                                            $start = Carbon::createFromDate($get('start'));
+                                            $end = Carbon::createFromDate($get('end'));
+
+                                            $start_shift = $get('start_shift');
+                                            $end_shift = $get('end_shift');
+
+                                            if ($end_shift == 'AM' && $start_shift == 'PM' && !($end->isAfter($start)))
+                                                $fail("Wrong shifts due to dates input ".$start->format('Y-m-d'));
+                                        };
+                                    },
+                                ])
                                 ->required(),
                         ])->disableItemMovement()
                         ->defaultItems(1),

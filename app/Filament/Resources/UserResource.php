@@ -77,15 +77,8 @@ class UserResource extends Resource
                     ->columns(2)
                     ->helperText('Only choose one!')
                     ->required(),
-                Select::make('bricks')
-                    ->label('Bricks')
-                    ->visible(fn($record) => !Str::contains(request()->path(),'create') && $record->hasRole('medical-rep'))
-                    ->multiple()
-                    ->preload()
-                    ->relationship('bricks','name'),
                 Select::make('areas')
                     ->label('Areas')
-                    ->visible(fn($record) => !Str::contains(request()->path(),'create') && !$record->hasRole('medical-rep'))
                     ->multiple()
                     ->preload()
                     ->relationship('areas','name'),

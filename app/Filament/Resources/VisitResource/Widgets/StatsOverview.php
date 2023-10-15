@@ -4,6 +4,7 @@ namespace App\Filament\Resources\VisitResource\Widgets;
 
 use App\Models\VacationRequest;
 use App\Models\Visit;
+use Carbon\Carbon;
 use DateTime;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Card;
@@ -50,14 +51,29 @@ class StatsOverview extends BaseWidget
     private function remainingVacations()
     {
         $vacations = 0;
-        $userVacations = VacationRequest::where('user_id',auth()->id())->where('approved',true)->get();
+        $userVacations = VacationRequest::query()
+            ->where('created_at','>=',today()->firstOfYear())
+            ->where('user_id',auth()->id())
+            ->where('approved',true)
+            ->get();
 
         foreach ($userVacations as $vacation) {
-            $date1 = new DateTime($vacation->start);
-            $date2 = new DateTime($vacation->end);
-            $interval = $date1->diff($date2);
-            $diffInDays = $interval->days;
-            $vacations += $diffInDays;
+            $requestDurations =  $vacation->vacationDurations;
+            foreach( $requestDurations as $duration){
+                $date1 = new DateTime($duration->start);
+                $date2 = new DateTime($duration->end);
+                $interval = $date1->diff($date2);
+                $diffInDays = $interval->days;
+                $vacations += $diffInDays;
+
+                if($duration->start_shift === $duration->end_shift){
+                    $vacations += 0.5;
+                }
+
+                if($duration->start_shift == 'AM' && $duration->end_shift == 'PM'){
+                    $vacations += 1;
+                }
+            }
         }
 
         return 21 - $vacations;

@@ -105,19 +105,19 @@ class Client extends Model
             return;
         }
 
-        if(auth()->user()->hasRole('medical-rep')){
-            $ids = auth()->user()->bricks()->pluck('bricks.id');
-            return $builder->whereIn('brick_id', $ids);
-        }
-
         if(auth()->user()->hasRole('super-admin')){
             return $builder;
         }
 
         $myAreas = auth()->user()->areas;
         $ids = [];
+        
         foreach($myAreas as $area){
             $ids = $ids + $area->bricks()->pluck('bricks.id')->toArray();
+        }
+
+        if(auth()->user()->hasRole('medical-rep')){
+            $ids += auth()->user()->bricks()->pluck('bricks.id');
         }
 
         return $builder->whereIn('brick_id', $ids);
