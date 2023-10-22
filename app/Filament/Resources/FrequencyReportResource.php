@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\FrequencyReportResource\Pages;
 use App\Filament\Resources\FrequencyReportResource\RelationManagers;
 use App\Models\Client;
+use App\Models\User;
 use App\Models\Visit;
 use Filament\Forms;
 use Filament\Resources\Form;
@@ -57,10 +58,21 @@ class FrequencyReportResource extends Resource
                     ->query(fn (Builder $query): Builder => $query->has('visits')),
                 Tables\Filters\SelectFilter::make('grade')
                     ->options(static::gradeAVG()),
-                Tables\Filters\SelectFilter::make('medical_rep')
+                Tables\Filters\SelectFilter::make('user_id')
                     ->label('Medical Rep')
                     ->multiple()
-                    ->relationship('visitedBy', 'name'),
+                    ->options(User::getMine()->pluck('name','id'))
+                    // ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
+                    // ->preload()
+                    ->query(function (Builder $query, array $data): Builder {
+                        if(count($data['values'])){
+                            return $query->whereHas('visits',function ($q) use ($data){
+                                $q->whereIn('user_id', $data['values']);
+                            });
+                        }
+                        else
+                            return $query;
+                        }),
                 Tables\Filters\Filter::make('visit_date')
                     ->form([
                         Forms\Components\DatePicker::make('from_date'),

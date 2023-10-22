@@ -111,7 +111,7 @@ class Client extends Model
 
         $myAreas = auth()->user()->areas;
         $ids = [];
-        
+
         foreach($myAreas as $area){
             $ids = $ids + $area->bricks()->pluck('bricks.id')->toArray();
         }

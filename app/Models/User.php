@@ -43,6 +43,7 @@ class User extends Authenticatable implements FilamentUser
         'name',
         'email',
         'password',
+        'parent_id',
     ];
 
     /**
@@ -142,13 +143,13 @@ class User extends Authenticatable implements FilamentUser
 
     public function scopeGetMine($builder)
     {
-        if(auth()->user() && auth()->user()->hasRole('medical-rep')){
+        if(auth()->user() && auth()->user()->hasRole(['medical-rep'])){
             return $builder->where('id', '=', auth()->id());
         }
 
         if(auth()->user() && auth()->user()->hasRole(['country-manager','area-manager','district-manager'])) {
             $ids = User::descendantsAndSelf(auth()->user())->pluck('id')->toArray();
-             return $builder->whereIn('id', $ids);
+            return $builder->whereIn('id', $ids);
         }
 
         return $builder;
@@ -172,5 +173,16 @@ class User extends Authenticatable implements FilamentUser
                 $teamField = config('permission.table_names.roles').'.'.PermissionRegistrar::$teamsKey;
                 $q->whereNull($teamField)->orWhere($teamField, getPermissionsTeamId());
             });
+    }
+
+    protected static function boot()
+    {
+        static::updated(function ($model) {
+            if( $model->isDirty('parent_id') ){
+                self::fixTree();
+            }
+        });
+
+        parent::boot();
     }
 }
