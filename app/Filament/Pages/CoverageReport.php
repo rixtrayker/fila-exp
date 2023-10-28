@@ -64,13 +64,13 @@ class CoverageReport extends Page implements HasFormActionsContract
         if($this->user_id){
 
             $query->where(function($q) {
-                $q->whereIn('user_id',$this->user_id);
-                $q->orWhereIn('second_user_id',$this->user_id);
+                $q->whereIn('user_id', $this->user_id);
+                $q->orWhereIn('second_user_id', $this->user_id);
             });
         }
 
         if($this->from){
-            $query->whereDate('visit_date','>=',$this->from);
+            $query->whereDate('visit_date','>=', $this->from);
         }
 
         if($this->to){

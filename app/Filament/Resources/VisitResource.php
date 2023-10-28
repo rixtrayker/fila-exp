@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\VisitResource\Pages;
 use App\Filament\Resources\VisitResource\RelationManagers;
+use App\Models\ClientType;
 use App\Models\Visit;
 use App\Models\VisitType;
 use Awcodes\FilamentTableRepeater\Components\TableRepeater;
@@ -16,6 +17,7 @@ use Filament\Resources\Table;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
+use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Filesystem\Filesystem;
@@ -57,26 +59,72 @@ class VisitResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('id')->sortable(),
                 TextColumn::make('user.name')
                     ->label('M.Rep')
                     ->hidden(auth()->user()->hasRole('medical-rep'))
                     ->sortable(),
+                TextColumn::make('secondRep.name')
+                    ->label('Double name'),
                 TextColumn::make('client.name_en')
                     ->label('Client')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('secondRep.name')
-                    ->label('Double name'),
-                TextColumn::make('created_at')
+                TextColumn::make('clientType.name')
+                    ->label('Client Type'),
+                TextColumn::make('client.grade')
+                    ->label('Client Grade'),
+                TextColumn::make('visit_date')
                     ->dateTime('d-M-Y')
                     ->sortable()
                     ->searchable(),
+                TextColumn::make('clientType.name')
+                    ->label('Client Type'),
+                TextColumn::make('visitType.name')
+                    ->label('Visit Type'),
                 TextColumn::make('comment')
                     ->limit(100)
                     ->wrap(),
             ])
             ->filters([
+                SelectFilter::make('grade')
+                    ->label('Grade')
+                    ->multiple()
+                    ->options(['A'=>'A','B'=>'B','C'=>'C','N'=>'N','PH'=>'PH'])
+                    ->query(function (Builder $query, array $data): Builder {
+                        if($data['values']){
+                            return $query->whereHas('client',function ($q) use ($data){
+                                $q->whereIn('grade', $data['values']);
+                            });
+                        }
+                        else
+                            return $query;
+                        }),
+                SelectFilter::make('visit_type_id')
+                    ->label('Visit Type')
+                    ->multiple()
+                    ->options(VisitType::pluck('name','id'))
+                    ->query(function (Builder $query, array $data): Builder {
+                        if($data['values']){
+                            return $query->whereHas('client',function ($q) use ($data){
+                                $q->whereIn('visit_type_id', $data['values']);
+                            });
+                        }
+                        else
+                            return $query;
+                        }),
+                SelectFilter::make('client_type_id')
+                    ->label('Client Type')
+                    ->multiple()
+                    ->options(ClientType::pluck('name','id'))
+                    ->query(function (Builder $query, array $data): Builder {
+                        if($data['values']){
+                            return $query->whereHas('client',function ($q) use ($data){
+                                $q->whereIn('client_type_id', $data['values']);
+                            });
+                        }
+                        else
+                            return $query;
+                        }),
                 TrashedFilter::make(),
             ])
             ->actions([
@@ -134,6 +182,7 @@ class VisitResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
+            ->orderBy('visit_date','desc')
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);

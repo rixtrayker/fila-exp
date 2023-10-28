@@ -13,6 +13,8 @@ class Visit extends Model
 {
     use HasFactory;
     use SoftDeletes;
+    use \Znck\Eloquent\Traits\BelongsToThrough;
+
     protected $casts = [
         'visit_date' => 'date'
     ];
@@ -34,6 +36,11 @@ class Visit extends Model
     public function client()
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public function clientType()
+    {
+        return $this->belongsToThrough(ClientType::class, Client::class);
     }
 
     public function scopeVisited(Builder $query): Builder
