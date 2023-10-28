@@ -9,11 +9,16 @@ class Brick extends Model
 {
     use HasFactory;
     protected $with = ['city.governorate.region.country'];
-
+    protected $appends = ['full_name'];
+    // Todo: add caching
     protected $guarded = [];
     public function city()
     {
         return $this->belongsTo(City::class);
+    }
+    public function getFullNameAttribute()
+    {
+        return $this->name . ':' . $this->city->name;
     }
 
     public function areas(){

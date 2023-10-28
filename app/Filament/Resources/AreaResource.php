@@ -38,7 +38,7 @@ class AreaResource extends Resource
                     ->label('Bricks')
                     ->multiple()
                     ->preload()
-                    ->relationship('bricks','name'),
+                    ->relationship('bricks','full_name'),
             ]);
     }
 
