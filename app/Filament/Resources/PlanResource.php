@@ -26,6 +26,7 @@ use Str;
 use Filament\Forms\Components\TimePicker;
 use Filament\Pages\Page;
 use Filament\Tables\Columns\TextColumn;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
 
 class PlanResource extends Resource
@@ -37,11 +38,15 @@ class PlanResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-calendar';
     protected static ?string $slug = 'plans';
     protected static ?int $navigationSort = 2;
+    protected static $clients = [];
+
     public static function form(Form $form): Form
     {
         for($i=0; $i<7; $i++){
             self::dates()[$i] = Carbon::createFromTimeString(self::dates()[$i].' 00:00:00')->format('D M-d');
         }
+
+        self::$clients = self::getClients();
 
         return $form
             ->schema([
@@ -87,7 +92,6 @@ class PlanResource extends Resource
                 ->requiresConfirmation()
                 ->action(fn($record) => $record->rejectPlan()),
             Tables\Actions\Action::make('show Achieved')
-                // ->
                 ->color('primary')
                 ->icon('heroicon-s-clipboard-check')
                 ->action(fn()=>Log::channel('debugging')->info(request()->fingerprint['name']))
@@ -114,7 +118,7 @@ class PlanResource extends Resource
 
     public static function getClients(): array
     {
-        return Client::inMyAreas()->orderBy('name_en')->get()->pluck('name_en', 'id')->toArray();
+        return Client::inMyAreas()->pluck('name_en', 'id')->toArray();
     }
     public static function visitDates(): array{
         return [];
@@ -135,7 +139,7 @@ class PlanResource extends Resource
         return [
             'index' => Pages\ListPlans::route('/'),
             'create' => Pages\CreatePlan::route('/create'),
-            // 'edit' => Pages\EditPlan::route('/{record}/edit'),
+            'edit' => Pages\EditPlan::route('/{record}/edit'),
             'view' => Pages\ViewPlan::route('/{record}'),
         ];
     }
@@ -194,53 +198,27 @@ class PlanResource extends Resource
                     ->default(fn($record)=> request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans') ? $record->shiftClient($days[$key])->pm_time : null)
                     ->label('PM time')
                     ->withoutSeconds(),
-                MultiselectTwoSides::make('clients_'.$day)
-                    ->disableLabel()
-                    ->defaultSelectOptions(
-                        function($record) use ($key){
-                            if( request()->path() && Str::contains(request()->path(),'/edit')){
-                                $options = Visit::with('client')
-                                    ->where('user_id',$record->user_id)
-                                    ->where('status','pending')
-                                    ->where('visit_date',self::dates()[$key])->get()
-                                    ->pluck('client.name','client_id')->toArray();
-                                return $options;
-                            }
-                            if(request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans')){
-                                $options = Visit::select('client_id')
-                                    ->where('user_id',$record->user_id)
-                                    ->where('status','visited')
-                                    ->where('visit_date',self::dates()[$key])
-                                    ->get()->toArray();
-                                return $options;
-                            }
-
-                            return self::getPlanDayState($record, $key);
-                        })
-                    ->options(
-                        function($record) use ($key){
-                            if(request()->path() && Str::contains(request()->path(),'/edit')){
-                                return self::getClients($record, $key);
-                            }
-                            if(request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans')){
-                                $visits = Visit::withoutGlobalScope('all')
-                                    ->with('client')
-                                    ->where('user_id',$record->user_id)
-                                    ->whereIn('status',['visited','planned'])
-                                    ->where('visit_date',self::dates()[$key])
-                                    ->get();
-
-                                $clientIds = $visits->pluck('client.name_en','client_id')->toArray();
-                                $clients = Client::inMyAreas()->orderBy('name_en')->whereIn('id',$clientIds)->get()->pluck('name_en', 'id')->toArray();
-                                $options = [];
-                                foreach($clients as $key => $client){
-                                    $firstClientVisit = $visits->where('client_id',$key)->first();
-                                    $options[$key] =  $firstClientVisit && $firstClientVisit->plan_id !== null ? $client : $client.' ( not planned ).';
-                                }
-                                return $options;
-                            }
-                            return self::getClients($record, $key);
-                        }),
+                Select::make('clients_'.$day)
+                    ->label('Clients')
+                    ->multiple()
+                    ->options(self::$clients)
+                    // ->relationship($days[$key].'Clients', 'name_en')
+                    ->preload(),
             ]);
+    }
+
+    public static function canCreate(): bool
+    {
+        $visitDates = DateHelper::calculateVisitDates();
+
+        return ! Plan::query()
+            ->where('user_id', auth()->id())
+            ->where('start_at', $visitDates[0])
+            ->exists();
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return static::can('update', $record);
     }
 }
