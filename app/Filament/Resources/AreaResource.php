@@ -25,9 +25,12 @@ class AreaResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-collection';
     protected static ?string $navigationGroup = 'Zone management';
+    protected static $bricks;
 
     public static function form(Form $form): Form
     {
+        self::$bricks = Brick::get()->pluck('full_name', 'id')->toArray();
+
         return $form
             ->schema([
                 TextInput::make('name')
@@ -36,9 +39,12 @@ class AreaResource extends Resource
                     ->required(),
                 Select::make('bricks')
                     ->label('Bricks')
-                    ->multiple()
                     ->preload()
-                    ->relationship('bricks','full_name'),
+                    ->relationship('bricks','name')
+                    ->getOptionLabelFromRecordUsing(fn ($record): ?string => $record->full_name)
+                    ->multiple()
+                    ->required(),
+                    //bad preformance
             ]);
     }
 
@@ -78,5 +84,14 @@ class AreaResource extends Resource
             'create' => Pages\CreateArea::route('/create'),
             'edit' => Pages\EditArea::route('/{record}/edit'),
         ];
+    }
+
+    private static function searchBrick(string $search)
+    {
+        $result = array_filter(self::$bricks, function ($value) use ($search) {
+            return strpos($value, $search) !== false;
+        });
+
+        return $result;
     }
 }

@@ -117,7 +117,7 @@ class Client extends Model
         }
 
         if(auth()->user()->hasRole('medical-rep')){
-            $ids += auth()->user()->bricks()->pluck('bricks.id');
+            $ids += auth()->user()->bricks()->pluck('bricks.id')->toArray();
         }
 
         return $builder->whereIn('brick_id', $ids);

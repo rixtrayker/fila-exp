@@ -26,7 +26,8 @@ class DateHelper{
         $dates = [];
 
         // Get the start date of the current or next week depending on the current day
-        $startDate = self::getFirstOfWeek(today()->isWednesday());
+        $nextWeek = self::nextWeekRule();
+        $startDate = self::getFirstOfWeek($nextWeek);
 
         // Loop through the next 7 days, starting from the start date
         for($i = 0; $i < 7; $i++) {
@@ -34,5 +35,17 @@ class DateHelper{
         }
 
         return $dates;
+    }
+
+    // True is next week
+    private static function nextWeekRule(): bool{
+        if(today()->isWednesday())
+            return true;
+        if(today()->isThursday())
+            return true;
+        if(today()->isFriday())
+            return true;
+        // return true if it's tuesday and after 10 pm
+        return today()->isTuesday() && now()->isAfter(today()->addHours(22));
     }
 }
