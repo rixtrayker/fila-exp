@@ -27,6 +27,7 @@ class CreatePlan extends CreateRecord
         $fieldName = ['clients_sat','clients_sun','clients_mon','clients_tues','clients_wednes','clients_thurs','clients_fri'];
 
         $now = now();
+        $filledDates = [];
 
         foreach($fieldName as $dayKey => $field){
             if(!isset($data[$field]))
@@ -43,6 +44,7 @@ class CreatePlan extends CreateRecord
                     'updated_at' => $now,
                 ];
             }
+            $filledDates[] = $dayKey;
             unset($data[$field]);
         }
 
@@ -50,8 +52,8 @@ class CreatePlan extends CreateRecord
         $days = ['sat', 'sun', 'mon', 'tues', 'wednes', 'thurs', 'fri'];
 
         for ($i = 0; $i < 7; $i++) {
-            if (isset($data[$fieldName[$i]])) {
-                $this->shiftsData = [
+            if (in_array($i, $filledDates)) {
+                $this->shiftsData[] = [
                     'day' => $i + 1,
                     'am_shift' => $data[$days[$i] . '_am'],
                     'am_time' => $data[$days[$i] . '_time_am'],
@@ -69,13 +71,11 @@ class CreatePlan extends CreateRecord
 
         $data['user_id'] = $userId;
         $data['start_at'] = $visitDates[0];
-
         return $data;
     }
 
     public function afterCreate()
     {
-
 
         array_walk($this->visitsData, function (&$array) {
             $array['plan_id'] = $this->record->id;
@@ -86,7 +86,6 @@ class CreatePlan extends CreateRecord
             $array['plan_id'] = $this->record->id;
         });
         PlanShift::upsert($this->shiftsData, ['plan_id', 'day']);
-
     }
 
 }
