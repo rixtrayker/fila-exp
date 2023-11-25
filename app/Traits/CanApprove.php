@@ -17,9 +17,7 @@ trait CanApprove {
     }
     public function approve()
     {
-        $this->approved = $this->approvalOrder();
-        $this->approved_at = now();
-        $this->save();
+        $this->update(['approved' => $this->approvalOrder(), 'approved_at' => now() ]);
     }
     public function reject()
     {
@@ -33,7 +31,7 @@ trait CanApprove {
         if(auth()->user()->hasRole('medical-rep') || auth()->user()->hasRole('area-manager'))
             return false;
 
-        if($this->approved !== 0 )
+        if($this->approved != 0 )
             return false;
 
         return true;
@@ -41,10 +39,10 @@ trait CanApprove {
 
     public function canDecline()
     {
-        if(auth()->user()->hasRole('medical-rep') || auth()->user()->hasRole('area-manager'))
+        if(auth()->user()->hasRole('medical-rep') || auth()->user()->hasRole('area-manager') )
             return false;
 
-        if($this->approved < 0)
+        if($this->approved < 0 || $this->approved == $this->approvalOrder())
             return false;
 
         $roleApprovalOrder = $this->approvalOrder();

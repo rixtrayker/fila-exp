@@ -14,14 +14,14 @@ class CreateOrder extends CreateRecord
 
     protected function mutateFormDataBeforeCreate($data): array
     {
-        if(auth()->user()->hasRole('medical-rep'))
-            $data['user_id'] = auth()->id();
+        $data['user_id'] = auth()->id();
         $data['order_date'] = today();
         return $data;
     }
     public function afterCreate()
     {
         $data = $this->form->getRawState();
+        $systemProducts = Product::pluck('price','id')->toArray();
         $products = $data['products'];
         $orderId = $this->record->id;
 
@@ -31,11 +31,13 @@ class CreateOrder extends CreateRecord
             if(!$product['product_id']){
                 continue;
             }
+            $cost = $systemProducts[$product['product_id']];
             $insertData[] = [
                 'order_id' => $orderId,
                 'product_id' =>  $product['product_id'],
                 'count' => $product['count'],
-                'cost' => Product::find( $product['product_id'])->price * $product['count'],
+                'cost' => $cost,
+                'item_total' => intval($cost * $product['count']),
                 'created_at' => $now,
                 'updated_at' => $now,
             ];

@@ -132,6 +132,7 @@ final class Regular
                 Textarea::make('comment')
                     ->label('Comment')
                     ->columnSpan('full')
+                    ->minLength('3')
                     ->required(),
         ])
         ->columns(3)];

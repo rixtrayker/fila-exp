@@ -10,7 +10,7 @@ use Filament\Resources\Pages\EditRecord;
 use App\Helpers\DateHelper;
 use App\Models\PlanShift;
 use App\Models\Visit;
-
+use Arr;
 class EditPlan extends EditRecord
 {
     protected static string $resource = PlanResource::class;
@@ -83,6 +83,7 @@ class EditPlan extends EditRecord
 
         // Shifts
         $days = ['sat', 'sun', 'mon', 'tues', 'wednes', 'thurs', 'fri'];
+        $this->visitsData = collect($this->visitsData);
 
         for ($i = 0; $i < 7; $i++) {
             if (isset($data[$fieldName[$i]])) {
@@ -93,6 +94,11 @@ class EditPlan extends EditRecord
                     'pm_shift' => $data[$days[$i] . '_pm'],
                     'pm_time' => $data[$days[$i] . '_time_pm'],
                 ];
+
+                $visit_date = Carbon::createFromDate($this->record->start_at)->addDays($i);
+                $this->visitsData
+                    ->where('visit_date', $visit_date)
+                    ->whereIn('client_id', [$data[$days[$i] . '_am'], $data[$days[$i] . '_pm']])->delete();
             } else {
                 $this->deletedShifts[] = $i + 1;
             }
@@ -102,6 +108,8 @@ class EditPlan extends EditRecord
             unset($data[$days[$i] . '_pm']);
             unset($data[$days[$i] . '_time_pm']);
         }
+        $this->visitsData = $this->visitsData->toArray();
+
 
         return $data;
     }
@@ -125,6 +133,8 @@ class EditPlan extends EditRecord
         if (!$visitIdsToDelete->isEmpty()) {
             Visit::whereIn('id', $visitIdsToDelete)->forceDelete();
         }
+dd();
+        $aaa = collect($this->visitsData)->whereIn('id', Arr::pluck($this->shiftsData, ''))->delete();
 
         Visit::insert($this->visitsData);
 

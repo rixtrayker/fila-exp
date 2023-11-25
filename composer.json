@@ -12,6 +12,7 @@
         "doctrine/dbal": "^3.6",
         "filament/filament": "^2.16",
         "filament/spatie-laravel-translatable-plugin": "^2.0",
+        "finller/laravel-kpi": "^1.1",
         "guzzlehttp/guzzle": "^7.2",
         "kalnoy/nestedset": "^6.0",
         "kirschbaum-development/eloquent-power-joins": "^3.0",

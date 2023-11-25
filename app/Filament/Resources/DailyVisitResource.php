@@ -42,7 +42,8 @@ class DailyVisitResource extends Resource
                     ->sortable(),
                 TextColumn::make('secondRep.name')
                     ->label('Double name'),
-                TextColumn::make('created_at')
+                TextColumn::make('visit_date')
+                    ->label('Visit Date')
                     ->dateTime('d-M-Y')
                     ->sortable()
                     ->searchable(),

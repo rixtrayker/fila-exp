@@ -91,18 +91,6 @@ class PlanResource extends Resource
                 ->visible(fn($record) => $record->canDecline())
                 ->requiresConfirmation()
                 ->action(fn($record) => $record->rejectPlan()),
-            Tables\Actions\Action::make('show Achieved')
-                ->color('primary')
-                ->icon('heroicon-s-clipboard-check')
-                ->action(fn()=>Log::channel('debugging')->info(request()->fingerprint['name']))
-                ->form([
-                    Select::make('user_id')
-                        ->label('Agent (medical rep)')
-                        ->relationship('user','name')
-                        ->default(fn($record)=>$record->user_id)
-                        ->disabled(),
-                    static::makeForm(),
-                ])->modalWidth('5xl'),
             ])
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),

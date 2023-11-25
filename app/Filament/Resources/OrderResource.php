@@ -141,6 +141,10 @@ class OrderResource extends Resource
                                 ->reactive(),
                             TextInput::make('item_total')
                                 ->label('Item total')
+                                // ->default(function($get) {
+                                //     $product = Product::find($get('product_id'));
+                                //     return $product && $get('count')? $product->price * $get('count') : 0;
+                                // })
                                 ->dehydrateStateUsing(function($get) {
                                     $product = Product::find($get('product_id'));
                                     return $product && $get('count')? $product->price * $get('count') : 0;

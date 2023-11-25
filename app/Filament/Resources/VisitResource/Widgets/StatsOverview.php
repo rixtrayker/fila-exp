@@ -52,9 +52,10 @@ class StatsOverview extends BaseWidget
     {
         $vacations = 0;
         $userVacations = VacationRequest::query()
+            ->with('vacationDurations')
             ->where('created_at','>=',today()->firstOfYear())
             ->where('user_id',auth()->id())
-            ->where('approved',true)
+            ->where('approved','>',0)
             ->get();
 
         foreach ($userVacations as $vacation) {

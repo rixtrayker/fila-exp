@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Traits\HasEditRequest;
 use Filament\Models\Contracts\FilamentUser;
+use Finller\Kpi\HasKpi;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -34,6 +35,7 @@ class User extends Authenticatable implements FilamentUser
     use HasEditRequest;
     use TwoFactorAuthenticatable;
     use HasMergedRelationships;
+    use HasKpi;
     /**
      * The attributes that are mass assignable.
      *

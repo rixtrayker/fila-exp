@@ -6,6 +6,7 @@ use App\Models\Scopes\GetMineScope;
 use App\Traits\CanApprove;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 class Plan extends Model
 {
@@ -19,6 +20,7 @@ class Plan extends Model
         'user_id',
         'start_at',
         'approved',
+        'approved_at',
     ];
 
     public function user()
@@ -36,11 +38,6 @@ class Plan extends Model
 
     public function getEndDateAttribute(){
         return $this->start_at->addDays(6);
-    }
-    public static function boot()
-    {
-        parent::boot();
-        static::addGlobalScope(new GetMineScope);
     }
 
     public function shiftClient($shiftQuery){
@@ -62,5 +59,43 @@ class Plan extends Model
     {
         $this->reject();
         $this->delete();
+    }
+
+    protected static function boot()
+    {
+        static::created(fn($plan) => self::createShiftVisits($plan));
+        static::updated(fn($plan) => self::createShiftVisits($plan));
+
+        static::addGlobalScope(new GetMineScope);
+
+        parent::boot();
+    }
+
+    public static function createShiftVisits($plan){
+        $shifts = $plan->shifts;
+
+        foreach($shifts as $shift){
+            $visitDate = Carbon::createFromDate($plan->start_at)->addDays($shift->day - 1);
+
+            // insert AM client & PM client
+            Visit::upsert([
+                [
+                    'user_id' => $plan->user_id,
+                    'client_id' => $shift->am_shift,
+                    'visit_type_id' => 1,
+                    'plan_id' => $plan->id,
+                    'status' => 'planned',
+                    'visit_date' => $visitDate,
+                ],
+                [
+                    'user_id' => $plan->user_id,
+                    'client_id' => $shift->pm_shift,
+                    'visit_type_id' => 1,
+                    'plan_id' => $plan->id,
+                    'status' => 'planned',
+                    'visit_date' => $visitDate,
+                ]
+            ], ['plan_id', 'visit_date','client_id']);
+        }
     }
 }
