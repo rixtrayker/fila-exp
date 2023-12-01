@@ -18,7 +18,7 @@ use Filament\Tables;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use LucasGiovanny\FilamentMultiselectTwoSides\Forms\Components\Fields\MultiselectTwoSides as newMultiSelect;
-use App\Http\Livewire\MultiSelect2Sides as MultiselectTwoSides;
+use App\Livewire\MultiSelect2Sides as MultiselectTwoSides;
 use App\Models\Plan;
 use App\Models\Visit;
 use Closure;

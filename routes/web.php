@@ -17,7 +17,8 @@ Route::get('/test', function () {
     return \App\Models\User::find(1)->editRequests;
 });
 
-Route::get('/login', \Filament\Http\Livewire\Auth\Login::class)->name('filament.auth.login');
+// Route::get('/login', [\Filament\Http\Livewire\Auth::class,'login'])->name('filament.auth.login');
+// Route::get('/logout', [\Filament\Http\Livewire\Auth::class,'logout'])->name('filament.app.auth.logout');
 
 // Route::middleware([
 //     'auth:sanctum',

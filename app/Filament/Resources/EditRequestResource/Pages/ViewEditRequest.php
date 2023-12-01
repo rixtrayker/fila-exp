@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\EditRequestResource\Pages;
 
 use App\Filament\Resources\EditRequestResource;
-use App\Http\Livewire\ApproveAction;
+use App\Livewire\ApproveAction;
 use App\Models\EditRequest;
 use Filament\Pages\Actions;
 use Filament\Forms\Form;

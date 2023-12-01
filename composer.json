@@ -7,7 +7,7 @@
     "require": {
         "php": "^8.0.2",
         "althinect/filament-spatie-roles-permissions": "^1.1",
-        "filament/spatie-laravel-translatable-plugin":"^3.0-stable",
+        "filament/spatie-laravel-translatable-plugin": "^3.0-stable",
         "awcodes/filament-table-repeater": "*",
         "blade-ui-kit/blade-heroicons": "^2.1",
         "doctrine/dbal": "^3.6",
@@ -57,7 +57,8 @@
     "scripts": {
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
-            "@php artisan package:discover --ansi"
+            "@php artisan package:discover --ansi",
+            "@php artisan filament:upgrade"
         ],
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
