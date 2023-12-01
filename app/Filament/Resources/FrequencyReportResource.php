@@ -138,7 +138,13 @@ class FrequencyReportResource extends Resource
             ->groupBy('grade')
             ->get();
 
-        $output = [];
+        $output = [
+            'A' => 'A - 0 %',
+            'B' => 'B - 0 %',
+            'C' => 'C - 0 %',
+            'N' => 'N - 0 %',
+            'PH' => 'PH - 0 %',
+        ];
 
         foreach ($query as $result) {
             $grade = $result->grade;
