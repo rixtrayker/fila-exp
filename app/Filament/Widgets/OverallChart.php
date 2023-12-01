@@ -3,12 +3,12 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Visit;
-use Filament\Widgets\PieChartWidget;
+use Filament\Widgets\ChartWidget;
 use Illuminate\Contracts\Session\Session;
 use Illuminate\Support\Facades\Log;
 use Str;
 
-class OverallChart extends PieChartWidget
+class OverallChart extends ChartWidget
 {
     public $users;
     public $from;
@@ -16,10 +16,14 @@ class OverallChart extends PieChartWidget
     public $user_id;
     protected static ?string $maxHeight = '300px';
 
-
     protected $listeners = [
         'updateVisitsList' => 'updateVisitsList',
     ];
+
+    protected function getType(): string
+    {
+        return 'pie';
+    }
     public function updateVisitsList($from, $to, $user_id)
     {
         $this->from = $from;

@@ -87,15 +87,15 @@ return [
     |
     */
 
-    'widgets' => [
-        'namespace' => 'App\\Filament\\Widgets',
-        'path' => app_path('Filament/Widgets'),
-        'register' => [
-            StatsOverview::class,
-            MonthlySalesChart::class,
-            YearVisitsChart::class,
-        ],
-    ],
+    // 'widgets' => [
+    //     'namespace' => 'App\\Filament\\Widgets',
+    //     'path' => app_path('Filament/Widgets'),
+    //     'register' => [
+    //         // StatsOverview::class,
+    //         // MonthlySalesChart::class,
+    //         // YearVisitsChart::class,
+    //     ],
+    // ],
 
     'pages' => [
         'namespace' => 'App\\Filament\\Pages',
@@ -104,6 +104,48 @@ return [
             CoverageReport::class,
         ],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Favicon
+    |--------------------------------------------------------------------------
+    |
+    | This is the path to the favicon used for pages in the admin panel.
+    |
+    */
+    'favicon' => 'favicon.png',
+
+    // 'layout' => [
+    //     'actions' => [
+    //         'modal' => [
+    //             'actions' => [
+    //                 'alignment' => 'left',
+    //             ],
+    //         ],
+    //     ],
+    //     'forms' => [
+    //         'actions' => [
+    //             'alignment' => 'left',
+    //         ],
+    //         'have_inline_labels' => false,
+    //     ],
+    //     'footer' => [
+    //         'should_show_logo' => false,
+    //     ],
+    //     'max_content_width' => 'full',
+    //     'notifications' => [
+    //         'vertical_alignment' => 'top',
+    //         'alignment' => 'right',
+    //     ],
+    //     'sidebar' => [
+    //         'is_collapsible_on_desktop' => true,
+    //         'groups' => [
+    //             'are_collapsible' => true,
+    //         ],
+    //         'width' => null,
+    //         'collapsed_width' => null,
+    //     ],
+    // ],
 
     /*
     |--------------------------------------------------------------------------
