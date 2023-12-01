@@ -10,7 +10,7 @@ class ListVacations extends ListRecords
 {
     protected static string $resource = VacationResource::class;
 
-    protected function getActions(): array
+    protected function getHeaderActions(): array
     {
         return [
             Actions\CreateAction::make(),

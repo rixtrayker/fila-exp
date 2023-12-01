@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Pages\Custom;
+namespace App\Filament\Pages;
 
 use App\Filament\Widgets\FilterFormWidget;
 use App\Filament\Widgets\OverallChart;
@@ -8,13 +8,14 @@ use App\Models\Visit;
 use App\Exports\ExportVisits;
 use Filament\Pages\Actions\Action;
 use Filament\Pages\Page;
-use Filament\Pages\Concerns\HasFormActions;
-use Filament\Pages\Contracts\HasFormActions as HasFormActionsContract;
+use Filament\Forms\Concerns\HasFormComponentActions;
+use Filament\Pages\Concerns\InteractsWithFormActions;
 use Maatwebsite\Excel\Excel;
 
-class CoverageReport extends Page implements HasFormActionsContract
+class CoverageReport extends Page
 {
-    use HasFormActions;
+    use HasFormComponentActions;
+    use InteractsWithFormActions;
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
 
@@ -109,11 +110,11 @@ class CoverageReport extends Page implements HasFormActionsContract
         $this->missed = $this->getVisits()->missed('client')->get();
     }
 
-    protected function getActions(): array
+    protected function getHeaderActions(): array
     {
         return [
             Action::make('Export')
-                ->icon('heroicon-o-document-report')
+                ->icon('heroicon-o-document-chart-bar')
                 ->color('warning')
                 ->action(function(){
                     return (new ExportVisits($this->visited, $this->pending, $this->missed))->download('visits-'.now().'.xlsx');

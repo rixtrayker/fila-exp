@@ -13,7 +13,7 @@ class EditDailyVisit extends EditRecord
 {
     protected static string $resource = DailyVisitResource::class;
 
-    protected function getActions(): array
+    protected function getHeaderActions(): array
     {
         return [
             // Actions\DeleteAction::make(),

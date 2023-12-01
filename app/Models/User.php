@@ -78,7 +78,7 @@ class User extends Authenticatable implements FilamentUser
         'profile_photo_url',
     ];
 
-    public function canAccessFilament(): bool
+    public function canAccessPanel(): bool
     {
         return true;
     }

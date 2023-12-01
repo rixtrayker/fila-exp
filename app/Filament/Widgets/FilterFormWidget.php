@@ -10,7 +10,7 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Pages\Actions\ViewAction;
 use Filament\Pages\Contracts\HasFormActions;
-use Filament\Resources\Form;
+use Filament\Forms\Form;
 use Filament\Widgets\Widget;
 use Illuminate\Contracts\View\View;
 use Livewire\Component;

@@ -15,9 +15,9 @@ use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
-use Filament\Resources\Form;
+use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Resources\Table;
+use Filament\Tables\Table;
 use Filament\Tables;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -28,7 +28,7 @@ class VacationResource extends Resource
 {
     protected static ?string $model = VacationRequest::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-collection';
+    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static ?int $navigationSort = 7;
 
 
@@ -171,7 +171,7 @@ class VacationResource extends Resource
                 Tables\Actions\Action::make('reject')
                     ->label('Reject')
                     ->color('danger')
-                    ->icon('heroicon-s-x')
+                    ->icon('heroicon-m-x-mark')
                     ->visible(fn($record) => $record->canDecline())
                     ->action(fn($record) => $record->reject()),
             ])

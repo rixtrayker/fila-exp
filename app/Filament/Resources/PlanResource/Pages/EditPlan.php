@@ -18,7 +18,7 @@ class EditPlan extends EditRecord
     private $visitsData = [];
     private $shiftsData = [];
     private $deletedShifts = [];
-    protected function getActions(): array
+    protected function getHeaderActions(): array
     {
         return [
             Actions\DeleteAction::make(),

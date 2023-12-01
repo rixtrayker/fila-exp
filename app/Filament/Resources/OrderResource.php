@@ -15,9 +15,9 @@ use Filament\Forms\Components\Component;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Resources\Form;
+use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Resources\Table;
+use Filament\Tables\Table;
 use Filament\Tables;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -248,7 +248,7 @@ class OrderResource extends Resource
                 Tables\Actions\Action::make('decline')
                     ->label('Decline')
                     ->color('danger')
-                    ->icon('heroicon-s-x')
+                    ->icon('heroicon-m-x-mark')
                     ->visible(fn($record) => $record->canDecline())
                     ->action(fn($record) => $record->reject()),
             ])

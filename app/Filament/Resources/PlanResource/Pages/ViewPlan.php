@@ -12,7 +12,7 @@ class ViewPlan extends ViewRecord
 {
     protected static string $resource = PlanResource::class;
 
-    protected function getActions(): array
+    protected function getHeaderActions(): array
     {
         return [
 

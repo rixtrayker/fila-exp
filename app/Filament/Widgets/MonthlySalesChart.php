@@ -34,7 +34,7 @@ class MonthlySalesChart extends BarChartWidget
     {
         return 'full';
     }
-    protected function getHeading(): string
+    public function getHeading(): string
     {
         return 'Monthly Sales';
     }

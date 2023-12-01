@@ -6,9 +6,9 @@ use App\Filament\Resources\EditRequestResource\Pages;
 use App\Filament\Resources\EditRequestResource\RelationManagers;
 use App\Models\EditRequest;
 use Filament\Forms;
-use Filament\Resources\Form;
+use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Resources\Table;
+use Filament\Tables\Table;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
@@ -19,7 +19,7 @@ class EditRequestResource extends Resource
 {
     protected static ?string $slug = 'edit-requests';
 
-    protected static ?string $navigationIcon = 'heroicon-o-pencil-alt';
+    protected static ?string $navigationIcon = 'heroicon-o-pencil-square';
     protected static ?int $navigationSort = 9;
 
     public static function form(Form $form): Form

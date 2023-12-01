@@ -41,7 +41,7 @@ class OverallChart extends PieChartWidget
 
 
 
-    protected function getHeading(): string
+    public function getHeading(): string
     {
         return 'Visits Overall Chart';
     }
@@ -106,7 +106,7 @@ class OverallChart extends PieChartWidget
 
 
 
-    public function updateChartData()
+    public function updateChartData(): void
     {
         $newDataChecksum = $this->generateDataChecksum();
 

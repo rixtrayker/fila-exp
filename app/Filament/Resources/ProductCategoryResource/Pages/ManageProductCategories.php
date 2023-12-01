@@ -10,7 +10,7 @@ class ManageProductCategories extends ManageRecords
 {
     protected static string $resource = ProductCategoryResource::class;
 
-    protected function getActions(): array
+    protected function getHeaderActions(): array
     {
         return [
             Actions\CreateAction::make(),

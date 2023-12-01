@@ -12,7 +12,7 @@ class EditVisit extends EditRecord
 {
     protected static string $resource = VisitResource::class;
 
-    protected function getActions(): array
+    protected function getHeaderActions(): array
     {
         return [
             Actions\DeleteAction::make(),

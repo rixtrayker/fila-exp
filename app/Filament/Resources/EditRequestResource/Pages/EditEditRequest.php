@@ -10,7 +10,7 @@ class EditEditRequest extends EditRecord
 {
     protected static string $resource = EditRequestResource::class;
 
-    protected function getActions(): array
+    protected function getHeaderActions(): array
     {
         return [
             // Actions\ViewAction::make(),

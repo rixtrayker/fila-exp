@@ -10,7 +10,7 @@ class EditClientRequest extends EditRecord
 {
     protected static string $resource = ClientRequestResource::class;
 
-    protected function getActions(): array
+    protected function getHeaderActions(): array
     {
         return [
             Actions\DeleteAction::make(),

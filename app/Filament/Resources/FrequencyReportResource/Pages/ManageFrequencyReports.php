@@ -10,7 +10,7 @@ class ManageFrequencyReports extends ManageRecords
 {
     protected static string $resource = FrequencyReportResource::class;
 
-    protected function getActions(): array
+    protected function getHeaderActions(): array
     {
         return [
             Actions\CreateAction::make(),

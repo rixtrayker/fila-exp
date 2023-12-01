@@ -10,10 +10,10 @@ use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
-use Filament\Resources\Form;
+use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\Tabs;
-use Filament\Resources\Table;
+use Filament\Tables\Table;
 use Filament\Tables;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -87,7 +87,7 @@ class PlanResource extends Resource
             Tables\Actions\Action::make('reject')
                 ->label('Reject & Delete')
                 ->color('danger')
-                ->icon('heroicon-s-x')
+                ->icon('heroicon-m-x-mark')
                 ->visible(fn($record) => $record->canDecline())
                 ->requiresConfirmation()
                 ->action(fn($record) => $record->rejectPlan()),

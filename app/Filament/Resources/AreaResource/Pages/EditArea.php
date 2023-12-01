@@ -10,7 +10,7 @@ class EditArea extends EditRecord
 {
     protected static string $resource = AreaResource::class;
 
-    protected function getActions(): array
+    protected function getHeaderActions(): array
     {
         return [
             Actions\DeleteAction::make(),

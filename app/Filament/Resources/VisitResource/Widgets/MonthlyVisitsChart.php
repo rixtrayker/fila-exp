@@ -8,7 +8,7 @@ class MonthlyVisitsChart extends PieChartWidget
 {
     protected static ?string $maxHeight = '300px';
 
-    protected function getHeading(): string
+    public function getHeading(): string
     {
         return 'Monthly Visits';
     }

@@ -10,7 +10,7 @@ class ManageVacationTypes extends ManageRecords
 {
     protected static string $resource = VacationTypeResource::class;
 
-    protected function getActions(): array
+    protected function getHeaderActions(): array
     {
         return [
             Actions\CreateAction::make(),

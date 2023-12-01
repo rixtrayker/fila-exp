@@ -9,9 +9,9 @@ use App\Models\Visit;
 use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
-use Filament\Resources\Form;
+use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Resources\Table;
+use Filament\Tables\Table;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
@@ -25,7 +25,7 @@ class DailyVisitResource extends Resource
     protected static ?string $navigationLabel = 'Daily visits';
     protected static ?string $label = 'Daily visits';
 
-    protected static ?string $navigationIcon = 'heroicon-o-collection';
+    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static ?string $slug = 'daily-visits';
 
     public static function form(Form $form): Form
@@ -99,8 +99,8 @@ class DailyVisitResource extends Resource
             ->actions([
                 Tables\Actions\Action::make('swap')
                     ->label('Swap')
-                    ->color('secondary')
-                    ->icon('heroicon-s-switch-horizontal')
+                    ->color('gray')
+                    ->icon('heroicon-m-arrows-right-left')
                     ->form(function ($record){
                         return [
                             DatePicker::make('visit_date')
@@ -118,8 +118,8 @@ class DailyVisitResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkAction::make('swap')
                     ->label('Swap')
-                    ->color('secondary')
-                    ->icon('heroicon-s-switch-horizontal')
+                    ->color('gray')
+                    ->icon('heroicon-m-arrows-right-left')
                     ->form(function ($records){
                         return [
                             DatePicker::make('visit_date')

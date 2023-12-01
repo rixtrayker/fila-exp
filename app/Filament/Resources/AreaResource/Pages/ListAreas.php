@@ -10,7 +10,7 @@ class ListAreas extends ListRecords
 {
     protected static string $resource = AreaResource::class;
 
-    protected function getActions(): array
+    protected function getHeaderActions(): array
     {
         return [
             Actions\CreateAction::make(),
