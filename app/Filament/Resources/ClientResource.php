@@ -7,6 +7,7 @@ use App\Filament\Resources\ClientResource\RelationManagers;
 use App\Models\Brick;
 use App\Models\City;
 use App\Models\Client;
+use App\Models\ClientType;
 use Filament\Forms;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
@@ -24,11 +25,13 @@ class ClientResource extends Resource
     protected static ?string $model = Client::class;
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
     protected static ?int $navigationSort = 3;
+    protected static $clientTypes = [];
 
     protected static $bricks;
     public static function form(Form $form): Form
     {
         self::$bricks = Brick::get()->pluck('zone_code', 'id')->toArray();
+        self::$clientTypes = ClientType::pluck('name','id')->toArray();
 
         return $form
             ->schema([
@@ -123,7 +126,12 @@ class ClientResource extends Resource
                     ->label('Speciality'),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('brick')
+                    ->searchable()
+                    ->options(self::$bricks)
+                    ->relationship('brick','name'),
+                Tables\Filters\SelectFilter::make('clientType')
+                    ->relationship('clientType','name'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -142,6 +150,7 @@ class ClientResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
+          ->with(['clientType','brick','speciality'])
           ->scopes([
             'inMyAreas',
           ]);

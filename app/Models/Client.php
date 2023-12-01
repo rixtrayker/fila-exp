@@ -82,22 +82,6 @@ class Client extends Model
     {
         return $this->hasMany(ClientRequest::class);
     }
-    public function getVisitsCountAttribute()
-    {
-        return $this->visits()->count();
-    }
-    public function getMissedVisitsCountAttribute()
-    {
-        return $this->visits()->where('status','cancelled')->count();
-    }
-    public function getPendingVisitsCountAttribute()
-    {
-        return $this->visits()->where('status','pending')->count();
-    }
-    public function getDoneVisitsCountAttribute()
-    {
-        return $this->visits()->where('status','visited')->count();
-    }
 
     public function scopeInMyAreas($builder)
     {

@@ -71,6 +71,10 @@ class Plan extends Model
         parent::boot();
     }
 
+    public function lastDay(): Carbon {
+        return $this->start_at->addDays(6);
+    }
+
     public static function createShiftVisits($plan){
         $shifts = $plan->shifts;
 

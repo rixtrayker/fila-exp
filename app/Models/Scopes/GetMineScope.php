@@ -29,6 +29,6 @@ class GetMineScope implements Scope
             $ids = User::descendantsAndSelf(auth()->user())->pluck('id')->toArray();
             $builder->whereIn('user_id', $ids);
         }
-        return $builder;
+        return;
     }
 }

@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Models\Visit;
+use App\Models\Plan;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -10,20 +10,8 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
-class CancelMissedVisitsJob implements ShouldQueue
+class CancelMissedVisitsJob
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-
-    /**
-     * Create a new job instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-
-    }
-
     /**
      * Execute the job.
      *
@@ -31,10 +19,11 @@ class CancelMissedVisitsJob implements ShouldQueue
      */
     public function handle()
     {
-        Visit::pending()
-            ->whereDate('visit_date','<',today())
-            ->update([
-                'status' => 'cancelled'
-            ]);
+        $closedPlans = Plan::whereDate('start_at',today()->subDays(8))->get();
+        // $cutoffDate = today()->addDays(7)->addHours(10);
+
+        foreach($closedPlans as $plan){
+            $plan->pendingVisits()->update(['status' => 'cancelled']);
+        }
     }
 }

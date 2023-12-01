@@ -90,7 +90,7 @@ class Visit extends Model
     }
     public function brick()
     {
-        return $this->belongsTo(Brick::class);
+        return $this->belongsToThrough(Brick::class, Client::class);
     }
     public function plan()
     {
@@ -109,5 +109,14 @@ class Visit extends Model
     public function nullRelation(): HasOne
     {
         return new HasOne($this->newQuery(), $this, 'id', '', '');
+    }
+
+    public function changeDate($date)
+    {
+        $this->update(['visit_date' => $date]);
+    }
+    public function swapable()
+    {
+        return $this->plan->lastOfPlan < today();
     }
 }
