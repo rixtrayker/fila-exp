@@ -109,7 +109,7 @@ class FrequencyReportResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ManageFrequencyReports::route('/'),
+            'index' => Pages\ListFrequencyReports::route('/'),
         ];
     }
     public static function canCreate(): bool

@@ -23,7 +23,7 @@ class Message extends Model
     }
 
     public function getSenderRoleAttribute(){
-        return $this->sender->firstRole[0]->name;
+        return $this->sender->roles()->first()->name;
     }
 
     public function users()

@@ -133,16 +133,16 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->belongsTo(User::class,'parent_id');
     }
-    public function firstRole()
-    {
-        return $this->morphToMany(
-            config('permission.models.role'),
-            'model',
-            config('permission.table_names.model_has_roles'),
-            config('permission.column_names.model_morph_key'),
-            PermissionRegistrar::$pivotRole
-        )->limit(1);
-    }
+    // public function firstRole()
+    // {
+    //     return $this->morphToMany(
+    //         config('permission.models.role'),
+    //         'model',
+    //         config('permission.table_names.model_has_roles'),
+    //         config('permission.column_names.model_morph_key'),
+    //         PermissionRegistrar::$pivotRole
+    //     )->limit(1);
+    // }
 
     public function scopeGetMine($builder)
     {
@@ -157,26 +157,26 @@ class User extends Authenticatable implements FilamentUser
 
         return $builder;
     }
-    public function roles(): BelongsToMany
-    {
-        $relation = $this->morphToMany(
-            Role::class,
-            'model',
-            config('permission.table_names.model_has_roles'),
-            config('permission.column_names.model_morph_key'),
-            PermissionRegistrar::$pivotRole
-        );
+    // public function roles(): BelongsToMany
+    // {
+    //     $relation = $this->morphToMany(
+    //         Role::class,
+    //         'model',
+    //         config('permission.table_names.model_has_roles'),
+    //         config('permission.column_names.model_morph_key'),
+    //         PermissionRegistrar::$pivotRole
+    //     );
 
-        if (! PermissionRegistrar::$teams) {
-            return $relation;
-        }
+    //     if (! PermissionRegistrar::$teams) {
+    //         return $relation;
+    //     }
 
-        return $relation->wherePivot(PermissionRegistrar::$teamsKey, getPermissionsTeamId())
-            ->where(function ($q) {
-                $teamField = config('permission.table_names.roles').'.'.PermissionRegistrar::$teamsKey;
-                $q->whereNull($teamField)->orWhere($teamField, getPermissionsTeamId());
-            });
-    }
+    //     return $relation->wherePivot(PermissionRegistrar::$teamsKey, getPermissionsTeamId())
+    //         ->where(function ($q) {
+    //             $teamField = config('permission.table_names.roles').'.'.PermissionRegistrar::$teamsKey;
+    //             $q->whereNull($teamField)->orWhere($teamField, getPermissionsTeamId());
+    //         });
+    // }
 
     protected static function boot()
     {

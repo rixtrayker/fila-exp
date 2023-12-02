@@ -29,8 +29,8 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->default()
             ->id('admin')
-            ->path('admin')
-            ->brandName('Avant Grade')
+            ->path('/admin')
+            ->brandName('Avant Garde')
             // ->domain(config('app.url'))
             ->login()
             ->colors([

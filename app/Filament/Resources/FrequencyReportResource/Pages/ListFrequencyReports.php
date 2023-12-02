@@ -4,16 +4,22 @@ namespace App\Filament\Resources\FrequencyReportResource\Pages;
 
 use App\Filament\Resources\FrequencyReportResource;
 use Filament\Pages\Actions;
-use Filament\Resources\Pages\ManageRecords;
+use Filament\Resources\Pages\ListRecords;
+use Illuminate\Database\Eloquent\Model;
 
-class ManageFrequencyReports extends ManageRecords
+class ListFrequencyReports extends ListRecords
 {
     protected static string $resource = FrequencyReportResource::class;
 
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            // Actions\CreateAction::make(),
         ];
+    }
+
+    public function getTableRecordKey(Model $model):string
+    {
+        return 'id';
     }
 }

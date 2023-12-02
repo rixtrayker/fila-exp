@@ -3,6 +3,7 @@
 namespace App\Console;
 
 use App\Jobs\CancelMissedVisitsJob;
+use App\Jobs\OptimizeAppPerformance;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use Illuminate\Support\Facades\Log;
@@ -22,6 +23,9 @@ class Kernel extends ConsoleKernel
         } catch (\Exception $e) {
             Log::channel('daily')->info("job scheduling failed, " . $e->getMessage());
         }
+
+        $schedule->job(new OptimizeAppPerformance)->daily()->at('00:00');
+
     }
 
     /**
