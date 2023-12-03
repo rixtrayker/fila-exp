@@ -1,6 +1,9 @@
 <?php
 
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
+use App\Jobs\OptimizeAppPerformance;
+use Laravel\Octane\Swoole\SwooleExtension;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,8 +20,27 @@ Route::get('/test', function () {
     return \App\Models\User::find(1)->editRequests;
 });
 
-Route::get('/login', [\Filament\Http\Livewire\Auth::class,'login'])->name('filament.auth.login');
-Route::get('/logout', [\Filament\Http\Livewire\Auth::class,'logout'])->name('filament.app.auth.logout');
+Route::get('/admin/ops/start-swoole', function () {
+    (new SwooleExtension)->isInstalled();
+    if(extension_loaded('swoole'))
+        return 1;
+    return 0;
+});
+
+Route::get('/admin/ops/optimize-app', function () {
+    dispatch(new OptimizeAppPerformance());
+    return true;
+});
+
+Route::get('/admin/ops/migrate-plan-data', function () {
+    Artisan::call('db:seed', [
+        '--class' => 'MigratePlanData',
+    ]);
+    return true;
+});
+
+// Route::get('/login', [\Filament\Http\Livewire\Auth::class,'login'])->name('filament.auth.login');
+// Route::get('/logout', [\Filament\Http\Livewire\Auth::class,'logout'])->name('filament.app.auth.logout');
 
 // Route::middleware([
 //     'auth:sanctum',

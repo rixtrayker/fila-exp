@@ -14,11 +14,13 @@ class Plan extends Model
     use CanApprove;
 
     protected $casts = [
-        'start_at' => 'date'
+        'start_at' => 'date',
+        'plan_data' => 'json',
     ];
     protected $fillable = [
         'user_id',
         'start_at',
+        'plan_data',
         'approved',
         'approved_at',
     ];
@@ -63,9 +65,6 @@ class Plan extends Model
 
     protected static function boot()
     {
-        static::created(fn($plan) => self::createShiftVisits($plan));
-        static::updated(fn($plan) => self::createShiftVisits($plan));
-
         static::addGlobalScope(new GetMineScope);
 
         parent::boot();
@@ -75,31 +74,29 @@ class Plan extends Model
         return $this->start_at->addDays(6);
     }
 
-    public static function createShiftVisits($plan){
-        $shifts = $plan->shifts;
+    public function createShiftVisits(){
+        $shifts = $this->shifts;
 
         foreach($shifts as $shift){
-            $visitDate = Carbon::createFromDate($plan->start_at)->addDays($shift->day - 1);
+            $visitDate = Carbon::createFromDate($this->start_at)->addDays($shift->day - 1);
 
             // insert AM client & PM client
-            Visit::upsert([
-                [
-                    'user_id' => $plan->user_id,
-                    'client_id' => $shift->am_shift,
-                    'visit_type_id' => 1,
-                    'plan_id' => $plan->id,
-                    'status' => 'planned',
-                    'visit_date' => $visitDate,
-                ],
-                [
-                    'user_id' => $plan->user_id,
-                    'client_id' => $shift->pm_shift,
-                    'visit_type_id' => 1,
-                    'plan_id' => $plan->id,
-                    'status' => 'planned',
-                    'visit_date' => $visitDate,
-                ]
-            ], ['plan_id', 'visit_date','client_id']);
+            $data = [
+                'user_id' => $this->user_id,
+                'client_id' => $shift->am_shift,
+                'visit_type_id' => 1,
+                'plan_id' => $this->id,
+                'status' => 'planned',
+                'visit_date' => $visitDate,
+            ];
+
+            if($shift->am_shift){
+                Visit::upsert([$data], ['plan_id', 'visit_date','client_id']);
+            }
+            if($shift->pm_shift){
+                $data['client_id'] = $shift->pm_shift;
+                Visit::upsert([$data], ['plan_id', 'visit_date','client_id']);
+            }
         }
     }
 }

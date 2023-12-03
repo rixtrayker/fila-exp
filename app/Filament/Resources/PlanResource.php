@@ -160,33 +160,29 @@ class PlanResource extends Resource
 
         return Tabs\Tab::make($tabName)
             ->schema([
-                Select::make($day.'_am')
+                Select::make($day.'_am_shift')
                     ->label('AM shift')
                     ->searchable()
-                    ->disabled(fn()=>request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans'))
                     ->default(fn($record)=> request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans') ? $record->shiftClient($days[$key])->am_shift : null)
                     ->getSearchResultsUsing(fn (string $search) => Client::inMyAreas()->where('name_en', 'like', "%{$search}%")->orWhere('name_ar', 'like', "%{$search}%")->limit(50)->pluck('name_en', 'id'))
                     ->options(Client::inMyAreas()->pluck('name_en', 'id'))
                     ->preload(),
                 TimePicker::make($day.'_time_am')
-                    ->disabled(fn()=>request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans'))
                     ->default(fn($record)=> request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans') ? $record->shiftClient($days[$key])->am_time : null)
                     ->label('AM time')
                     ->withoutSeconds(),
-                Select::make($day.'_pm')
+                Select::make($day.'_pm_shift')
                     ->label('PM shift')
                     ->searchable()
-                    ->disabled(fn()=>request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans'))
                     ->default(fn($record)=> request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans') ? $record->shiftClient($days[$key])->pm_shift : null)
                     ->getSearchResultsUsing(fn (string $search) => Client::inMyAreas()->where('name_en', 'like', "%{$search}%")->orWhere('name_ar', 'like', "%{$search}%")->limit(50)->pluck('name_en', 'id'))
                     ->options(Client::inMyAreas()->pluck('name_en', 'id'))
                     ->preload(),
                 TimePicker::make($day.'_time_pm')
-                    ->disabled(fn()=>request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans'))
                     ->default(fn($record)=> request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans') ? $record->shiftClient($days[$key])->pm_time : null)
                     ->label('PM time')
                     ->withoutSeconds(),
-                Select::make('clients_'.$day)
+                Select::make($day.'_clients')
                     ->label('Clients')
                     ->multiple()
                     ->options(self::$clients)

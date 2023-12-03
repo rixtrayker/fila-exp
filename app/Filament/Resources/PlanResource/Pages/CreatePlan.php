@@ -15,77 +15,37 @@ class CreatePlan extends CreateRecord
 {
     protected static string $resource = PlanResource::class;
     protected static bool $canCreateAnother = false;
-    private $visitsData = [];
-    private $shiftsData = [];
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $userId = auth()->id();
 
         $visitDates = DateHelper::calculateVisitDates();
+        $days = ['sat', 'sun', 'mon', 'tues', 'wednes', 'thurs', 'fri'];
 
-        $fieldName = ['clients_sat','clients_sun','clients_mon','clients_tues','clients_wednes','clients_thurs','clients_fri'];
+        $planData = [];
 
-        $now = now();
-        $filledDates = [];
-
-        foreach($fieldName as $dayKey => $field){
+        for($i = 0; $i < 7; $i++){
+            $field = $days[$i] . '_clients';
             if(!isset($data[$field]))
                 continue;
 
-            foreach($data[$field] as $clientId){
-                $this->visitsData[] = [
-                    'user_id' => $userId,
-                    'client_id' => $clientId,
-                    'visit_date' => $visitDates[$dayKey],
-                    'visit_type_id' => 1,
-                    'status' => 'planned',
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ];
-            }
-            $filledDates[] = $dayKey;
+            $planData[$field] = array_values(array_map(fn($val) => intval($val),$data[$field]));
             unset($data[$field]);
-        }
 
-        // Shifts
-        $days = ['sat', 'sun', 'mon', 'tues', 'wednes', 'thurs', 'fri'];
-
-        for ($i = 0; $i < 7; $i++) {
-            if (in_array($i, $filledDates)) {
-                $this->shiftsData[] = [
-                    'day' => $i + 1,
-                    'am_shift' => $data[$days[$i] . '_am'],
-                    'am_time' => $data[$days[$i] . '_time_am'],
-                    'pm_shift' => $data[$days[$i] . '_pm'],
-                    'pm_time' => $data[$days[$i] . '_time_pm'],
-                ];
+            $inputs = ['_am_shift','_pm_shift','_am_time','_pm_time'];
+            for ($j = 0; $j < 4; $j++) {
+                $key = $days[$i] . $inputs[$j];
+                if(isset($data[$key]))
+                    $planData[$key] = intval($data[$key]);
+                unset($data[$key]);
             }
-
-            unset($data[$days[$i] . '_am']);
-            unset($data[$days[$i] . '_time_am']);
-            unset($data[$days[$i] . '_pm']);
-            unset($data[$days[$i] . '_time_pm']);
         }
 
-
+        $planData = array_filter($planData);
+        $data['plan_data'] = $planData;
         $data['user_id'] = $userId;
         $data['start_at'] = $visitDates[0];
         return $data;
     }
-
-    public function afterCreate()
-    {
-
-        array_walk($this->visitsData, function (&$array) {
-            $array['plan_id'] = $this->record->id;
-        });
-        Visit::insert($this->visitsData);
-
-        array_walk($this->shiftsData, function (&$array) {
-            $array['plan_id'] = $this->record->id;
-        });
-        PlanShift::upsert($this->shiftsData, ['plan_id', 'day']);
-    }
-
 }
