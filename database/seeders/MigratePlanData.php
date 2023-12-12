@@ -6,12 +6,14 @@ use App\Models\Plan;
 use App\Models\PlanShift;
 use App\Models\Visit;
 use Carbon\Carbon;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
 
 class MigratePlanData extends Seeder
 {
+    use WithoutModelEvents;
     /**
      * Run the database seeds.
      */

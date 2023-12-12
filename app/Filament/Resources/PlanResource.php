@@ -76,8 +76,8 @@ class PlanResource extends Resource
                 //
             ])
             ->actions([
-            Tables\Actions\ViewAction::make()
-                ->visible(fn($record)=>$record->approved != 1),
+            Tables\Actions\ViewAction::make(),
+            Tables\Actions\EditAction::make(),
             Tables\Actions\Action::make('approve')
                 ->label('Approve')
                 ->color('success')
@@ -170,6 +170,7 @@ class PlanResource extends Resource
                 TimePicker::make($day.'_time_am')
                     ->default(fn($record)=> request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans') ? $record->shiftClient($days[$key])->am_time : null)
                     ->label('AM time')
+                    ->native(false)
                     ->withoutSeconds(),
                 Select::make($day.'_pm_shift')
                     ->label('PM shift')
@@ -181,6 +182,7 @@ class PlanResource extends Resource
                 TimePicker::make($day.'_time_pm')
                     ->default(fn($record)=> request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans') ? $record->shiftClient($days[$key])->pm_time : null)
                     ->label('PM time')
+                    ->native(false)
                     ->withoutSeconds(),
                 Select::make($day.'_clients')
                     ->label('Clients')
@@ -203,6 +205,7 @@ class PlanResource extends Resource
 
     public static function canEdit(Model $record): bool
     {
-        return static::can('update', $record);
+        $lastPlanId = $record->user?->plans()->latest()->first()?->id;
+        return $record->id == $lastPlanId && !$record->approved;
     }
 }

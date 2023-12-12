@@ -109,9 +109,10 @@ class PlanObserver
 
             $temp = array_filter($temp);
             if($temp){
-                $temp['day'] = $i + 1;
-                $temp['plan_id'] = $this->plan->id;
-                $arr[] = $temp;
+                $arr[] = [
+                    'day' => $i + 1,
+                    'plan_id' => $this->plan->id,
+                ];
             }
         }
 

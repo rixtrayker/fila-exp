@@ -1,17 +1,7 @@
-const colors = require('tailwindcss/colors')
-const defaultTheme = require('tailwindcss/defaultTheme');
+import preset from './vendor/filament/support/tailwind.config.preset'
 
-/** @type {import('tailwindcss').Config} */
-module.exports = {
-    content: [
-        './resources/**/*.blade.php',
-        './vendor/filament/**/*.blade.php',
-        './vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php',
-        './vendor/laravel/jetstream/**/*.blade.php',
-        './storage/framework/views/*.php',
-        './resources/views/**/*.blade.php',
-    ],
-    // darkMode: 'class',
+export default {
+    presets: [preset],
     theme: {
         extend: {
             colors: {
@@ -23,15 +13,12 @@ module.exports = {
                 chartblueB: '#35A2EB',
                 chartgreenB: '#21CFCF',
                 chartredB: '#FF4069',
-            },
-            fontFamily: {
-                // sans: ['DM Sans', ...defaultTheme.fontFamily.sans],
-                sans: ['Nunito', ...defaultTheme.fontFamily.sans],
-            },
-        },
+            }
+        }
     },
-    plugins: [
-        require('@tailwindcss/forms'),
-        require('@tailwindcss/typography'),
+    content: [
+        './app/Filament/**/*.php',
+        './resources/views/filament/**/*.blade.php',
+        './vendor/filament/**/*.blade.php',
     ],
 }

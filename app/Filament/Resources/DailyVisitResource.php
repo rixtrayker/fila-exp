@@ -106,7 +106,7 @@ class DailyVisitResource extends Resource
                             DatePicker::make('visit_date')
                                 ->label('Visit Date')
                                 ->default($record->visit_date)
-                                ->minDate(Carbon::tomorrow())
+                                ->minDate(Carbon::today())
                                 ->maxDate(fn($record) => $record->plan->lastDay())
                                 ->required(),
                         ];
@@ -125,7 +125,7 @@ class DailyVisitResource extends Resource
                             DatePicker::make('visit_date')
                                 ->label('Visit Date')
                                 ->default($records->first()->visit_date)
-                                ->minDate(Carbon::tomorrow())
+                                ->minDate(fn($records) => self::minDate($records->first()->plan->start_at))
                                 ->maxDate($records->first()->plan->lastDay())
                                 ->required(),
                         ];
@@ -166,6 +166,13 @@ class DailyVisitResource extends Resource
     public static function canEdit(Model $visit): bool
     {
         return self::isTodayVisit($visit);
+    }
+
+    public static function minDate($planStart): Carbon
+    {
+        if(Carbon::today()->isBefore($planStart))
+            return $planStart;
+        return DateHelper::today();
     }
 
     private static function isTodayVisit(Visit $visit): bool {
