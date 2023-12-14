@@ -4,8 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Models\Visit;
 use Filament\Widgets\ChartWidget;
-use Illuminate\Contracts\Session\Session;
-use Illuminate\Support\Facades\Log;
+use Livewire\Attributes\On;
 use Str;
 
 class OverallChart extends ChartWidget
@@ -16,19 +15,19 @@ class OverallChart extends ChartWidget
     public $user_id;
     protected static ?string $maxHeight = '300px';
 
-    protected $listeners = [
-        'updateVisitsList' => 'updateVisitsList',
-    ];
 
     protected function getType(): string
     {
         return 'pie';
     }
-    public function updateVisitsList($from, $to, $user_id)
+
+    #[On('updateVisitsList')]
+
+    public function updateVisitsList($eventData)
     {
-        $this->from = $from;
-        $this->to = $to;
-        $this->user_id = $user_id;
+        $this->from = $eventData['from'];
+        $this->to = $eventData['to'];
+        $this->user_id = $eventData['user_id'];
         $this->updateChartData();
     }
 
@@ -87,10 +86,6 @@ class OverallChart extends ChartWidget
         return $datasets;
     }
 
-    // public function updateUsersList(){
-    //     //  $this->users = $ids;
-    //      Log::channel('debugging')->info(1);
-    // }
     public function getVisits(){
         $query =  Visit::query();
 
@@ -107,9 +102,6 @@ class OverallChart extends ChartWidget
         }
         return $query;
     }
-
-
-
     public function updateChartData(): void
     {
         $newDataChecksum = $this->generateDataChecksum();
@@ -121,10 +113,5 @@ class OverallChart extends ChartWidget
                 'data' => $this->getData(),
             ]);
         }
-    }
-
-    public static function canView(): bool
-    {
-        return Str::contains(request()->path(),'cover-report') || Str::contains(request()->path(),'coverage-report');
     }
 }

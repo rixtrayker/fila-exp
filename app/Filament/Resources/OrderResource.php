@@ -76,12 +76,12 @@ class OrderResource extends Resource
                 ->preload()
                 ->required(),
                 Section::make('products')
-                    ->disableLabel()
+                    ->hiddenLabel()
                     ->schema([
                         TableRepeater::make('products')
                         ->relationship('products')
                         ->reactive()
-                        ->disableLabel()
+                        ->hiddenLabel()
                         ->headers(['Product', 'Quantity'])
                         ->emptyLabel('There is no product added.')
                         ->columnWidths([
@@ -93,7 +93,7 @@ class OrderResource extends Resource
                         ])
                         ->schema([
                             Select::make('product_id')
-                                ->disableLabel()
+                                ->hiddenLabel()
                                 ->placeholder('select a product')
                                 ->options(Product::pluck('name','id'))
                                 ->required()
@@ -119,7 +119,7 @@ class OrderResource extends Resource
                                 ->numeric()
                                 ->required()
                                 ->minValue(1)
-                                ->disableLabel()
+                                ->hiddenLabel()
                                 ->reactive()
                                 ->afterStateUpdated(
                                     function($set, $get){
@@ -137,7 +137,7 @@ class OrderResource extends Resource
                                 ->numeric()
                                 ->minValue(1)
                                 ->disabled()
-                                ->disableLabel()
+                                ->hiddenLabel()
                                 ->reactive(),
                             TextInput::make('item_total')
                                 ->label('Item total')
@@ -151,7 +151,7 @@ class OrderResource extends Resource
                                 }) // todo load from DB directly if found
                                 ->numeric()
                                 ->disabled()
-                                ->disableLabel(),
+                                ->hiddenLabel(),
                         ])->disableItemMovement()
                         ->columnSpanFull()
                         ->defaultItems(1),

@@ -1,7 +1,6 @@
 <?php
 
 use App\Filament\Pages\CoverageReport;
-use App\Filament\Resources\FrequencyReportResource;
 use App\Filament\Resources\VisitResource\Widgets\StatsOverview;
 use App\Filament\Resources\VisitResource\Widgets\YearVisitsChart;
 use App\Filament\Widgets\MonthlySalesChart;
@@ -103,7 +102,6 @@ return [
         'path' => app_path('Filament/Pages'),
         'register' => [
             CoverageReport::class,
-            FrequencyReport::class,
         ],
     ],
 

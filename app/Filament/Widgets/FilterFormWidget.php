@@ -26,12 +26,12 @@ class FilterFormWidget extends Widget implements HasForms
     public $user_id = [];
     public $query = [];
 
-    public function queryString(){
-        return [
-            // 'from' => ['except' => ''],
-            // 'to' => ['except' => ''],
-            // 'user_id' => ['except' => ''],
-        ];
+    public function refreshData(){
+        $this->dispatch('updateVisitsList', [
+            'from' => $this->from,
+            'to' => $this->to,
+            'user_id' => $this->user_id,
+        ]);
     }
     protected function getFormSchema()
     {

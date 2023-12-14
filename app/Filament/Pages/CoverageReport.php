@@ -10,6 +10,7 @@ use Filament\Pages\Actions\Action;
 use Filament\Pages\Page;
 use Filament\Forms\Concerns\HasFormComponentActions;
 use Filament\Pages\Concerns\InteractsWithFormActions;
+use Livewire\Attributes\On;
 use Maatwebsite\Excel\Excel;
 
 class CoverageReport extends Page
@@ -35,22 +36,13 @@ class CoverageReport extends Page
     public $user_id = [];
     public $query = [];
 
-    public function queryString(){
-        return [
-            'from' => ['except' => ''],
-            'to' => ['except' => ''],
-            'user_id' => ['except' => ''],
-        ];
-    }
+    #[On('updateVisitsList')]
 
-    protected $listeners = [
-        'updateVisitsList' => 'updateVisitsList',
-    ];
-    public function updateVisitsList($from, $to, $user_id)
+    public function updateVisitsList($eventData)
     {
-        $this->from = $from;
-        $this->to = $to;
-        $this->user_id = $user_id;
+        $this->from = $eventData['from'];
+        $this->to = $eventData['to'];
+        $this->user_id = $eventData['user_id'];
         $this->initData();
     }
 

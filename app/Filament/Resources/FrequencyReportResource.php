@@ -3,7 +3,6 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\FrequencyReportResource\Pages;
-use App\Filament\Resources\FrequencyReportResource\RelationManagers;
 use App\Models\Client;
 use App\Models\User;
 use App\Models\Visit;
@@ -14,7 +13,6 @@ use Filament\Tables\Table;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class FrequencyReportResource extends Resource
 {
@@ -25,7 +23,7 @@ class FrequencyReportResource extends Resource
     protected static ?string $navigationGroup = 'Reports';
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
-    protected static ?string $slug = 'frequency-report';
+    protected static ?string $slug = 'frequency-report-resource';
 
     protected static $avgGrade;
     protected static $medicalReps;
@@ -82,7 +80,7 @@ class FrequencyReportResource extends Resource
                     })
             ])
             ->actions([
-                // Tables\Actions\EditAction::make(),
+                Tables\Actions\ViewAction::make(),
                 // Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
@@ -126,6 +124,19 @@ class FrequencyReportResource extends Resource
         return self::$medicalReps;
     }
 
+
+
+    // public static function resolveRecordRouteBinding(int | string $key): ?Model
+    // {
+    //     return app(static::getModel())
+    //         ->resolveRouteBindingQuery(static::getEloquentQuery(), $key, static::getRecordRouteKeyName())
+    //         ->first();
+    // }
+
+    public static function getRecordRouteKeyName(): string|null {
+        return 'clients.id';
+    }
+
     private static function gradeAVG(): array
     {
         if(self::$avgGrade)
@@ -164,5 +175,4 @@ class FrequencyReportResource extends Resource
         self::$avgGrade = $output;
         return $output;
     }
-
 }

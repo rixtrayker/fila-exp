@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Admin\FrequencyReport;
 use App\Filament\Resources\VisitResource\Widgets\StatsOverview;
 use App\Filament\Resources\VisitResource\Widgets\YearVisitsChart;
 use App\Filament\Widgets\MonthlySalesChart;
@@ -39,6 +40,7 @@ class AdminPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
                 Pages\Dashboard::class,
+                FrequencyReport::class,
             ])
             // ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([

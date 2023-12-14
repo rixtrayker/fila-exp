@@ -51,12 +51,12 @@ class VacationResource extends Resource
                     ->preload()
                     ->required(),
                 Section::make('Durations')
-                    ->disableLabel()
+                    ->hiddenLabel()
                     ->schema([
                         TableRepeater::make('vacationDurations')
                             ->relationship('vacationDurations')
                             ->reactive()
-                            ->disableLabel()
+                            ->hiddenLabel()
                             ->headers(['Start date','End date' , 'From shift', 'To Shift'])
                             ->emptyLabel('There is no vacation duration added.')
                             ->columnWidths([
@@ -68,7 +68,7 @@ class VacationResource extends Resource
                             ])
                         ->schema([
                             DatePicker::make('start')
-                                ->disableLabel()
+                                ->hiddenLabel()
                                 ->closeOnDateSelection()
                                 ->required(),
                             DatePicker::make('end')
@@ -83,16 +83,16 @@ class VacationResource extends Resource
                                         };
                                     },
                                 ])
-                                ->disableLabel()
+                                ->hiddenLabel()
                                 ->closeOnDateSelection()
                                 ->required(),
                             Select::make('start_shift')
-                                ->disableLabel()
+                                ->hiddenLabel()
                                 ->default('AM')
                                 ->options(['AM'=>'AM','PM'=>'PM'])
                                 ->required(),
                             Select::make('end_shift')
-                                ->disableLabel()
+                                ->hiddenLabel()
                                 ->default('PM')
                                 ->options(['AM'=>'AM','PM'=>'PM'])
                                 ->rules([
