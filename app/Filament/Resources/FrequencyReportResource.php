@@ -12,6 +12,7 @@ use Filament\Tables\Table;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 
 class FrequencyReportResource extends Resource
 {
@@ -101,6 +102,8 @@ class FrequencyReportResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
+        DB::statement("SET SESSION sql_mode=''");
+
         return Client::select('clients.id as id',
         'name_en',
         'clients.brick_id as brick_id',

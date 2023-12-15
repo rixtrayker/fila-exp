@@ -201,6 +201,7 @@ class VisitReportResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
+        DB::statement("SET SESSION sql_mode=''");
         return Visit::select('visits.id as id',
             'visits.client_id as client_id',
             'visits.user_id as user_id',
@@ -225,7 +226,6 @@ class VisitReportResource extends Resource
             ->leftJoin('products', 'product_visits.product_id', '=', 'products.id')
             ->leftJoin('bricks', 'clients.brick_id', '=', 'bricks.id')
             ->leftJoin('visit_types', 'visit_types.id', '=', 'visits.visit_type_id')
-            ->groupBy('visits.id')
             ->orderBy('visits.id', 'DESC');
     }
 
