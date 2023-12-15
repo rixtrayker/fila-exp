@@ -24,8 +24,9 @@ class VisitReport extends Page
     protected static string $view = 'filament.admin.pages.visits-report';
 
     protected static ?string $navigationLabel = 'Visits report';
-    protected static ?string $slug = 'visits-report';
+    protected static ?string $slug = 'visits-report-test';
     protected static ?string $navigationGroup = 'Reports';
+    protected static bool $shouldRegisterNavigation = false;
     public $visits;
     public $from;
     public $to;
@@ -33,7 +34,6 @@ class VisitReport extends Page
     public $client_type_id;
     public $user_id;
     public $grade;
-    public $query = [];
 
     public function __construct()
     {
@@ -64,7 +64,7 @@ class VisitReport extends Page
             ->leftJoin('visit_types', 'visits.visit_type_id', '=', 'visit_types.id')
             ->leftJoin('product_visits', 'product_visits.visit_id', '=', 'visits.id')
             ->leftJoin('products', 'product_visits.product_id', '=', 'products.id')
-            ->groupBy('visits.id')
+            ->groupBy('visits.id','clients.id')
             ->orderBy('visit_date', 'DESC');
 
 

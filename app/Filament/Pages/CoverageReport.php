@@ -48,6 +48,8 @@ class CoverageReport extends Page
 
     public function __construct()
     {
+        $this->from = $this->from ?? today()->subDays(7);
+        $this->to = $this->to ?? today()->format('Y-m-d');
         $this->initData();
     }
 

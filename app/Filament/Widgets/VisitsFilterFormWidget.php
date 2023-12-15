@@ -33,17 +33,8 @@ class VisitsFilterFormWidget extends Widget implements HasForms
 
     protected $listeners = ['refreshData'];
 
-    // public function queryString(){
-    //     return [
-    //         'from',
-    //         'to',
-    //         'user_id',
-    //         'grade',
-    //     ];
-    // }
-
     public function refreshData(){
-        $this->dispatch('updateReportData', [
+        $this->dispatch('updateVisitReportData', [
             'from' => $this->from,
             'to' => $this->to,
             'user_id' => $this->user_id,
@@ -61,17 +52,14 @@ class VisitsFilterFormWidget extends Widget implements HasForms
     protected function getFormSchema()
     {
         return [
-
             Select::make('user_id')
                 ->label('Medical Rep')
                 ->default($this->user_id)
                 ->multiple()
                 ->options(self::getMedicalReps()),
-            // ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
             Select::make('grade')
                 ->default($this->grade)
                 ->options(fn()=>self::gradeAVG()),
-
             Select::make('visit_type_id')
                 ->label('Visit Type')
                 ->multiple()
@@ -80,14 +68,6 @@ class VisitsFilterFormWidget extends Widget implements HasForms
                 ->label('Client Type')
                 ->multiple()
                 ->options(ClientType::pluck('name','id')),
-            // ->query(function (Builder $query, array $data): Builder {
-            //     if(count($data['values'])){
-            //         return $query->rightJoin('visits', 'clients.id', '=', 'visits.client_id')
-            //             ->whereIn('visits.user_id', $data['values']);
-            //     }
-            //     else
-            //         return $query;
-            //     }),
             DatePicker::make('from')
                 ->default($this->from ?? today()->subDays(7)),
             DatePicker::make('to')
