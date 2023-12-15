@@ -3,10 +3,7 @@
 namespace App\Filament\Pages\Admin;
 
 use App\Filament\Widgets\FrequencyFilterFormWidget;
-use App\Models\Visit;
-use App\Exports\ExportVisits;
 use App\Models\Client;
-use Filament\Pages\Actions\Action;
 use Filament\Pages\Page;
 use Filament\Forms\Concerns\HasFormComponentActions;
 use Filament\Pages\Concerns\InteractsWithFormActions;
@@ -24,8 +21,10 @@ class FrequencyReport extends Page
 
     protected static ?string $navigationLabel = 'Frequency report';
     // protected static ?string $navigationIcon = 'heroicon-o-calendar';
-    protected static ?string $slug = 'frequency-report';
+    protected static ?string $slug = 'frequency-report-dep';
     protected static ?string $navigationGroup = 'Reports';
+    protected static bool $shouldRegisterNavigation = false;
+
 
     // protected static ?int $navigationSort = 11;
     public $clients;
