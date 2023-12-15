@@ -6,6 +6,7 @@ use App\Filament\Resources\FrequencyReportResource;
 use App\Models\Reports\ReportSummary;
 use App\Models\Visit;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\View;
 use Filament\Infolists\Concerns\InteractsWithInfolists;
 use Filament\Infolists\Contracts\HasInfolists;
 use Filament\Infolists\Infolist;
@@ -39,11 +40,6 @@ class ListFrequencyReports extends ListRecords implements HasInfolists
         return $infolist
                 ->record($this->getSummary())
                 ->schema([
-                    TextEntry::make('')
-                        ->label('Done, Pending, Missed, Total Visits')
-                        ->columnSpanFull()
-                        ->size(TextEntry\TextEntrySize::Large)
-                        ->weight(FontWeight::ExtraBold),
                     TextEntry::make('from_date')
                         ->label('From Date'),
                     TextEntry::make('to_date')
@@ -51,31 +47,35 @@ class ListFrequencyReports extends ListRecords implements HasInfolists
                         ->label('To Date'),
                     TextEntry::make('doctors_count')
                         ->label('Visited Doctors'),
-                    TextEntry::make('distinct_rep_visits_count')
+                    TextEntry::make('medical_reps_count')
                         ->label('Medical Reps'),
                     TextEntry::make('grade')
                         ->label('Grades'),
                     TextEntry::make('bricks_count')
                         ->label('Bricks Count'),
                     TextEntry::make('done_visits_count')
+                        ->label('Done Visits')
                         ->badge()
                         ->color('success')
                         ->size(TextEntry\TextEntrySize::Large)
                         ->icon('heroicon-m-check-circle')
                         ->iconPosition(IconPosition::After),
                     TextEntry::make('pending_visits_count')
+                        ->label('Planned & Pending Visits')
                         ->badge()
                         ->color('warning')
                         ->size(TextEntry\TextEntrySize::Large)
                         ->icon('heroicon-s-clock')
                         ->iconPosition(IconPosition::After),
                     TextEntry::make('missed_visits_count')
+                        ->label('Missed Visits')
                         ->badge()
                         ->color('danger')
                         ->size(TextEntry\TextEntrySize::Large)
                         ->icon('heroicon-m-x-circle')
                         ->iconPosition(IconPosition::After),
                     TextEntry::make('total_visits_count')
+                        ->label('Total Visits')
                         ->badge()
                         ->color('gray')
                         ->size(TextEntry\TextEntrySize::Large)
@@ -83,9 +83,9 @@ class ListFrequencyReports extends ListRecords implements HasInfolists
                         ->iconPosition(IconPosition::After),
                 ])
             ->columns([
-                'sm' => 2,
+                'sm' => 1,
+                'md' => 2,
                 'xl' => 4,
-                '2xl' => 4,
             ]);
     }
 
@@ -100,11 +100,19 @@ class ListFrequencyReports extends ListRecords implements HasInfolists
         $summary['missed_visits_count'] = $records->sum('missed_visits_count');
         $summary['pending_visits_count'] = $records->sum('pending_visits_count');
         $summary['total_visits_count'] = $records->sum('total_visits_count');
-        $summary['distinct_rep_visits_count'] = Visit::whereIn('client_id', $records->pluck('id'))
+        $query = Visit::whereIn('client_id', $records->pluck('id'))
             ->where('visit_date', '>=', $summary['from_date'])
-            ->where('visit_date', '<=', $summary['to_date'])
+            ->where('visit_date', '<=', $summary['to_date']);
+
+        $user_ids  =$this->table->getFilter('user_id')->getState()['values'];
+        if($user_ids){
+            $query->whereIn('user_id', $user_ids);
+        }
+
+        $summary['medical_reps_count'] = $query
             ->distinct('user_id')
             ->count('user_id');
+
         $model = new ReportSummary();
         $model->fill($summary);
         return $model;

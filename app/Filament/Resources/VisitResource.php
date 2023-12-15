@@ -87,7 +87,6 @@ class VisitResource extends Resource
                     ->wrap(),
             ])
             ->filters([
-
                 Tables\Filters\Filter::make('id')
                     ->form([
                         Select::make('user_id')

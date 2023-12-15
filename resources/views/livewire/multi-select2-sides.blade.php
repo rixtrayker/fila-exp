@@ -40,7 +40,7 @@
         <div class="flex-1 border overflow-hidden rounded-lg shadow-sm"
              :class="{
             'bg-white border-gray-300': !@js(config('filament.dark_mode')),
-            'dark:bg-gray-700 dark:border-gray-600': @js(config('filament.dark_mode'))
+            'dark:bg-gray-700': @js(config('filament.dark_mode'))
             }"
         >
             {{-- Title --}}
@@ -64,7 +64,7 @@
                         focus:ring-primary-500"
                         :class="{
                             'bg-gray-100': !@js(config('filament.dark_mode')),
-                             'dark:bg-gray-600 dark:border-gray-500': @js(config('filament.dark_mode'))
+                             'dark:bg-gray-600': @js(config('filament.dark_mode'))
                         }"
                         @keyup="searchSelectedOptions('{{str($getStatePath())->remove('.')}}_ms-two-sides_selectableOptions',$event.target.value)"
                     />
@@ -107,9 +107,9 @@
         <div class="flex-1 border overflow-hidden rounded-lg shadow-sm"
              :class="{
                     'bg-white border-gray-300': ! (@js($getStatePath()) in $wire.__instance.serverMemo.errors),
-                    'dark:bg-gray-700 dark:border-gray-600': ! (@js($getStatePath()) in $wire.__instance.serverMemo.errors) && @js(config('filament.dark_mode')),
+                    'dark:bg-gray-700': ! (@js($getStatePath()) in $wire.__instance.serverMemo.errors) && @js(config('filament.dark_mode')),
                     'bg-white border-danger-600': (@js($getStatePath()) in $wire.__instance.serverMemo.errors),
-                    'dark:bg-gray-700 dark:border-danger-400': (@js($getStatePath()) in $wire.__instance.serverMemo.errors) && @js(config('filament.dark_mode')),
+                    'dark:bg-gray-700': (@js($getStatePath()) in $wire.__instance.serverMemo.errors) && @js(config('filament.dark_mode')),
                 }"
         >
             {{-- Title --}}
@@ -132,7 +132,7 @@
                         focus:ring-primary-500"
                         :class="{
                             'bg-gray-100': !@js(config('filament.dark_mode')),
-                            'dark:bg-gray-600 dark:border-gray-500': @js(config('filament.dark_mode'))
+                            'dark:bg-gray-600': @js(config('filament.dark_mode'))
                         }"
                         @keyup="searchSelectedOptions('{{str($getStatePath())->remove('.')}}_ms-two-sides_selectedOptions',$event.target.value)"
                     />

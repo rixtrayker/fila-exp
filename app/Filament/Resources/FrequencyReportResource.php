@@ -39,13 +39,13 @@ class FrequencyReportResource extends Resource
                     ->searchable()
                     ->label('Name'),
                 TextColumn::make('done_visits_count')
-                    ->label('Done Visits Count'),
+                    ->label('Done Visits'),
                 TextColumn::make('pending_visits_count')
-                    ->label('Pending Visits Count'),
+                    ->label('Planned & Pending Visits'),
                 TextColumn::make('missed_visits_count')
-                    ->label('Missed Visits Count'),
+                    ->label('Missed Visits'),
                 TextColumn::make('total_visits_count')
-                    ->label('Total Visits Count'),
+                    ->label('Total Visits'),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('brick_id')
@@ -105,11 +105,10 @@ class FrequencyReportResource extends Resource
         'clients.brick_id as brick_id',
         'clients.grade as grade',
         )
-            ->selectRaw('COUNT(DISTINCT visits.user_id) AS distinct_rep_visits_count')
             ->selectRaw('SUM(CASE WHEN visits.status = "visited" THEN 1 ELSE 0 END) AS done_visits_count')
-            ->selectRaw('SUM(CASE WHEN visits.status IN ("pending", "planned") THEN 1 ELSE 0 END) AS pending_visits_count')
+            ->selectRaw('IFNULL(SUM(CASE WHEN visits.status IN ("pending", "planned") THEN 1 ELSE 0 END), 0) AS pending_visits_count')
             ->selectRaw('SUM(CASE WHEN visits.status = "cancelled" THEN 1 ELSE 0 END) AS missed_visits_count')
-            ->selectRaw('COUNT(*) AS total_visits_count')
+            ->selectRaw('COUNT(DISTINCT visits.id) AS total_visits_count')
             ->rightJoin('visits', 'clients.id', '=', 'visits.client_id')
             ->leftJoin('users', 'visits.user_id', '=', 'users.id')
             ->groupBy('clients.id','clients.name_en');
