@@ -43,7 +43,7 @@ class VisitReportResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->defaultPaginationPageOption(50)
+            ->defaultPaginationPageOption(25)
             ->columns([
                 TextColumn::make('medical_rep')
                     ->label('Medical Rep'),
@@ -162,6 +162,7 @@ class VisitReportResource extends Resource
                                     fn (Builder $query, $data): Builder => $query->where('clients.client_type_id', $data)
                                 );}),
             ])
+            ->paginated([10, 25, 50, 100, 1000, 'all'])
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 // Tables\Actions\DeleteAction::make(),

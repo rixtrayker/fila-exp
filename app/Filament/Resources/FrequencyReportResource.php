@@ -89,6 +89,7 @@ class FrequencyReportResource extends Resource
                             );
                     })
             ])
+            ->paginated([10, 25, 50, 100, 1000, 'all'])
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 // Tables\Actions\DeleteAction::make(),
