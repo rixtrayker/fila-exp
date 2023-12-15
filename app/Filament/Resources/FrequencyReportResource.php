@@ -33,7 +33,7 @@ class FrequencyReportResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->defaultPaginationPageOption(50)
+            ->defaultPaginationPageOption(10)
             ->columns([
                 TextColumn::make('name_en')
                     ->searchable()

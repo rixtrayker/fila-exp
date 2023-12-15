@@ -43,7 +43,7 @@ class VisitReportResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->defaultPaginationPageOption(25)
+            ->defaultPaginationPageOption(10)
             ->columns([
                 TextColumn::make('medical_rep')
                     ->label('Medical Rep'),
