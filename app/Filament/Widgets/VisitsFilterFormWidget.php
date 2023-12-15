@@ -4,7 +4,9 @@ namespace App\Filament\Widgets;
 
 use App\Filament\Pages\Admin\FrequencyReport;
 use App\Models\Client;
+use App\Models\ClientType;
 use App\Models\User;
+use App\Models\VisitType;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -13,15 +15,17 @@ use Filament\Forms\Form;
 use Filament\Widgets\Widget;
 use Illuminate\Support\Str;
 
-class FrequencyFilterFormWidget extends Widget implements HasForms
+class VisitsFilterFormWidget extends Widget implements HasForms
 {
     use InteractsWithForms;
 
-    protected static string $view = 'filament.widgets.frequency-filter-form-widget';
+    protected static string $view = 'filament.widgets.visits-filter-form-widget';
     public $from;
     public $to;
     public $user_id = [];
     public $grade = [];
+    public $client_type_id = [];
+    public $visit_type_id = [];
     public $query = [];
 
     private static $medicalReps;
@@ -29,6 +33,14 @@ class FrequencyFilterFormWidget extends Widget implements HasForms
 
     protected $listeners = ['refreshData'];
 
+    // public function queryString(){
+    //     return [
+    //         'from',
+    //         'to',
+    //         'user_id',
+    //         'grade',
+    //     ];
+    // }
 
     public function refreshData(){
         $this->dispatch('updateReportData', [
@@ -36,6 +48,8 @@ class FrequencyFilterFormWidget extends Widget implements HasForms
             'to' => $this->to,
             'user_id' => $this->user_id,
             'grade' => $this->grade,
+            'client_type_id' => $this->client_type_id,
+            'visit_type_id' => $this->visit_type_id,
         ]);
     }
 
@@ -53,9 +67,27 @@ class FrequencyFilterFormWidget extends Widget implements HasForms
                 ->default($this->user_id)
                 ->multiple()
                 ->options(self::getMedicalReps()),
+            // ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
             Select::make('grade')
                 ->default($this->grade)
                 ->options(fn()=>self::gradeAVG()),
+
+            Select::make('visit_type_id')
+                ->label('Visit Type')
+                ->multiple()
+                ->options(VisitType::pluck('name','id')),
+            Select::make('client_type_id')
+                ->label('Client Type')
+                ->multiple()
+                ->options(ClientType::pluck('name','id')),
+            // ->query(function (Builder $query, array $data): Builder {
+            //     if(count($data['values'])){
+            //         return $query->rightJoin('visits', 'clients.id', '=', 'visits.client_id')
+            //             ->whereIn('visits.user_id', $data['values']);
+            //     }
+            //     else
+            //         return $query;
+            //     }),
             DatePicker::make('from')
                 ->default($this->from ?? today()->subDays(7)),
             DatePicker::make('to')

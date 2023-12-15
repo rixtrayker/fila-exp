@@ -2,7 +2,7 @@
 
 namespace App\Filament\Pages\Admin;
 
-use App\Filament\Widgets\FrequencyFilterFormWidget;
+use App\Filament\Widgets\VisitsFilterFormWidget;
 use App\Models\Visit;
 use App\Exports\ExportVisits;
 use App\Models\Client;
@@ -11,40 +11,30 @@ use Filament\Pages\Page;
 use Filament\Forms\Concerns\HasFormComponentActions;
 use Filament\Pages\Concerns\InteractsWithFormActions;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
 
-class FrequencyReport extends Page
+class VisitReport extends Page
 {
     use HasFormComponentActions;
     use InteractsWithFormActions;
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
 
-    protected static string $view = 'filament.admin.pages.frequency-report';
+    protected static string $view = 'filament.admin.pages.visits-report';
 
-    protected static ?string $navigationLabel = 'Frequency report';
-    // protected static ?string $navigationIcon = 'heroicon-o-calendar';
-    protected static ?string $slug = 'frequency-report';
+    protected static ?string $navigationLabel = 'Visits report';
+    protected static ?string $slug = 'visits-report';
     protected static ?string $navigationGroup = 'Reports';
-
-    // protected static ?int $navigationSort = 11;
-    public $clients;
-    public $pending;
-    public $missed;
+    public $visits;
     public $from;
     public $to;
+    public $visit_type_id;
+    public $client_type_id;
     public $user_id;
     public $grade;
     public $query = [];
 
-    // public function queryString(){
-    //     return [
-    //         'from',
-    //         'to',
-    //         'user_id',
-    //         'grade',
-    //     ];
-    // }
     public function __construct()
     {
         $this->from = $this->from ?? today()->subDays(7);
@@ -53,35 +43,48 @@ class FrequencyReport extends Page
     }
 
 
-    #[On('updateReportData')]
-    public function updateReportData($eventData)
+    #[On('updateVisitReportData')]
+    public function updateVisitReportData($eventData)
     {
         $this->from = $eventData['from'];
         $this->to = $eventData['to'];
         $this->user_id = $eventData['user_id'];
         $this->grade = $eventData['grade'];
+        $this->client_type_id = $eventData['client_type_id'];
+        $this->visit_type_id = $eventData['visit_type_id'];
         $this->initData();
     }
     public function getReportQuery(){
-        $query =  Client::query()
-            ->select('clients.id as id',
-                'name_en')
-            ->selectRaw('SUM(CASE WHEN visits.status = "visited" THEN 1 ELSE 0 END) AS done_visits_count')
-            ->selectRaw('SUM(CASE WHEN visits.status IN ("pending", "planned") THEN 1 ELSE 0 END) AS pending_visits_count')
-            ->selectRaw('SUM(CASE WHEN visits.status = "cancelled" THEN 1 ELSE 0 END) AS missed_visits_count')
-            ->selectRaw('COUNT(*) AS total_visits_count')
-            ->rightJoin('visits', 'clients.id', '=', 'visits.client_id')
-            ->groupBy('clients.id','clients.name_en')
-            ->orderBy('clients.name_en');
+        $query =  Visit::query()
+            ->select('users.name as medical_rep', 'visit_date','clients.name_en as client_name','comment', 'visits.status as status'
+                ,DB::raw('GROUP_CONCAT(products.name SEPARATOR", ") AS products_list')
+            )
+            ->leftJoin('users', 'visits.user_id', '=', 'users.id')
+            ->leftJoin('clients', 'visits.client_id', '=', 'clients.id')
+            ->leftJoin('visit_types', 'visits.visit_type_id', '=', 'visit_types.id')
+            ->leftJoin('product_visits', 'product_visits.visit_id', '=', 'visits.id')
+            ->leftJoin('products', 'product_visits.product_id', '=', 'products.id')
+            ->groupBy('visits.id')
+            ->orderBy('visit_date', 'DESC');
+
 
 
         $query->when($this->user_id,
             fn (Builder $query, $ids): Builder => $query
-                ->whereIn('visits.user_id', $ids)
+                ->whereIn('user_id', $ids)
         );
 
         $query->when($this->grade,
             fn (Builder $query, $grade): Builder => $query->where('grade', $grade)
+        );
+
+        $query->when($this->visit_type_id,
+            fn (Builder $query, $ids): Builder => $query->whereIn('visit_type_id', $ids)
+
+        );
+
+        $query->when($this->client_type_id,
+            fn (Builder $query, $ids): Builder => $query->whereIn('client_type_id', $ids)
         );
 
         $query->when($this->from,
@@ -98,6 +101,7 @@ class FrequencyReport extends Page
     public function updatedFromDate(){
         $this->initData();
     }
+
     public function updatedToDate(){
         $this->initData();
     }
@@ -105,13 +109,13 @@ class FrequencyReport extends Page
     protected function getHeaderWidgets(): array
     {
         return [
-            FrequencyFilterFormWidget::class,
+            VisitsFilterFormWidget::class,
         ];
     }
 
     public function initData()
     {
-        $this->clients = $this->getReportQuery()->get();
+        $this->visits = $this->getReportQuery()->get();
     }
 
     // protected function getHeaderActions(): array
