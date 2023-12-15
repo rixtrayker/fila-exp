@@ -23,6 +23,6 @@ class OptimizeAppPerformance
         Artisan::call('optimize');
         Artisan::call('config:cache');
         Artisan::call('route:cache');
-        // Artisan::call('icons:cache');
+        Artisan::call('icon:cache');
     }
 }
