@@ -90,7 +90,8 @@ class ListFrequencyReports extends ListRecords implements HasInfolists
     }
 
     private function getSummary(): Model{
-        $records = $this->table->getRecords();
+        $query = self::$resource::getEloquentQuery();
+        $records = $this->applyFiltersToTableQuery($query)->get();
         $summary['doctors_count'] = $records->count();
         $summary['grade'] = implode(', ', array_unique($records->pluck('grade')->toArray()));
         $summary['bricks_count'] = count(array_unique($records->pluck('brick_id')->toArray()));
@@ -100,16 +101,16 @@ class ListFrequencyReports extends ListRecords implements HasInfolists
         $summary['missed_visits_count'] = $records->sum('missed_visits_count');
         $summary['pending_visits_count'] = $records->sum('pending_visits_count');
         $summary['total_visits_count'] = $records->sum('total_visits_count');
-        $query = Visit::whereIn('client_id', $records->pluck('id'))
+        $visitQuery = Visit::whereIn('client_id', $records->pluck('id'))
             ->where('visit_date', '>=', $summary['from_date'])
             ->where('visit_date', '<=', $summary['to_date']);
 
         $user_ids  =$this->table->getFilter('user_id')->getState()['values'];
         if($user_ids){
-            $query->whereIn('user_id', $user_ids);
+            $visitQuery->whereIn('user_id', $user_ids);
         }
 
-        $summary['medical_reps_count'] = $query
+        $summary['medical_reps_count'] = $visitQuery
             ->distinct('user_id')
             ->count('user_id');
 

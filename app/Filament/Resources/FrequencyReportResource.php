@@ -114,6 +114,7 @@ class FrequencyReportResource extends Resource
             ->selectRaw('SUM(CASE WHEN visits.status = "cancelled" THEN 1 ELSE 0 END) AS missed_visits_count')
             ->selectRaw('COUNT(DISTINCT visits.id) AS total_visits_count')
             ->rightJoin('visits', 'clients.id', '=', 'visits.client_id')
+            ->whereNull('visits.deleted_at')
             ->leftJoin('users', 'visits.user_id', '=', 'users.id')
             ->groupBy('clients.id','clients.name_en');
 

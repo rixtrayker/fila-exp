@@ -144,7 +144,6 @@ class VisitReportResource extends Resource
                 Tables\Filters\Filter::make('visit_client_types')
                     ->form([
                         Select::make('visit_type_id')
-                            ->label('Grade')
                             ->label('Visit Type')
                             ->options(self::getVisitTypes()),
                         Select::make('client_type_id')

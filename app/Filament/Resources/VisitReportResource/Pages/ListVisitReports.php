@@ -53,10 +53,11 @@ class ListVisitReports extends ListRecords implements HasInfolists
                 TextEntry::make('visit_types')
                     ->label('Visit Types'),
                 TextEntry::make('bricks_names')
+                    ->columnSpan(['lg' => 3, 'sm' => 1])
                     ->label('Bricks Names'),
                 TextEntry::make('bricks_count')
                     ->label('Bricks Count')
-                    ->columnSpan(['lg' => 3, 'sm' => 1]),
+                    ->columnSpan(['lg' => 1, 'sm' => 1]),
                 TextEntry::make('done_visits_count')
                     ->label('Done Visits')
                     ->badge()
@@ -94,7 +95,8 @@ class ListVisitReports extends ListRecords implements HasInfolists
     }
 
     private function getSummary(): Model{
-        $records = $this->table->getRecords();
+        $query = self::$resource::getEloquentQuery();
+        $records = $this->applyFiltersToTableQuery($query)->get();
         $summary['medical_reps_count'] =  count(array_unique($records->pluck('user_id')->toArray()));
         $summary['doctors_count'] = count(array_unique($records->pluck('client_id')->toArray()));
         $summary['grade'] = implode(', ', array_unique($records->pluck('grade')->toArray()));
@@ -110,6 +112,8 @@ class ListVisitReports extends ListRecords implements HasInfolists
         $summary['distinct_rep_visits_count'] = count(array_unique($records->pluck('user_id')->toArray()));
         $model = new ReportSummary();
         $model->fill($summary);
+        //write raw sql query to get distinct client_id form table visits where user_id
+        // ex. select distinct client_id from visits where user_id = 1;
         return $model;
     }
 }
