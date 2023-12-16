@@ -47,10 +47,10 @@ class ExpensesResource extends Resource
                     ->default(today())
                     ->closeOnDateSelection()
                     ->required(),
-                TextInput::make('trasporation')
-                    ->label('Trasporation')
+                TextInput::make('transportation')
+                    ->label('Transportation')
                     ->numeric()
-                    ->helperText('Money value of trasporation')
+                    ->helperText('Money value of transportation')
                     ->minValue(1),
                 TextInput::make('lodging')
                     ->label('Lodging')
@@ -101,8 +101,8 @@ class ExpensesResource extends Resource
                     ->label('Total')
                     ->sortable()
                     ->searchable(),
-                TextColumn::make('trasporation')
-                    ->label('Trasporation')
+                TextColumn::make('transportation')
+                    ->label('Transportation')
                     ->sortable()
                     ->searchable(),
                 TextColumn::make('lodging')

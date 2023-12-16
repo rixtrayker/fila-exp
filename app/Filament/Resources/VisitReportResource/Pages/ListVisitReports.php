@@ -29,6 +29,11 @@ class ListVisitReports extends ListRecords implements HasInfolists
         ];
     }
 
+    public function getBreadcrumbs(): array
+    {
+        return [];
+    }
+
     public function getTableRecordKey(Model $model):string
     {
         return 'id';

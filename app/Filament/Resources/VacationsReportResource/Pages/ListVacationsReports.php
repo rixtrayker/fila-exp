@@ -32,6 +32,10 @@ class ListVacationsReports extends ListRecords implements HasInfolists
     {
         return 'id';
     }
+    public function getBreadcrumbs(): array
+    {
+        return [];
+    }
 
     public function summaryInfolist(Infolist $infolist): Infolist
     {

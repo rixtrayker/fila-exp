@@ -46,7 +46,7 @@ class EditExpenses extends EditRecord
 
         $data['daily_allowance'] = $dailyAllowance;
 
-        $data['total'] = $data['trasporation']
+        $data['total'] = $data['transportation']
             +$data['lodging']
             +(($data['mileage']-$dailyAllowance) * $kmPrice)
             +$data['meal']

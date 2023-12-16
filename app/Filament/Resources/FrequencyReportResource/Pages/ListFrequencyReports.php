@@ -29,6 +29,10 @@ class ListFrequencyReports extends ListRecords implements HasInfolists
             // Actions\CreateAction::make(),
         ];
     }
+    public function getBreadcrumbs(): array
+    {
+        return [];
+    }
 
     public function getTableRecordKey(Model $model):string
     {

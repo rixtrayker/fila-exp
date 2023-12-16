@@ -38,7 +38,7 @@ class CreateExpenses extends CreateRecord
 
         $data['daily_allowance'] = $dailyAllowance;
 
-        $data['total'] = $data['trasporation']
+        $data['total'] = $data['transportation']
             +$data['lodging']
             +(($data['mileage']-$dailyAllowance) * $kmPrice)
             +$data['meal']

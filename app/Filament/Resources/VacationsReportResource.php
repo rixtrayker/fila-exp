@@ -84,6 +84,7 @@ class VacationsReportResource extends Resource
         DB::statement("SET SESSION sql_mode=''");
 
         return VacationRequest::select(
+            'users.id as id',
             'users.name as medical_rep',
             'vacation_requests.approved as approved',
             DB::raw('GROUP_CONCAT( vacation_types.name SEPARATOR ", ") AS vacation_types'),

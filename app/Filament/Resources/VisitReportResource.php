@@ -201,7 +201,8 @@ class VisitReportResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         DB::statement("SET SESSION sql_mode=''");
-        return Visit::select('visits.id as id',
+        return Visit::select(
+            'visits.id as id',
             'visits.client_id as client_id',
             'visits.user_id as user_id',
             'clients.grade as grade',
