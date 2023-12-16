@@ -41,9 +41,18 @@ class ListFrequencyReports extends ListRecords implements HasInfolists
                 ->record($this->getSummary())
                 ->schema([
                     TextEntry::make('from_date')
+                        ->columnSpan([
+                            'sm' => 1,
+                            'md' => 1,
+                            'xl' => 2,
+                        ])
                         ->label('From Date'),
                     TextEntry::make('to_date')
-                        ->columnSpan(3)
+                        ->columnSpan([
+                            'sm' => 1,
+                            'md' => 1,
+                            'xl' => 2,
+                        ])
                         ->label('To Date'),
                     TextEntry::make('doctors_count')
                         ->label('Visited Doctors'),
@@ -85,6 +94,7 @@ class ListFrequencyReports extends ListRecords implements HasInfolists
             ->columns([
                 'sm' => 1,
                 'md' => 2,
+                'lg' => 2,
                 'xl' => 4,
             ]);
     }
@@ -102,10 +112,11 @@ class ListFrequencyReports extends ListRecords implements HasInfolists
         $summary['pending_visits_count'] = $records->sum('pending_visits_count');
         $summary['total_visits_count'] = $records->sum('total_visits_count');
         $visitQuery = Visit::whereIn('client_id', $records->pluck('id'))
-            ->where('visit_date', '>=', $summary['from_date'])
-            ->where('visit_date', '<=', $summary['to_date']);
+            ->whereDate('visit_date', '>=', $summary['from_date'])
+            ->whereDate('visit_date', '<=', $summary['to_date']);
 
         $user_ids  =$this->table->getFilter('user_id')->getState()['values'];
+
         if($user_ids){
             $visitQuery->whereIn('user_id', $user_ids);
         }

@@ -40,9 +40,18 @@ class ListVisitReports extends ListRecords implements HasInfolists
             ->record($this->getSummary())
             ->schema([
                 TextEntry::make('from_date')
+                    ->columnSpan([
+                        'sm' => 1,
+                        'md' => 1,
+                        'xl' => 2,
+                    ])
                     ->label('From Date'),
                 TextEntry::make('to_date')
-                    ->columnSpan(3)
+                    ->columnSpan([
+                        'sm' => 1,
+                        'md' => 1,
+                        'xl' => 2,
+                    ])
                     ->label('To Date'),
                 TextEntry::make('doctors_count')
                     ->label('Visited Doctors'),
@@ -87,11 +96,12 @@ class ListVisitReports extends ListRecords implements HasInfolists
                     ->icon('heroicon-m-list-bullet')
                     ->iconPosition(IconPosition::After),
             ])
-        ->columns([
-            'sm' => 1,
-            'md' => 2,
-            'xl' => 4,
-        ]);
+            ->columns([
+                'sm' => 1,
+                'md' => 2,
+                'lg' => 2,
+                'xl' => 4,
+            ]);
     }
 
     private function getSummary(): Model{
