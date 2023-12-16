@@ -29,6 +29,8 @@ class ExpensesReportResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
+        DB::statement("SET SESSION sql_mode=''");
+
         return Expenses::query()
             ->select(
                 'users.id as id',
@@ -43,7 +45,7 @@ class ExpensesReportResource extends Resource
                 DB::raw('SUM(others) as others'),
                 DB::raw('SUM(total) as total'),
             )
-            ->join('users', 'users.id', '=', 'expenses.user_id')
+            ->leftJoin('users', 'users.id','=','expenses.user_id')
             ->groupBy(
                 'users.id',
             );
