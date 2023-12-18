@@ -15,9 +15,9 @@ use Filament\Forms\Components\Component;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Resources\Form;
+use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Resources\Table;
+use Filament\Tables\Table;
 use Filament\Tables;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -76,12 +76,12 @@ class OrderResource extends Resource
                 ->preload()
                 ->required(),
                 Section::make('products')
-                    ->disableLabel()
+                    ->hiddenLabel()
                     ->schema([
                         TableRepeater::make('products')
                         ->relationship('products')
                         ->reactive()
-                        ->disableLabel()
+                        ->hiddenLabel()
                         ->headers(['Product', 'Quantity'])
                         ->emptyLabel('There is no product added.')
                         ->columnWidths([
@@ -93,7 +93,7 @@ class OrderResource extends Resource
                         ])
                         ->schema([
                             Select::make('product_id')
-                                ->disableLabel()
+                                ->hiddenLabel()
                                 ->placeholder('select a product')
                                 ->options(Product::pluck('name','id'))
                                 ->required()
@@ -119,7 +119,7 @@ class OrderResource extends Resource
                                 ->numeric()
                                 ->required()
                                 ->minValue(1)
-                                ->disableLabel()
+                                ->hiddenLabel()
                                 ->reactive()
                                 ->afterStateUpdated(
                                     function($set, $get){
@@ -137,17 +137,21 @@ class OrderResource extends Resource
                                 ->numeric()
                                 ->minValue(1)
                                 ->disabled()
-                                ->disableLabel()
+                                ->hiddenLabel()
                                 ->reactive(),
                             TextInput::make('item_total')
                                 ->label('Item total')
+                                // ->default(function($get) {
+                                //     $product = Product::find($get('product_id'));
+                                //     return $product && $get('count')? $product->price * $get('count') : 0;
+                                // })
                                 ->dehydrateStateUsing(function($get) {
                                     $product = Product::find($get('product_id'));
                                     return $product && $get('count')? $product->price * $get('count') : 0;
                                 }) // todo load from DB directly if found
                                 ->numeric()
                                 ->disabled()
-                                ->disableLabel(),
+                                ->hiddenLabel(),
                         ])->disableItemMovement()
                         ->columnSpanFull()
                         ->defaultItems(1),
@@ -244,7 +248,7 @@ class OrderResource extends Resource
                 Tables\Actions\Action::make('decline')
                     ->label('Decline')
                     ->color('danger')
-                    ->icon('heroicon-s-x')
+                    ->icon('heroicon-m-x-mark')
                     ->visible(fn($record) => $record->canDecline())
                     ->action(fn($record) => $record->reject()),
             ])

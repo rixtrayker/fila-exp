@@ -10,7 +10,7 @@ class ListDailyVisits extends ListRecords
 {
     protected static string $resource = DailyVisitResource::class;
 
-    protected function getActions(): array
+    protected function getHeaderActions(): array
     {
         return [
             Actions\CreateAction::make(),

@@ -10,7 +10,7 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Pages\Actions\ViewAction;
 use Filament\Pages\Contracts\HasFormActions;
-use Filament\Resources\Form;
+use Filament\Forms\Form;
 use Filament\Widgets\Widget;
 use Illuminate\Contracts\View\View;
 use Livewire\Component;
@@ -26,12 +26,12 @@ class FilterFormWidget extends Widget implements HasForms
     public $user_id = [];
     public $query = [];
 
-    public function queryString(){
-        return [
-            // 'from' => ['except' => ''],
-            // 'to' => ['except' => ''],
-            // 'user_id' => ['except' => ''],
-        ];
+    public function refreshData(){
+        $this->dispatch('updateVisitsList', [
+            'from' => $this->from,
+            'to' => $this->to,
+            'user_id' => $this->user_id,
+        ]);
     }
     protected function getFormSchema()
     {
@@ -48,12 +48,12 @@ class FilterFormWidget extends Widget implements HasForms
             DatePicker::make('from')
                 ->displayFormat('Y-m-d')
                 ->label('From Date')
-                ->default(today())
+                ->default($this->from ?? today()->subDays(7))
                 ->closeOnDateSelection()
                 ->reactive()
                 ->maxDate(today()),
             DatePicker::make('to')
-                ->default(today())
+                ->default($this->to ?? today())
                 ->displayFormat('Y-m-d')
                 ->label('To Date')
                 ->closeOnDateSelection()
@@ -61,10 +61,5 @@ class FilterFormWidget extends Widget implements HasForms
                 ->maxDate(today()),
 
         ];
-    }
-
-    public static function canView(): bool
-    {
-        return Str::contains(request()->path(),'cover-report') || Str::contains(request()->path(),'coverage-report');
     }
 }

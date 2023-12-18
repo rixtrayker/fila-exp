@@ -5,11 +5,16 @@ namespace App\Filament\Widgets;
 use App\Models\BusinessOrder;
 use App\Models\Company;
 use App\Models\Order;
-use Filament\Widgets\BarChartWidget;
+use Filament\Widgets\ChartWidget;
 
-class MonthlySalesChart extends BarChartWidget
+class MonthlySalesChart extends ChartWidget
 {
     protected static ?string $maxHeight = '300px';
+
+    protected function getType(): string
+    {
+        return 'bar';
+    }
     protected $backgroundColor = [
         'rgba(255, 99, 132, 0.2)',
         'rgba(75, 192, 192, 0.2)',
@@ -34,7 +39,7 @@ class MonthlySalesChart extends BarChartWidget
     {
         return 'full';
     }
-    protected function getHeading(): string
+    public function getHeading(): string
     {
         return 'Monthly Sales';
     }

@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Closure;
-use Filament\Pages\Actions\Action;
-use Filament\Support\Actions\Concerns\CanCustomizeProcess;
+use Filament\Actions\Action;
+use Filament\Actions\Concerns\CanCustomizeProcess;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
 

@@ -2,23 +2,30 @@
 
 namespace App\Filament\Resources\VisitResource\Widgets;
 
-use Filament\Widgets\PieChartWidget;
+use Filament\Widgets\ChartWidget;
 
-class MonthlyVisitsChart extends PieChartWidget
+class MonthlyVisitsChart extends ChartWidget
 {
     protected static ?string $maxHeight = '300px';
 
-    protected function getHeading(): string
+
+    protected function getType(): string
+    {
+        return 'pie';
+    }
+
+    public function getHeading(): string
     {
         return 'Monthly Visits';
     }
+
     protected function getData(): array
     {
         return [
             'datasets' => [
                 [
-                    'label' => 'Blog posts created',
-                    'data' => [0, 10, 5, 2, 21, 32, 45, 74, 65, 45, 77, 89],
+                    'label' => 'Jan',
+                    'data' => 10,
                 ],
             ],
             'labels' => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],

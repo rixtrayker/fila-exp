@@ -3,12 +3,11 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Visit;
-use Filament\Widgets\PieChartWidget;
-use Illuminate\Contracts\Session\Session;
-use Illuminate\Support\Facades\Log;
+use Filament\Widgets\ChartWidget;
+use Livewire\Attributes\On;
 use Str;
 
-class OverallChart extends PieChartWidget
+class OverallChart extends ChartWidget
 {
     public $users;
     public $from;
@@ -17,14 +16,18 @@ class OverallChart extends PieChartWidget
     protected static ?string $maxHeight = '300px';
 
 
-    protected $listeners = [
-        'updateVisitsList' => 'updateVisitsList',
-    ];
-    public function updateVisitsList($from, $to, $user_id)
+    protected function getType(): string
     {
-        $this->from = $from;
-        $this->to = $to;
-        $this->user_id = $user_id;
+        return 'pie';
+    }
+
+    #[On('updateVisitsList')]
+
+    public function updateVisitsList($eventData)
+    {
+        $this->from = $eventData['from'];
+        $this->to = $eventData['to'];
+        $this->user_id = $eventData['user_id'];
         $this->updateChartData();
     }
 
@@ -41,7 +44,7 @@ class OverallChart extends PieChartWidget
 
 
 
-    protected function getHeading(): string
+    public function getHeading(): string
     {
         return 'Visits Overall Chart';
     }
@@ -83,10 +86,6 @@ class OverallChart extends PieChartWidget
         return $datasets;
     }
 
-    // public function updateUsersList(){
-    //     //  $this->users = $ids;
-    //      Log::channel('debugging')->info(1);
-    // }
     public function getVisits(){
         $query =  Visit::query();
 
@@ -103,10 +102,7 @@ class OverallChart extends PieChartWidget
         }
         return $query;
     }
-
-
-
-    public function updateChartData()
+    public function updateChartData(): void
     {
         $newDataChecksum = $this->generateDataChecksum();
 
@@ -117,10 +113,5 @@ class OverallChart extends PieChartWidget
                 'data' => $this->getData(),
             ]);
         }
-    }
-
-    public static function canView(): bool
-    {
-        return Str::contains(request()->path(),'cover-report') || Str::contains(request()->path(),'coverage-report');
     }
 }

@@ -6,6 +6,7 @@ use App\Models\Scopes\GetMineScope;
 use App\Traits\CanApprove;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 class Plan extends Model
 {
@@ -13,12 +14,15 @@ class Plan extends Model
     use CanApprove;
 
     protected $casts = [
-        'start_at' => 'date'
+        'start_at' => 'date',
+        'plan_data' => 'json',
     ];
     protected $fillable = [
         'user_id',
         'start_at',
+        'plan_data',
         'approved',
+        'approved_at',
     ];
 
     public function user()
@@ -36,11 +40,6 @@ class Plan extends Model
 
     public function getEndDateAttribute(){
         return $this->start_at->addDays(6);
-    }
-    public static function boot()
-    {
-        parent::boot();
-        static::addGlobalScope(new GetMineScope);
     }
 
     public function shiftClient($shiftQuery){
@@ -62,5 +61,42 @@ class Plan extends Model
     {
         $this->reject();
         $this->delete();
+    }
+
+    protected static function boot()
+    {
+        static::addGlobalScope(new GetMineScope);
+
+        parent::boot();
+    }
+
+    public function lastDay(): Carbon {
+        return $this->start_at->addDays(6);
+    }
+
+    public function createShiftVisits(){
+        $shifts = $this->shifts;
+
+        foreach($shifts as $shift){
+            $visitDate = Carbon::createFromDate($this->start_at)->addDays($shift->day - 1);
+
+            // insert AM client & PM client
+            $data = [
+                'user_id' => $this->user_id,
+                'client_id' => $shift->am_shift,
+                'visit_type_id' => 1,
+                'plan_id' => $this->id,
+                'status' => 'planned',
+                'visit_date' => $visitDate,
+            ];
+
+            if($shift->am_shift){
+                Visit::upsert([$data], ['plan_id', 'visit_date','client_id']);
+            }
+            if($shift->pm_shift){
+                $data['client_id'] = $shift->pm_shift;
+                Visit::upsert([$data], ['plan_id', 'visit_date','client_id']);
+            }
+        }
     }
 }

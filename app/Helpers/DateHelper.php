@@ -48,4 +48,20 @@ class DateHelper{
         // return true if it's tuesday and after 10 pm
         return today()->isTuesday() && now()->isAfter(today()->addHours(22));
     }
+
+    public static function today(): Carbon{
+        if(now()->isBefore(today()->addHours(10))){
+            return Carbon::yesterday();
+        }
+        return today();
+    }
+
+    public static function dayOfWeek(bool $oneBased = false): int{
+        $today = (today()->dayOfWeek + 8) % 7;
+
+        if($oneBased)
+            return $today + 1;
+
+        return $today;
+    }
 }

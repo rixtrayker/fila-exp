@@ -2,25 +2,29 @@
 
 namespace App\Models;
 
-use App\Traits\HasEditRequest;
-use Filament\Models\Contracts\FilamentUser;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
+// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Kalnoy\Nestedset\NodeTrait;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
+
+use App\Traits\HasEditRequest;
+use Filament\Models\Contracts\FilamentUser;
+use Finller\Kpi\HasKpi;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Kalnoy\Nestedset\NodeTrait;
 use App\Models\Role;
+use Filament\Panel;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\PermissionRegistrar;
 use Spatie\Permission\Traits\HasRoles;
 use \Staudenmeir\LaravelMergedRelations\Eloquent\HasMergedRelationships;
 
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable  implements FilamentUser
 {
     use NodeTrait;
 
@@ -34,6 +38,8 @@ class User extends Authenticatable implements FilamentUser
     use HasEditRequest;
     use TwoFactorAuthenticatable;
     use HasMergedRelationships;
+    use HasKpi;
+
     /**
      * The attributes that are mass assignable.
      *
@@ -76,7 +82,8 @@ class User extends Authenticatable implements FilamentUser
         'profile_photo_url',
     ];
 
-    public function canAccessFilament(): bool
+
+    public function canAccessPanel(Panel $panel): bool
     {
         return true;
     }
@@ -130,16 +137,16 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->belongsTo(User::class,'parent_id');
     }
-    public function firstRole()
-    {
-        return $this->morphToMany(
-            config('permission.models.role'),
-            'model',
-            config('permission.table_names.model_has_roles'),
-            config('permission.column_names.model_morph_key'),
-            PermissionRegistrar::$pivotRole
-        )->limit(1);
-    }
+    // public function firstRole()
+    // {
+    //     return $this->morphToMany(
+    //         config('permission.models.role'),
+    //         'model',
+    //         config('permission.table_names.model_has_roles'),
+    //         config('permission.column_names.model_morph_key'),
+    //         PermissionRegistrar::$pivotRole
+    //     )->limit(1);
+    // }
 
     public function scopeGetMine($builder)
     {
@@ -154,26 +161,26 @@ class User extends Authenticatable implements FilamentUser
 
         return $builder;
     }
-    public function roles(): BelongsToMany
-    {
-        $relation = $this->morphToMany(
-            Role::class,
-            'model',
-            config('permission.table_names.model_has_roles'),
-            config('permission.column_names.model_morph_key'),
-            PermissionRegistrar::$pivotRole
-        );
+    // public function roles(): BelongsToMany
+    // {
+    //     $relation = $this->morphToMany(
+    //         Role::class,
+    //         'model',
+    //         config('permission.table_names.model_has_roles'),
+    //         config('permission.column_names.model_morph_key'),
+    //         PermissionRegistrar::$pivotRole
+    //     );
 
-        if (! PermissionRegistrar::$teams) {
-            return $relation;
-        }
+    //     if (! PermissionRegistrar::$teams) {
+    //         return $relation;
+    //     }
 
-        return $relation->wherePivot(PermissionRegistrar::$teamsKey, getPermissionsTeamId())
-            ->where(function ($q) {
-                $teamField = config('permission.table_names.roles').'.'.PermissionRegistrar::$teamsKey;
-                $q->whereNull($teamField)->orWhere($teamField, getPermissionsTeamId());
-            });
-    }
+    //     return $relation->wherePivot(PermissionRegistrar::$teamsKey, getPermissionsTeamId())
+    //         ->where(function ($q) {
+    //             $teamField = config('permission.table_names.roles').'.'.PermissionRegistrar::$teamsKey;
+    //             $q->whereNull($teamField)->orWhere($teamField, getPermissionsTeamId());
+    //         });
+    // }
 
     protected static function boot()
     {

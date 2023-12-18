@@ -10,7 +10,7 @@ class ManageClientRequestTypes extends ManageRecords
 {
     protected static string $resource = ClientRequestTypeResource::class;
 
-    protected function getActions(): array
+    protected function getHeaderActions(): array
     {
         return [
             Actions\CreateAction::make(),

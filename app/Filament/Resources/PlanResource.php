@@ -10,15 +10,15 @@ use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
-use Filament\Resources\Form;
+use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\Tabs;
-use Filament\Resources\Table;
+use Filament\Tables\Table;
 use Filament\Tables;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use LucasGiovanny\FilamentMultiselectTwoSides\Forms\Components\Fields\MultiselectTwoSides as newMultiSelect;
-use App\Http\Livewire\MultiSelect2Sides as MultiselectTwoSides;
+use App\Livewire\MultiSelect2Sides as MultiselectTwoSides;
 use App\Models\Plan;
 use App\Models\Visit;
 use Closure;
@@ -76,8 +76,8 @@ class PlanResource extends Resource
                 //
             ])
             ->actions([
-            Tables\Actions\ViewAction::make()
-                ->visible(fn($record)=>$record->approved != 1),
+            Tables\Actions\ViewAction::make(),
+            Tables\Actions\EditAction::make(),
             Tables\Actions\Action::make('approve')
                 ->label('Approve')
                 ->color('success')
@@ -87,22 +87,10 @@ class PlanResource extends Resource
             Tables\Actions\Action::make('reject')
                 ->label('Reject & Delete')
                 ->color('danger')
-                ->icon('heroicon-s-x')
+                ->icon('heroicon-m-x-mark')
                 ->visible(fn($record) => $record->canDecline())
                 ->requiresConfirmation()
                 ->action(fn($record) => $record->rejectPlan()),
-            Tables\Actions\Action::make('show Achieved')
-                ->color('primary')
-                ->icon('heroicon-s-clipboard-check')
-                ->action(fn()=>Log::channel('debugging')->info(request()->fingerprint['name']))
-                ->form([
-                    Select::make('user_id')
-                        ->label('Agent (medical rep)')
-                        ->relationship('user','name')
-                        ->default(fn($record)=>$record->user_id)
-                        ->disabled(),
-                    static::makeForm(),
-                ])->modalWidth('5xl'),
             ])
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),
@@ -172,33 +160,31 @@ class PlanResource extends Resource
 
         return Tabs\Tab::make($tabName)
             ->schema([
-                Select::make($day.'_am')
+                Select::make($day.'_am_shift')
                     ->label('AM shift')
                     ->searchable()
-                    ->disabled(fn()=>request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans'))
                     ->default(fn($record)=> request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans') ? $record->shiftClient($days[$key])->am_shift : null)
                     ->getSearchResultsUsing(fn (string $search) => Client::inMyAreas()->where('name_en', 'like', "%{$search}%")->orWhere('name_ar', 'like', "%{$search}%")->limit(50)->pluck('name_en', 'id'))
                     ->options(Client::inMyAreas()->pluck('name_en', 'id'))
                     ->preload(),
                 TimePicker::make($day.'_time_am')
-                    ->disabled(fn()=>request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans'))
                     ->default(fn($record)=> request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans') ? $record->shiftClient($days[$key])->am_time : null)
                     ->label('AM time')
+                    ->native(false)
                     ->withoutSeconds(),
-                Select::make($day.'_pm')
+                Select::make($day.'_pm_shift')
                     ->label('PM shift')
                     ->searchable()
-                    ->disabled(fn()=>request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans'))
                     ->default(fn($record)=> request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans') ? $record->shiftClient($days[$key])->pm_shift : null)
                     ->getSearchResultsUsing(fn (string $search) => Client::inMyAreas()->where('name_en', 'like', "%{$search}%")->orWhere('name_ar', 'like', "%{$search}%")->limit(50)->pluck('name_en', 'id'))
                     ->options(Client::inMyAreas()->pluck('name_en', 'id'))
                     ->preload(),
                 TimePicker::make($day.'_time_pm')
-                    ->disabled(fn()=>request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans'))
                     ->default(fn($record)=> request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans') ? $record->shiftClient($days[$key])->pm_time : null)
                     ->label('PM time')
+                    ->native(false)
                     ->withoutSeconds(),
-                Select::make('clients_'.$day)
+                Select::make($day.'_clients')
                     ->label('Clients')
                     ->multiple()
                     ->options(self::$clients)
@@ -219,6 +205,7 @@ class PlanResource extends Resource
 
     public static function canEdit(Model $record): bool
     {
-        return static::can('update', $record);
+        $lastPlanId = $record->user?->plans()->latest()->first()?->id;
+        return $record->id == $lastPlanId && !$record->approved;
     }
 }

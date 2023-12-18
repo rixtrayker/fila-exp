@@ -12,9 +12,9 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Resources\Form;
+use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Resources\Table;
+use Filament\Tables\Table;
 use Filament\Tables;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -25,7 +25,7 @@ class ExpensesResource extends Resource
 {
     protected static ?string $model = Expenses::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-cash';
+    protected static ?string $navigationIcon = 'heroicon-o-banknotes';
 
     protected static ?int $navigationSort = 8;
 
@@ -47,10 +47,10 @@ class ExpensesResource extends Resource
                     ->default(today())
                     ->closeOnDateSelection()
                     ->required(),
-                TextInput::make('trasporation')
-                    ->label('Trasporation')
+                TextInput::make('transportation')
+                    ->label('Transportation')
                     ->numeric()
-                    ->helperText('Money value of trasporation')
+                    ->helperText('Money value of transportation')
                     ->minValue(1),
                 TextInput::make('lodging')
                     ->label('Lodging')
@@ -101,8 +101,8 @@ class ExpensesResource extends Resource
                     ->label('Total')
                     ->sortable()
                     ->searchable(),
-                TextColumn::make('trasporation')
-                    ->label('Trasporation')
+                TextColumn::make('transportation')
+                    ->label('Transportation')
                     ->sortable()
                     ->searchable(),
                 TextColumn::make('lodging')

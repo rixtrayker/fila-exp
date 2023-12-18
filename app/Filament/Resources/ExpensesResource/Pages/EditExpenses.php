@@ -11,7 +11,7 @@ class EditExpenses extends EditRecord
 {
     protected static string $resource = ExpensesResource::class;
 
-    protected function getActions(): array
+    protected function getHeaderActions(): array
     {
         return [
             Actions\ViewAction::make(),
@@ -46,7 +46,7 @@ class EditExpenses extends EditRecord
 
         $data['daily_allowance'] = $dailyAllowance;
 
-        $data['total'] = $data['trasporation']
+        $data['total'] = $data['transportation']
             +$data['lodging']
             +(($data['mileage']-$dailyAllowance) * $kmPrice)
             +$data['meal']

@@ -17,7 +17,7 @@ return new class extends Migration
         Schema::create('expenses', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(User::class);
-            $table->double('trasporation')->nullable();
+            $table->double('transportation')->nullable();
             $table->double('lodging')->nullable();
             $table->double('mileage')->nullable();
             $table->double('meal')->nullable();

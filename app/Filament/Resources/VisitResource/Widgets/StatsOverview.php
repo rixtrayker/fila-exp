@@ -15,7 +15,7 @@ class StatsOverview extends BaseWidget
     {
         return [
             Card::make('Daily achieved vists', $this->achievedVisits())
-                ->descriptionIcon('heroicon-s-trending-up')
+                ->descriptionIcon('heroicon-m-arrow-trending-up')
                 ->color('success'),
             Card::make('Total visits', $this->totalVisits()),
             Card::make('Direct orders', $this->directOrders()),
@@ -52,9 +52,10 @@ class StatsOverview extends BaseWidget
     {
         $vacations = 0;
         $userVacations = VacationRequest::query()
+            ->with('vacationDurations')
             ->where('created_at','>=',today()->firstOfYear())
             ->where('user_id',auth()->id())
-            ->where('approved',true)
+            ->where('approved','>',0)
             ->get();
 
         foreach ($userVacations as $vacation) {

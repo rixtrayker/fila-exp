@@ -20,6 +20,7 @@ return new class extends Migration
             $table->boolean('approved')->default(0);
             $table->dateTime('approved_at')->nullable();
             $table->date('start_at');
+            $table->json('plan_data')->nullable();
             $table->timestamps();
         });
     }

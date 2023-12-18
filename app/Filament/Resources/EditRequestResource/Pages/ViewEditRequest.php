@@ -3,10 +3,10 @@
 namespace App\Filament\Resources\EditRequestResource\Pages;
 
 use App\Filament\Resources\EditRequestResource;
-use App\Http\Livewire\ApproveAction;
+use App\Livewire\ApproveAction;
 use App\Models\EditRequest;
 use Filament\Pages\Actions;
-use Filament\Resources\Form;
+use Filament\Forms\Form;
 use Filament\Resources\Pages\ListRecords\Concerns\CanViewRecords;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Database\Eloquent\Model;
@@ -17,7 +17,7 @@ class ViewEditRequest extends ViewRecord
 {
     protected static string $resource = EditRequestResource::class;
 
-    public function mount($record): void
+    public function mount(int | string $record): void
     {
         static::authorizeResourceAccess();
         $this->record = $this->resolveRecord( EditRequest::find($record)?->editable_id );
@@ -63,7 +63,7 @@ class ViewEditRequest extends ViewRecord
         return $data;
     }
 
-    protected function getActions(): array
+    protected function getHeaderActions(): array
     {
 
         if(Str::contains(request()->path(), 'edit-requests')) {

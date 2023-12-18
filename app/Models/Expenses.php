@@ -15,7 +15,7 @@ class Expenses extends Model
     protected $fillable = [
         'user_id',
         'date',
-        'trasporation',
+        'transportation',
         'lodging',
         'mileage',
         'meal',

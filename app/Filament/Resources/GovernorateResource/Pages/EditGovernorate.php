@@ -10,7 +10,7 @@ class EditGovernorate extends EditRecord
 {
     protected static string $resource = GovernorateResource::class;
 
-    protected function getActions(): array
+    protected function getHeaderActions(): array
     {
         return [
             Actions\DeleteAction::make(),

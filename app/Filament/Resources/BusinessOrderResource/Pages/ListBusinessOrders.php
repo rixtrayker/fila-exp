@@ -14,12 +14,12 @@ class ListBusinessOrders extends ListRecords
 {
     protected static string $resource = BusinessOrderResource::class;
 
-    protected function getActions(): array
+    protected function getHeaderActions(): array
     {
         return [
             Action::make('Import')
                 ->color('success')
-                ->icon('heroicon-s-cloud-upload')
+                ->icon('heroicon-m-cloud-arrow-up')
                 ->action(function (array $data): void {
                     $importer = new ImportHelper();
                     $importer->importMultipleFiles(BusinessOrder::class ,$data['files']);

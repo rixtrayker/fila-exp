@@ -8,9 +8,9 @@ use App\Helpers\ImportHelper;
 use App\Models\BusinessOrder;
 use Filament\Forms;
 use Filament\Forms\Components\FileUpload;
-use Filament\Resources\Form;
+use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Resources\Table;
+use Filament\Tables\Table;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
@@ -20,7 +20,7 @@ class BusinessOrderResource extends Resource
 {
     protected static ?string $model = BusinessOrder::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-collection';
+    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function form(Form $form): Form
     {

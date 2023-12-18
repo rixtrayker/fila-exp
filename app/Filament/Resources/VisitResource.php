@@ -5,15 +5,16 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\VisitResource\Pages;
 use App\Filament\Resources\VisitResource\RelationManagers;
 use App\Models\ClientType;
+use App\Models\User;
 use App\Models\Visit;
 use App\Models\VisitType;
 use Awcodes\FilamentTableRepeater\Components\TableRepeater;
 use Closure;
 use Filament\Forms;
 use Filament\Forms\Components\Select;
-use Filament\Resources\Form;
+use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Resources\Table;
+use Filament\Tables\Table;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
@@ -28,7 +29,7 @@ class VisitResource extends Resource
 {
     protected static ?string $model = Visit::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-office-building';
+    protected static ?string $navigationIcon = 'heroicon-o-building-office';
 
     // protected static bool $shouldRegisterNavigation = false;
     protected static ?int $navigationSort = 1;
@@ -86,7 +87,43 @@ class VisitResource extends Resource
                     ->wrap(),
             ])
             ->filters([
-                SelectFilter::make('grade')
+                Tables\Filters\Filter::make('id')
+                    ->form([
+                        Select::make('user_id')
+                            ->label('Medical Rep')
+                            ->multiple()
+                            ->options(User::getMine()->pluck('name','id')),
+                        Select::make('second_user_id')
+                            ->label('Manager')
+                            ->multiple()
+                            ->options(User::role('district-manager')->getMine()->pluck('name','id')),
+                    ])->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['user_id'],
+                                fn (Builder $query, $userIds): Builder => $query->whereIn('user_id', $userIds)
+                            )
+                            ->when(
+                                $data['second_user_id'],
+                                fn (Builder $query, $secondIds): Builder => $query->orWhereIn('second_user_id', $secondIds)
+                            );
+                    }),
+                Tables\Filters\Filter::make('visit_date')
+                    ->form([
+                        Forms\Components\DatePicker::make('from_date'),
+                        Forms\Components\DatePicker::make('to_date'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['from_date'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('visit_date', '>=', $date)
+                            )
+                            ->when(
+                                $data['to_date'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('visit_date', '<=', $date));
+                    }),
+                    SelectFilter::make('grade')
                     ->label('Grade')
                     ->multiple()
                     ->options(['A'=>'A','B'=>'B','C'=>'C','N'=>'N','PH'=>'PH'])
@@ -183,6 +220,7 @@ class VisitResource extends Resource
     {
         return parent::getEloquentQuery()
             ->orderBy('visit_date','desc')
+            ->visited()
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);

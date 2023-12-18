@@ -95,7 +95,7 @@ final class Regular
                     ->label('Visit Date')
                     ->default(today()),
                 Section::make('products')
-                    ->disableLabel()
+                    ->hiddenLabel()
                     ->schema([
                     TableRepeater::make('products')
                         ->createItemButtonLabel('Add product')
@@ -107,7 +107,7 @@ final class Regular
                             ) return 'nullRelation';
                             return 'products';
                         })
-                        ->disableLabel()
+                        ->hiddenLabel()
                         // ->headers(['Product', 'Sample Count'])
                         ->emptyLabel('There is no product added.')
                         ->columnWidths([
@@ -132,6 +132,7 @@ final class Regular
                 Textarea::make('comment')
                     ->label('Comment')
                     ->columnSpan('full')
+                    ->minLength('3')
                     ->required(),
         ])
         ->columns(3)];

@@ -6,10 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 trait RolesOnlyResources{
 
-    protected static function shouldRegisterNavigation(): bool
-    {
-        return static::accessMe();
-    }
+    // protected static function shouldRegisterNavigation(): bool
+    // {
+    //     return static::accessMe();
+    // }
     public static function canViewAny(): bool
     {
         return static::accessMe();

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\VisitResource\Pages;
 
 use App\Filament\Resources\VisitResource;
+use App\Helpers\DateHelper;
 use App\Models\ProductVisit;
 use Filament\Pages\Actions;
 use Filament\Resources\Pages\EditRecord;
@@ -11,7 +12,7 @@ class EditVisit extends EditRecord
 {
     protected static string $resource = VisitResource::class;
 
-    protected function getActions(): array
+    protected function getHeaderActions(): array
     {
         return [
             Actions\DeleteAction::make(),
@@ -70,12 +71,16 @@ class EditVisit extends EditRecord
         $data = $data['temp_content'][$templatesRev[$temp]];
         $data['visit_type_id'] = $temp;
 
-        if(auth()->user()->hasRole('medical-rep') )
+        $isRep = auth()->user()->hasRole(['medical-rep','area-manager']) ;
+
+        if($isRep)
             $data['user_id'] = auth()->id();
+
         $data['status'] = 'visited';
 
-
-        if(auth()->user()->hasRole('medical-rep') &&  $data['visit_type_id'] == 1 && !isset($data['visit_date'])){
+        if($isRep && $this->record->plan_id){
+            $data['visit_date'] = DateHelper::today();
+        } elseif($isRep && !isset($data['visit_date']) && $data['visit_type_id'] == 1){
             $data['visit_date'] = today();
         }
 
