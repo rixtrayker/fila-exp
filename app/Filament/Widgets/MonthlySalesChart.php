@@ -49,7 +49,6 @@ class MonthlySalesChart extends ChartWidget
         return [
             'datasets' => $this->getDataSets(),
             'labels' => $this->getLabels(),
-
         ];
     }
     private function getLabels(){

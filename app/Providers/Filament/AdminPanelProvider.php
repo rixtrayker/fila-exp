@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Pages\Admin\FrequencyReport;
 use App\Filament\Resources\VisitResource\Widgets\StatsOverview;
+use App\Filament\Resources\VisitResource\Widgets\WeeklyVisitsChart;
 use App\Filament\Resources\VisitResource\Widgets\YearVisitsChart;
 use App\Filament\Widgets\MonthlySalesChart;
 use Filament\Http\Middleware\Authenticate;
@@ -47,7 +48,7 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 StatsOverview::class,
                 MonthlySalesChart::class,
-                YearVisitsChart::class,
+                WeeklyVisitsChart::class,
             ])
             ->middleware([
                 EncryptCookies::class,
