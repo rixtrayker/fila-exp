@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Jobs\OptimizeAppPerformance;
 use App\Models\Area;
 use App\Models\Brick;
+use App\Models\Client;
 use Illuminate\Support\Facades\DB;
 use Laravel\Octane\Swoole\SwooleExtension;
 
@@ -19,9 +20,10 @@ use Laravel\Octane\Swoole\SwooleExtension;
 |
 */
 
-Route::get('/test', function () {
-    return \App\Models\User::find(1)->editRequests;
-});
+// Route::get('/test', function () {
+//     Client::with('visits')->get();
+//     return 1;
+// });
 
 Route::get('/admin/ops/start-swoole', function () {
     (new SwooleExtension)->isInstalled();

@@ -82,12 +82,12 @@ class VisitReportResource extends Resource
                     ->form([
                         Select::make('user_id')
                             ->label('Medical Rep')
-                            ->multiple(self::getDistrictManagers())
+                            ->multiple()
                             ->options(self::getMedicalReps()),
                         Select::make('second_user_id')
                             ->label('Manager')
                             ->multiple()
-                            ->options(),
+                            ->options(self::getDistrictManagers()),
                     ])->query(function (Builder $query, array $data): Builder {
                         return $query
                             ->when(
