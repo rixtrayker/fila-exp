@@ -2,50 +2,67 @@
 
 namespace App\Filament\Resources\VisitResource\Widgets;
 
+use App\Helpers\DateHelper;
+use App\Models\Order;
 use App\Models\VacationRequest;
 use App\Models\Visit;
-use Carbon\Carbon;
 use DateTime;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Card;
+use Illuminate\Support\Collection;
 
 class StatsOverview extends BaseWidget
 {
-      protected function getCards(): array
+    private static $visits;
+
+    protected function getCards(): array
     {
         return [
             Card::make('Daily achieved vists', $this->achievedVisits())
                 ->descriptionIcon('heroicon-m-arrow-trending-up')
                 ->color('success'),
-            Card::make('Total visits', $this->totalVisits()),
+            Card::make('Done plan visits', $this->donePlanVisits()),
             Card::make('Direct orders', $this->directOrders()),
             Card::make('Remaining vacations', $this->remainingVacations()),
         ];
     }
 
-    private function achievedVisits()
+    private function achievedVisits(): string
     {
-        $totalVisits = Visit::where('visit_date', today())->whereIn('status',['verified','visited'])->count();
+        $totalVisits = self::getVisits()
+            ->whereNotNull('plan_id')
+            ->where('visit_date', DateHelper::today())
+            ->count();
 
-        if($totalVisits == 0)
+        $planDoneVisits = self::getVisits()
+            ->whereNotNull('plan_id')
+            ->where('visit_date', DateHelper::today())
+            ->where('status', 'visited')
+            ->count();
+
+        if($planDoneVisits === 0)
             return '0 %';
 
-        $doneVisits = Visit::where('visit_date', today())->where('status','visited')->count();
+        $percentage = ($planDoneVisits / $totalVisits) * 100;
 
-        $percentage = ($doneVisits / $totalVisits) % 100;
+        $achievedRatio = round($percentage, 2);
 
-        return round($percentage, 2);
+        return "$achievedRatio %";
     }
 
-    private function totalVisits()
+    private function donePlanVisits(): int
     {
-        $totalVisits = Visit::where('visit_date', today())->whereIn('status',['verified','visited'])->count();
-        return $totalVisits;
+        return self::getVisits()
+            ->where('status','visited')
+            ->count();
     }
-    private function directOrders() // todo
+
+    private function directOrders(): int
     {
-        $totalVisits = Visit::where('visit_date', today())->whereIn('status',['verified','visited'])->count();
-        return $totalVisits;
+       return Order::query()
+            ->where('created_at', today())
+            ->where('approved', '>', 0)
+            ->count();
     }
 
     private function remainingVacations()
@@ -78,5 +95,22 @@ class StatsOverview extends BaseWidget
         }
 
         return 21 - $vacations;
+    }
+    private static function getVisits(): Collection{
+        if(self::$visits){
+            return self::$visits;
+        }
+
+        $startOfPlan = DateHelper::getFirstOfWeek();
+        $endOfPlan = (clone $startOfPlan)->addDays(7);
+
+        self::$visits = Visit::query()
+            ->select(['visit_date','status','plan_id'])
+            ->whereIn('status', ['visited', 'pending'])
+            ->whereDate('visit_date', '>=', $startOfPlan)
+            ->whereDate('visit_date', '<=', $endOfPlan)
+            ->get();
+
+        return self::$visits;
     }
 }

@@ -226,6 +226,7 @@ class VisitReportResource extends Resource
             ->leftJoin('products', 'product_visits.product_id', '=', 'products.id')
             ->leftJoin('bricks', 'clients.brick_id', '=', 'bricks.id')
             ->leftJoin('visit_types', 'visit_types.id', '=', 'visits.visit_type_id')
+            ->groupBy('visits.id')
             ->orderBy('visits.id', 'DESC');
     }
 

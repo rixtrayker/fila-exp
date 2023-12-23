@@ -6,7 +6,7 @@ use App\Filament\Widgets\FilterFormWidget;
 use App\Filament\Widgets\OverallChart;
 use App\Models\Visit;
 use App\Exports\ExportVisits;
-use Filament\Pages\Actions\Action;
+use Filament\Actions\Action;
 use Filament\Pages\Page;
 use Filament\Forms\Concerns\HasFormComponentActions;
 use Filament\Pages\Concerns\InteractsWithFormActions;
@@ -49,7 +49,7 @@ class CoverageReport extends Page
     public function __construct()
     {
         $this->from = $this->from ?? today()->subDays(7);
-        $this->to = $this->to ?? today()->format('Y-m-d');
+        $this->to = $this->to ?? today();
         $this->initData();
     }
 
@@ -72,7 +72,7 @@ class CoverageReport extends Page
             $query->whereDate('visit_date','<=',$this->to);
         }
 
-        return $query;
+        return $query->with('client')->get();
     }
 
     public function updatedFrom(){
@@ -99,9 +99,10 @@ class CoverageReport extends Page
 
     public function initData()
     {
-        $this->visited = $this->getVisits()->with('client')->visited()->get();
-        $this->pending = $this->getVisits()->pending('client')->get();
-        $this->missed = $this->getVisits()->missed('client')->get();
+        $visits =  $this->getVisits();
+        $this->visited = $visits->where('status', 'visited');
+        $this->pending = $visits->whereIn('status', ['planned','pending']);
+        $this->missed = $visits->where('status', 'missed');
     }
 
     protected function getHeaderActions(): array
