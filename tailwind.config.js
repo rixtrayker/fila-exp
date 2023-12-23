@@ -5,27 +5,25 @@ import typography from '@tailwindcss/typography';
 /** @type {import('tailwindcss').Config} */
 export default {
     content: [
-        './vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php',
-        './vendor/laravel/jetstream/**/*.blade.php',
-        './storage/framework/views/*.php',
-        './resources/views/**/*.blade.php',
+        "./vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php",
+        "./vendor/laravel/jetstream/**/*.blade.php",
+        "./storage/framework/views/*.php",
+        "./resources/views/**/*.blade.php",
     ],
 
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ["Figtree", ...defaultTheme.fontFamily.sans],
             },
             colors: {
-                danger: colors.rose,
-                success: colors.green,
-                chartblue: '#DAECFC',
-                chartgreen: '#DAF5F5',
-                chartred: '#FFE1E6',
-                chartblueB: '#35A2EB',
-                chartgreenB: '#21CFCF',
-                chartredB: '#FF4069',
-            }
+                chartblue: "#DAECFC",
+                chartgreen: "#DAF5F5",
+                chartred: "#FFE1E6",
+                chartblueB: "#35A2EB",
+                chartgreenB: "#21CFCF",
+                chartredB: "#FF4069",
+            },
         },
     },
 
