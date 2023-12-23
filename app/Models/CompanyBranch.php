@@ -13,7 +13,7 @@ class CompanyBranch extends Model
 
     public function products()
     {
-        return $this->belongsToMany(Product::class,'company_branch_product');
+        return $this->belongsToMany(Product::class, 'company_branch_product');
     }
     public function company()
     {
