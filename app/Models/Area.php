@@ -14,10 +14,7 @@ class Area extends Model
     ];
 
     public function bricks(){
-        return $this->belongsToMany(Brick::class);
-    }
-    public function areaBricks(){
-        return $this->hasMany(AreaBrick::class);
+        return $this->hasMany(Brick::class);
     }
 
     public function getBricksNamesAttribute(){

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Brick extends Model
 {
@@ -12,17 +13,20 @@ class Brick extends Model
     protected $appends = ['full_name'];
     // Todo: add caching
     protected $guarded = [];
-    public function city()
+
+    public function city() : BelongsTo
     {
         return $this->belongsTo(City::class);
     }
-    public function getFullNameAttribute()
+
+    public function getFullNameAttribute() : string
     {
         return $this->name . ':' . $this->city->name;
     }
 
-    public function areas(){
-        return $this->belongsToMany(Area::class);
+    public function areas() : BelongsTo
+    {
+        return $this->belongsTo(Area::class);
     }
 
     public function getZoneCodeAttribute(){

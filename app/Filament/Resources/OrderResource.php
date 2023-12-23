@@ -152,7 +152,7 @@ class OrderResource extends Resource
                                 ->numeric()
                                 ->disabled()
                                 ->hiddenLabel(),
-                        ])->disableItemMovement()
+                        ])
                         ->columnSpanFull()
                         ->defaultItems(1),
                         Select::make('discount_type')

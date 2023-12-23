@@ -38,6 +38,7 @@ class VisitReportResource extends Resource
     protected static $clientTypes;
     protected static $visitTypes;
     protected static $medicalReps;
+    protected static $districtManager;
 
 
     public static function table(Table $table): Table
@@ -81,12 +82,12 @@ class VisitReportResource extends Resource
                     ->form([
                         Select::make('user_id')
                             ->label('Medical Rep')
-                            ->multiple()
+                            ->multiple(self::getDistrictManagers())
                             ->options(self::getMedicalReps()),
                         Select::make('second_user_id')
                             ->label('Manager')
                             ->multiple()
-                            ->options(User::role('district-manager')->getMine()->pluck('name','id')),
+                            ->options(),
                     ])->query(function (Builder $query, array $data): Builder {
                         return $query
                             ->when(
@@ -179,6 +180,15 @@ class VisitReportResource extends Resource
         self::$medicalReps = User::getMine()->pluck('name','id')->toArray();
         return self::$medicalReps;
     }
+    private static function getDistrictManagers(): array
+    {
+        if(self::$districtManager)
+            return self::$districtManager;
+
+        self::$districtManager = User::role('district-manager')->pluck('name','id');
+        return self::$districtManager;
+    }
+
     private static function getVisitTypes() : array {
         if(self::$visitTypes){
             return self::$visitTypes;
