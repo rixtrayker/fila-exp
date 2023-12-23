@@ -3,6 +3,9 @@
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 use App\Jobs\OptimizeAppPerformance;
+use App\Models\Area;
+use App\Models\Brick;
+use Illuminate\Support\Facades\DB;
 use Laravel\Octane\Swoole\SwooleExtension;
 
 /*
@@ -31,6 +34,24 @@ Route::get('/admin/ops/optimize-app', function () {
     dispatch(new OptimizeAppPerformance());
     return true;
 });
+
+// Route::get('/admin/migrate-areas', function () {
+//    $areas = Area::with('bricks')->get();
+//    $data = [];
+
+//     foreach($areas as $area){
+//         $bricks = $area->bricks;
+
+//         foreach($bricks as $brick){
+//             $data[] = [
+//                 'id' =>  $brick->id,
+//                 'area_id' => $area->id,
+//             ];
+//         }
+//     }
+//     Brick::upsert($data, ['id'],['area_id']);
+//     return true;
+// });
 
 Route::get('/admin/ops/migrate-plan-data', function () {
     Artisan::call('db:seed', [

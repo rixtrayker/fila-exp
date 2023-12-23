@@ -35,6 +35,11 @@ class BrickResource extends Resource
                     ->relationship('city','name')
                     ->preload()
                     ->required(),
+                Select::make('area_id')
+                    ->label('Area name')
+                    ->relationship('area','name')
+                    ->preload()
+                    ->required(),
             ]);
     }
 
@@ -46,6 +51,8 @@ class BrickResource extends Resource
                 ->label('Name'),
                 TextColumn::make('city.name')
                     ->label('City name'),
+                TextColumn::make('area.name')
+                    ->label('Area name'),
             ])
             ->filters([
                 //
