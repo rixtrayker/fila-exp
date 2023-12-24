@@ -28,6 +28,19 @@ class BusinessOrderCompanyQuantity  extends ChartWidget
     {
         return 'pie';
     }
+    protected function getOptions(): array
+    {
+        return [
+            'scales' => [
+                'yAxis' => [
+                    'display' => false,
+                ],
+                'xAxis' => [
+                    'display' => false,
+                ],
+            ],
+        ];
+    }
     protected function getTablePage(): string
     {
         return ListSalesReport::class;

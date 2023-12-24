@@ -20,6 +20,19 @@ class OverallChart extends ChartWidget
     {
         return 'pie';
     }
+    protected function getOptions(): array
+    {
+        return [
+            'scales' => [
+                'yAxis' => [
+                    'display' => false,
+                ],
+                'xAxis' => [
+                    'display' => false,
+                ],
+            ],
+        ];
+    }
 
     #[On('updateVisitsList')]
 
