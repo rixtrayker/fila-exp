@@ -2,27 +2,20 @@
 
 namespace App\Filament\Widgets\Charts;
 
+use App\Filament\Resources\OrderReportResource;
+use App\Filament\Resources\OrderReportResource\Pages\ListOrdersReport;
 use App\Filament\Resources\SalesReportResource;
-use App\Filament\Resources\SalesReportResource\Pages\ListSalesReport;
-use App\Models\Company;
-use App\Models\Visit;
 use Filament\Widgets\ChartWidget;
 use Filament\Widgets\Concerns\InteractsWithPageTable;
-use Livewire\Attributes\On;
-use Livewire\Attributes\Reactive;
 use Str;
 
-class BusinessOrderCompanyQuantity  extends ChartWidget
+class OrderAreaChart  extends ChartWidget
 {
     use InteractsWithPageTable;
 
-    public $users;
-    public $from;
-    public $to;
-    public $user_id;
     protected static ?string $maxHeight = '300px';
     private static $data;
-    private static $resource = SalesReportResource::class;
+    private static $resource = OrderReportResource::class;
 
     protected function getType(): string
     {
@@ -30,7 +23,7 @@ class BusinessOrderCompanyQuantity  extends ChartWidget
     }
     protected function getTablePage(): string
     {
-        return ListSalesReport::class;
+        return ListOrdersReport::class;
     }
 
     protected $backgroundColor = [
@@ -52,14 +45,9 @@ class BusinessOrderCompanyQuantity  extends ChartWidget
         'rgb(255, 159, 64)',
       ];
 
-
-    // public function getColumnSpan(): int|string|array
-    // {
-    //     return 'full';
-    // }
     public function getHeading(): string
     {
-        return 'Products Sales';
+        return 'Area Orders Profit';
     }
 
     protected function getData(): array
@@ -70,7 +58,7 @@ class BusinessOrderCompanyQuantity  extends ChartWidget
         ];
     }
     private function getLabels(): array {
-        return $this->getPageTableRecords()->pluck('product_name')->unique()->toArray();
+        return array_values($this->getPageTableRecords()->pluck('area_name')->unique()->toArray());
     }
 
     public function getColumnSpan(): int|string|array
@@ -82,7 +70,7 @@ class BusinessOrderCompanyQuantity  extends ChartWidget
     {
         $datasets = [
             [
-                'label' => 'Products chart',
+                'label' => 'Area chart',
                 'data'=> $this->getChartData(),
                 'backgroundColor' => $this->backgroundColor,
                 'borderColor' => $this->borderColor,
@@ -94,8 +82,8 @@ class BusinessOrderCompanyQuantity  extends ChartWidget
     public function getChartData(): array {
         $data = [];
 
-        foreach(self::getLabels() as $label){
-            $data[] = $this->getPageTableRecords()->where('product_name', $label)->sum('quantity');
+        foreach($this->getLabels() as $label){
+            $data[] = $this->getPageTableRecords()->where('area_name', $label)->sum('total');
         }
 
         return $data;
