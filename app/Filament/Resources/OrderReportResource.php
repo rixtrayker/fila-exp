@@ -163,6 +163,11 @@ class OrderReportResource extends Resource
             ->groupBy('orders.id')
             ->orderBy('orders.id', 'DESC');
     }
+
+    public static function getRecordRouteKeyName(): string|null {
+        return 'orders.id';
+    }
+
     public static function getPages(): array
     {
         return [

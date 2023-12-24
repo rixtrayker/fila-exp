@@ -15,6 +15,7 @@ use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\DB;
 
 class BrickResource extends Resource
 {
@@ -49,11 +50,14 @@ class BrickResource extends Resource
             ->columns([
                 TextColumn::make('name')
                 ->label('Name'),
-                TextColumn::make('city.name')
+                TextColumn::make('city_name')
                     ->label('City name'),
-                TextColumn::make('area.name')
+                TextColumn::make('area_name')
                     ->label('Area name'),
+                TextColumn::make('medical_reps')
+                    ->label('Medical Reps'),
             ])
+            ->paginated([10,50,100,250,500,1000])
             ->filters([
                 //
             ])
@@ -63,6 +67,29 @@ class BrickResource extends Resource
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),
             ]);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        DB::statement("SET SESSION sql_mode=''");
+
+        return Brick::with(['city','area'])->select(
+            'bricks.id as id',
+            'bricks.name as name',
+            'areas.name as area_name',
+            'cities.name as city_name',
+            DB::raw('GROUP_CONCAT( users.name SEPARATOR ", ") AS medical_reps'),
+        )
+            ->leftJoin('cities', 'cities.id', '=', 'bricks.city_id')
+            ->leftJoin('areas', 'areas.id', '=', 'bricks.area_id')
+            ->leftJoin('area_user', 'area_user.area_id', '=', 'areas.id')
+            ->leftJoin('users', 'users.id', '=', 'area_user.user_id')
+            ->groupBy('bricks.id')
+            ->orderBy('bricks.id', 'DESC');
+    }
+
+    public static function getRecordRouteKeyName(): string|null {
+        return 'bricks.id';
     }
 
     public static function getRelations(): array
