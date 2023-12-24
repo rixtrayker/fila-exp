@@ -103,16 +103,16 @@ class MonthlySalesChart extends ChartWidget
     }
 
     protected static ?array $options = [
-        'scales' => [
-                'yAxes'=>[
-                    'title' => [
-                            'display'=> true,
-                            'text'=> 'Sales',
-                        ],
-                    'ticks' => [
-                        'precision'=> 0
-                        ],
-                    ],
-            ]
+        // 'scales' => [
+        //         'yAxes'=>[
+        //             'title' => [
+        //                     // 'display'=> true,
+        //                     'text'=> 'Sales',
+        //                 ],
+        //             'ticks' => [
+        //                 'precision'=> 0
+        //                 ],
+        //             ],
+        //     ]
         ];
 }
