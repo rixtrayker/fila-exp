@@ -29,8 +29,6 @@ class AreaResource extends Resource
 
     public static function form(Form $form): Form
     {
-        self::$bricks = Brick::get()->pluck('full_name', 'id')->toArray();
-
         return $form
             ->schema([
                 TextInput::make('name')

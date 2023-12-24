@@ -51,6 +51,10 @@ class ExpensesReportResource extends Resource
             );
     }
 
+    public static function getRecordRouteKeyName(): string|null {
+        return 'users.id';
+    }
+
 
     public static function table(Table $table): Table
     {

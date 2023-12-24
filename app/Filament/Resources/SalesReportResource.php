@@ -130,6 +130,11 @@ class SalesReportResource extends Resource
             ->groupBy('business_orders.id')
             ->orderBy('business_orders.id', 'DESC');
     }
+
+    public static function getRecordRouteKeyName(): string|null {
+        return 'business_orders.id';
+    }
+
     public static function getPages(): array
     {
         return [

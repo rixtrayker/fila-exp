@@ -99,6 +99,10 @@ class VacationsReportResource extends Resource
             ->groupBy('users.id');
     }
 
+    public static function getRecordRouteKeyName(): string|null {
+        return 'users.id';
+    }
+
     private static function getMedicalReps(): array
     {
         if(self::$medicalReps)

@@ -102,10 +102,11 @@ class FrequencyReportResource extends Resource
     {
         DB::statement("SET SESSION sql_mode=''");
 
-        return Client::select('clients.id as id',
-        'name_en',
-        'clients.brick_id as brick_id',
-        'clients.grade as grade',
+        return Client::select(
+            'clients.id as id',
+            'name_en',
+            'clients.brick_id as brick_id',
+            'clients.grade as grade',
         )
             ->selectRaw('SUM(CASE WHEN visits.status = "visited" THEN 1 ELSE 0 END) AS done_visits_count')
             ->selectRaw('IFNULL(SUM(CASE WHEN visits.status IN ("pending", "planned") THEN 1 ELSE 0 END), 0) AS pending_visits_count')
@@ -116,6 +117,10 @@ class FrequencyReportResource extends Resource
             ->leftJoin('users', 'visits.user_id', '=', 'users.id')
             ->groupBy('clients.id','clients.name_en');
 
+    }
+
+    public static function getRecordRouteKeyName(): string|null {
+        return 'clients.id';
     }
 
     public static function getPages(): array
@@ -146,10 +151,6 @@ class FrequencyReportResource extends Resource
     //         ->resolveRouteBindingQuery(static::getEloquentQuery(), $key, static::getRecordRouteKeyName())
     //         ->first();
     // }
-
-    public static function getRecordRouteKeyName(): string|null {
-        return 'clients.id';
-    }
 
     private static function getBricks(): array
     {
