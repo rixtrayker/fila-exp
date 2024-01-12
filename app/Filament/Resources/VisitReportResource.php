@@ -185,7 +185,7 @@ class VisitReportResource extends Resource
         if(self::$districtManager)
             return self::$districtManager;
 
-        self::$districtManager = User::role('district-manager')->pluck('name','id');
+        self::$districtManager = User::role('district-manager')->pluck('name','id')->toArray();
         return self::$districtManager;
     }
 

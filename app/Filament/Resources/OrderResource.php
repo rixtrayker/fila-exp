@@ -118,7 +118,7 @@ class OrderResource extends Resource
                             TextInput::make('count')
                                 ->numeric()
                                 ->required()
-                                ->minValue(1)
+                                ->minValue(0)
                                 ->hiddenLabel()
                                 ->reactive()
                                 ->afterStateUpdated(

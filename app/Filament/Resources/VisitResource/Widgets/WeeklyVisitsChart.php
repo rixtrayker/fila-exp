@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\VisitResource\Widgets;
 
 use App\Models\Plan;
+use Carbon\Carbon;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +14,7 @@ class WeeklyVisitsChart extends ChartWidget
 
     private static $plans;
     private static $labels;
+    private static $planDates = [];
 
     protected function getType(): string
     {
@@ -52,10 +54,10 @@ class WeeklyVisitsChart extends ChartWidget
     private function getLabels(): array {
         $data = [];
 
-        foreach ($this->getLatestPlans() as $plan)
+        foreach (self::getPlansDates() as $date)
         {
-            $date = $plan->start_at;
-            $data[] = $date->day.' '.$date->monthName;
+            $carbon = new Carbon($date);
+            $data[] = $carbon->day.' '.$carbon->monthName;
         }
 
         return $data;
@@ -66,12 +68,28 @@ class WeeklyVisitsChart extends ChartWidget
             return self::$plans;
 
         self::$plans = Plan::latest()
+            ->whereIn('start_at', self::getPlansDates())
             ->select(['start_at', 'id'])
             ->with('visits')
-            ->limit(12)
             ->get();
 
         return self::$plans;
+    }
+
+    private static function getPlansDates(): array
+    {
+        if(self::$planDates)
+            return self::$planDates;
+
+        self::$planDates = Plan::selectRaw('DISTINCT start_at')
+            ->orderBy('start_at', 'desc')
+            ->limit(12)
+            ->get()
+            ->pluck('start_at')
+            ->map(fn($item)=>$item->format('Y-m-d'))
+            ->toArray();
+
+        return self::$planDates;
     }
 
     private function getDataSets()
@@ -104,10 +122,21 @@ class WeeklyVisitsChart extends ChartWidget
     private function getChartData($status){
 
         $data = [];
+        $plans = self::getLatestPlans();
 
-        foreach (self::getLatestPlans() as $plan)
+        foreach ( self::getPlansDates() as $date)
         {
-            $data[] = self::getPlansData($plan, $status);
+            $count = 0;
+
+            foreach($plans->where('start_at', new Carbon($date)) as $plan){
+                $count += self::getPlansData($plan, $status);
+
+                if($status == 'pending'){
+                    $count += self::getPlansData($plan, 'planned');
+                }
+            }
+
+            $data[] = $count;
         }
         return $data;
     }

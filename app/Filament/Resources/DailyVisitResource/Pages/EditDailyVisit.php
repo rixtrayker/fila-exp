@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\DailyVisitResource\Pages;
 
 use App\Filament\Resources\DailyVisitResource;
+use App\Helpers\DateHelper;
 use App\Models\ProductVisit;
 use Filament\Pages\Actions;
 use Filament\Resources\Pages\EditRecord;
@@ -76,6 +77,7 @@ class EditDailyVisit extends EditRecord
 
             $data = collect($this->form->getRawState()['temp_content']['Regular'])->only(['next_visit','call_type_id','comment'])->toArray();
             $data['status'] = 'visited';
+            $data['visit_date'] = DateHelper::today();
 
             $this->callHook('afterValidate');
 

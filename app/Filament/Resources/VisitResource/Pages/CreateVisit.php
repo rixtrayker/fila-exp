@@ -155,7 +155,7 @@ class CreateVisit extends CreateRecord
             $insertData[] = [
                 'visit_id' => $visitId,
                 'product_id' =>  $product['product_id'],
-                'count' => $product['count'],
+                'count' => isset($product['count']) ? $product['count'] :  null,
                 'created_at' => $now,
                 'updated_at' => $now,
             ];

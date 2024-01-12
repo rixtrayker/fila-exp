@@ -79,7 +79,7 @@ class EditVisit extends EditRecord
         $data['status'] = 'visited';
 
         if($isRep && $this->record->plan_id){
-            $data['visit_date'] = DateHelper::today();
+            $data['visit_date'] = DateHelper::today(); // todo: logical bug
         } elseif($isRep && !isset($data['visit_date']) && $data['visit_type_id'] == 1){
             $data['visit_date'] = today();
         }

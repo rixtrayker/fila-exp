@@ -205,6 +205,10 @@ class PlanResource extends Resource
             ->exists();
     }
 
+    public static function getEloquentQuery(): Builder
+    {
+        return static::getModel()::query()->latest();
+    }
     public static function canEdit(Model $record): bool
     {
         $lastPlanId = $record->user?->plans()->latest()->first()?->id;

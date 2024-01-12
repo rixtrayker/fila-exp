@@ -123,7 +123,7 @@ final class Regular
                             TextInput::make('count')
                                 ->numeric()
                                 ->label('Sample count')
-                                ->minValue(1),
+                                ->minValue(0),
 
                         ])
                         ->disableItemMovement()
