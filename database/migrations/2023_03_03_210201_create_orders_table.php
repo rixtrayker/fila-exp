@@ -27,6 +27,7 @@ return new class extends Migration
             $table->double('total');
             $table->tinyInteger('approved')->default(0);
             $table->dateTime('approved_at')->nullable();
+            $table->string('comment')->nullable();
             $table->timestamps();
         });
     }

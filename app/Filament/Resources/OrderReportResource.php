@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\User;
+use App\Traits\RepRoleResources;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
@@ -26,6 +27,7 @@ use Illuminate\Support\Facades\DB;
 
 class OrderReportResource extends Resource
 {
+    use RepRoleResources;
     protected static ?string $model = Order::class;
 
     protected static ?string $navigationLabel = 'Orders report';

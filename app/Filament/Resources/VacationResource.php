@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Vacation;
 use App\Models\VacationRequest;
 use App\Models\VacationType;
+use App\Traits\RepRoleResources;
 use Awcodes\FilamentTableRepeater\Components\TableRepeater;
 use Carbon\Carbon;
 use Closure;
@@ -26,8 +27,8 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class VacationResource extends Resource
 {
+    use RepRoleResources;
     protected static ?string $model = VacationRequest::class;
-
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static ?int $navigationSort = 7;
 

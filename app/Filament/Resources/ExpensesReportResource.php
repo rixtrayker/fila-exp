@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 
 class ExpensesReportResource extends Resource
 {
+    use \App\Traits\RepRoleResources;
     protected static ?string $model = Expenses::class;
 
     protected static ?string $navigationGroup = 'Reports';

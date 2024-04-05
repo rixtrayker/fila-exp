@@ -7,6 +7,7 @@ use App\Filament\Resources\CompanyResource\RelationManagers;
 use App\Filament\Resources\CompanyResource\RelationManagers\BranchesRelationManager;
 use App\Filament\Resources\CompanyResource\RelationManagers\CompanyProductsRelationManager;
 use App\Models\Company;
+use App\Traits\RolesOnlyResources;
 use Filament\Forms;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
@@ -19,6 +20,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class CompanyResource extends Resource
 {
+    use RolesOnlyResources;
     protected static ?string $model = Company::class;
     protected static ?string $navigationGroup = 'Companies management';
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';

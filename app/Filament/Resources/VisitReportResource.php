@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\DB;
 
 class VisitReportResource extends Resource
 {
+    use \App\Traits\RepRoleResources;
     protected static ?string $model = Client::class;
     protected static ?string $label = 'Visit report';
 

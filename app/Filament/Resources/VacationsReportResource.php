@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\VacationsReportResource\Pages;
 use App\Models\User;
 use App\Models\VacationRequest;
+use App\Traits\RepRoleResources;
 use Faker\Provider\ar_EG\Text;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Form;
@@ -18,6 +19,7 @@ use Illuminate\Support\Facades\DB;
 
 class VacationsReportResource extends Resource
 {
+    use RepRoleResources;
     protected static ?string $model = VacationRequest::class;
 
     protected static ?string $navigationGroup = 'Reports';

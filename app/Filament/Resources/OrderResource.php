@@ -267,6 +267,15 @@ class OrderResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
+        if(auth()->user()->hasRole('accountant')){
+            return parent::getEloquentQuery()
+                ->withoutGlobalScopes([
+                    SoftDeletingScope::class,
+                ])
+                ->scopes([
+                    'inMyAreas',
+                ]);
+        }
         return parent::getEloquentQuery()
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,

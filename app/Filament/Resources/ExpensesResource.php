@@ -6,6 +6,7 @@ use App\Filament\Resources\ExpensesResource\Pages;
 use App\Filament\Resources\ExpensesResource\RelationManagers;
 use App\Models\Expenses;
 use App\Models\User;
+use App\Traits\RepRoleResources;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
@@ -23,6 +24,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ExpensesResource extends Resource
 {
+    use RepRoleResources; // todo: check if this is needed
     protected static ?string $model = Expenses::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';

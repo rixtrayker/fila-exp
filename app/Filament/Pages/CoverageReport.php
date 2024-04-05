@@ -6,6 +6,7 @@ use App\Filament\Widgets\FilterFormWidget;
 use App\Filament\Widgets\OverallChart;
 use App\Models\Visit;
 use App\Exports\ExportVisits;
+use App\Traits\RepRoleResources;
 use Filament\Actions\Action;
 use Filament\Pages\Page;
 use Filament\Forms\Concerns\HasFormComponentActions;
@@ -17,6 +18,7 @@ class CoverageReport extends Page
 {
     use HasFormComponentActions;
     use InteractsWithFormActions;
+    use RepRoleResources;
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
 

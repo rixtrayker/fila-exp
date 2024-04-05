@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\CompanyBranchResource\Pages;
 use App\Filament\Resources\CompanyBranchResource\RelationManagers;
 use App\Models\CompanyBranch;
+use App\Traits\RolesOnlyResources;
 use Filament\Forms;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -18,6 +19,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class CompanyBranchResource extends Resource
 {
+    use RolesOnlyResources;
     protected static ?string $model = CompanyBranch::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';

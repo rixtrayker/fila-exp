@@ -61,4 +61,27 @@ class Order extends Model
         parent::boot();
         static::addGlobalScope(new GetMineScope);
     }
+
+    public function scopeInMyAreas($builder)
+    {
+        if(!auth()->user()){
+            return;
+        }
+
+        if(!auth()->user()->hasRole(['accountant'])){
+            return $builder;
+        }
+
+        $myAreas = auth()->user()->areas;
+        $ids = [];
+
+        foreach($myAreas as $area){
+            $ids = $ids + $area->bricks()->pluck('bricks.id')->toArray();
+        }
+
+
+        return $builder->join('clients','clients.id','=','orders.client_id')
+            ->whereIn('clients.brick_id',$ids)
+            ->select('orders.*');
+    }
 }

@@ -6,6 +6,7 @@ use App\Filament\Resources\BusinessOrderResource\Pages;
 use App\Filament\Resources\BusinessOrderResource\RelationManagers;
 use App\Helpers\ImportHelper;
 use App\Models\BusinessOrder;
+use App\Traits\RepRoleResources;
 use Filament\Forms;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Form;
@@ -18,6 +19,8 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class BusinessOrderResource extends Resource
 {
+    use RepRoleResources;
+
     protected static ?string $model = BusinessOrder::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';

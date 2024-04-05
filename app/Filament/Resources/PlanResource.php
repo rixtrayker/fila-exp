@@ -21,6 +21,7 @@ use LucasGiovanny\FilamentMultiselectTwoSides\Forms\Components\Fields\Multiselec
 use App\Livewire\MultiSelect2Sides as MultiselectTwoSides;
 use App\Models\Plan;
 use App\Models\Visit;
+use App\Traits\RepRoleResources;
 use Closure;
 use Str;
 use Filament\Forms\Components\TimePicker;
@@ -32,7 +33,7 @@ use Illuminate\Support\Facades\Log;
 class PlanResource extends Resource
 {
     // protected static bool $shouldRegisterNavigation = false;
-
+    use RepRoleResources;
     protected static ?string $model = Plan::class;
     protected static ?string $navigationLabel = 'Weekly plans';
     protected static ?string $navigationIcon = 'heroicon-o-calendar';

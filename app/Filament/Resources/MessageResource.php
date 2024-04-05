@@ -6,6 +6,7 @@ use App\Filament\Resources\MessageResource\Pages;
 use App\Filament\Resources\MessageResource\RelationManagers;
 use App\Models\Message;
 use App\Models\User;
+use App\Traits\RepRoleResources;
 use Filament\Forms;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Grid;
@@ -29,6 +30,7 @@ use Str;
 
 class MessageResource extends Resource
 {
+    use RepRoleResources;
     protected static ?string $model = Message::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-envelope';
