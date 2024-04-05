@@ -102,7 +102,8 @@ class CreateVisit extends CreateRecord
                 $visit->status = 'visited';
                 $visit->save();
                 $data = $this->form->getRawState();
-                $this->saveProducts($data, $visit);
+                $this->saveProducts($visit);
+
                 $this->getCreatedNotification()?->send();
                 $this->redirect($this->getRedirectUrl());
                 return;
@@ -143,19 +144,22 @@ class CreateVisit extends CreateRecord
         }
 
         $products = $data['products'];
-        $visitId = $visit->id;
+        $visitId = $this->record->id;
 
         $insertData = [];
         $now = now();
 
         foreach($products as $product){
-            if(!$product['product_id'] || !$product['count'])
+            $count = 0;
+            if(isset($product['count']) && $product['count'])
+                $count = $product['count'];
+            if(!isset($product['product_id']) || !$product['product_id'])
                 continue;
 
             $insertData[] = [
                 'visit_id' => $visitId,
                 'product_id' =>  $product['product_id'],
-                'count' => isset($product['count']) ? $product['count'] :  null,
+                'count' => $count,
                 'created_at' => $now,
                 'updated_at' => $now,
             ];

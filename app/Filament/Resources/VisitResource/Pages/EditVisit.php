@@ -91,26 +91,30 @@ class EditVisit extends EditRecord
     {
         $data = $this->form->getRawState();
         if($this->isRegularVisit)
-            $this->saveProducts($data, $this->record);
+            $this->saveProducts($data);
     }
 
-    private function saveProducts($data, $visit)
+    private function saveProducts($data)
     {
         if(!isset($data['products'])){
             return;
         }
 
         $products = $data['products'];
-        $visitId = $visit->id;
+        $visitId = $this->record->id;
 
         $insertData = [];
         $now = now();
-
         foreach($products as $product){
+            $count = 0;
+            if(isset($product['count']) && $product['count'])
+                $count = $product['count'];
+            if(!isset($product['product_id']) || !$product['product_id'])
+                continue;
             $insertData[] = [
                 'visit_id' => $visitId,
                 'product_id' =>  $product['product_id'],
-                'count' => $product['count'],
+                'count' => $count,
                 'created_at' => $now,
                 'updated_at' => $now,
             ];

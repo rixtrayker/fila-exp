@@ -55,10 +55,15 @@ class EditDailyVisit extends EditRecord
         $now = now();
 
         foreach($products as $product){
+            $count = 0;
+            if(isset($product['count']) && $product['count'])
+                $count = $product['count'];
+            if(!isset($product['product_id']) || !$product['product_id'])
+                continue;
             $insertData[] = [
                 'visit_id' => $this->record->id,
                 'product_id' =>  $product['product_id'],
-                'count' => $product['count'],
+                'count' => $count,
                 'created_at' => $now,
                 'updated_at' => $now,
             ];
