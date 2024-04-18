@@ -324,4 +324,7 @@ class OrderResource extends Resource
 
     //     self::$subTotalField->state($total);
     // }
+    public static function getRecordRouteKeyName(): string|null {
+        return 'orders.id';
+    }
 }
