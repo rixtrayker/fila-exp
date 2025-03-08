@@ -14,6 +14,7 @@ class OverallChart extends ChartWidget
     public $to;
     public $user_id;
     protected static ?string $maxHeight = '300px';
+    public string $dataChecksum = '';
 
 
     protected function getType(): string
@@ -117,14 +118,12 @@ class OverallChart extends ChartWidget
     }
     public function updateChartData(): void
     {
-        $newDataChecksum = $this->generateDataChecksum();
+        $newData = $this->getData();
+        $newDataChecksum = md5(json_encode($newData));
 
-        if ($newDataChecksum !== $this->dataChecksum) {
+        if ($this->dataChecksum !== $newDataChecksum) {
             $this->dataChecksum = $newDataChecksum;
-
-            $this->emitSelf('updateChartData', [
-                'data' => $this->getData(),
-            ]);
+            $this->dispatch('updateChartData', data: $newData);
         }
     }
 }
