@@ -64,53 +64,66 @@ class OrderReportResource extends Resource
             ->filters([
                 Filter::make('dates')
                     ->form([
-                            DatePicker::make('from_date')
-                                ->default(today()->startOfMonth()),
-                            DatePicker::make('to_date')
-                                ->default(today()),
-                        ])->columns(2)
+                        DatePicker::make('from_date')
+                            ->default(null),
+                        DatePicker::make('to_date')
+                            ->default(null),
+                    ])->columns(2)
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
                             ->when(
-                                $data['from_date'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('order_date', '>=', $date)
+                                !empty($data['from_date']),
+                                fn (Builder $query, $date): Builder => $query->whereDate('orders.created_at', '>=', $data['from_date'])
                             )
                             ->when(
-                                $data['to_date'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('order_date', '<=', $date));
+                                !empty($data['to_date']),
+                                fn (Builder $query, $date): Builder => $query->whereDate('orders.created_at', '<=', $data['to_date'])
+                            );
                     }),
-                    SelectFilter::make('product_id')
-                        ->multiple()
-                        ->options(self::getProducts())
-                        ->label('Products'),
-                    SelectFilter::make('product_category_id')
-                        ->multiple()
-                        ->options(self::getCategories())
-                        ->label('Categories')
-                        ->query(fn(Builder $query, array $data):Builder => $data['values'] ? $query->where('product_category_id', $data):$query ),
-                    Filter::make('quantity_filter')
-                        ->form([
-                            Select::make('comparasion')
-                                ->label('Comparasion')
-                                ->options([
-                                    '>' => 'Greater than',
-                                    '>=' => 'Greater than or equal',
-                                    '<' => 'Less than',
-                                    '<=' => 'Less than or equal',
-                                    '=' => 'Equals',
-                                ])
-                                ->default('>'),
-                            TextInput::make('quantity')
-                                ->nullable()
-                                ->minValue(1)
-                                ->numeric(),
-                        ])->columns(2)
+                SelectFilter::make('product_id')
+                    ->multiple()
+                    ->options(self::getProducts())
+                    ->label('Products')
                     ->query(function (Builder $query, array $data): Builder {
-                        if(!$data['comparasion'] || !$data['quantity'])
-                            return $query;
-                        return $query->where('order_products.count', $data['comparasion'], $data['quantity']);
+                        return $query->when(
+                            !empty($data['values']),
+                            fn (Builder $query) => $query->whereIn('order_products.product_id', $data['values'])
+                        );
                     }),
-                    Filter::make('id')
+                SelectFilter::make('product_category_id')
+                    ->multiple()
+                    ->options(self::getCategories())
+                    ->label('Categories')
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query->when(
+                            !empty($data['values']),
+                            fn (Builder $query) => $query->whereIn('products.product_category_id', $data['values'])
+                        );
+                    }),
+                Filter::make('quantity_filter')
+                    ->form([
+                        Select::make('comparison')
+                            ->label('Comparison')
+                            ->options([
+                                '>' => 'Greater than',
+                                '>=' => 'Greater than or equal',
+                                '<' => 'Less than',
+                                '<=' => 'Less than or equal',
+                                '=' => 'Equals',
+                            ])
+                            ->nullable(),
+                        TextInput::make('quantity')
+                            ->nullable()
+                            ->minValue(1)
+                            ->numeric(),
+                    ])->columns(2)
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query->when(
+                            !empty($data['comparison']) && !empty($data['quantity']),
+                            fn (Builder $query) => $query->where('order_products.count', $data['comparison'], $data['quantity'])
+                        );
+                    }),
+                Filter::make('id')
                     ->form([
                         Select::make('user_id')
                             ->label('Medical Rep')
@@ -123,12 +136,12 @@ class OrderReportResource extends Resource
                     ])->query(function (Builder $query, array $data): Builder {
                         return $query
                             ->when(
-                                $data['user_id'],
-                                fn (Builder $query, $userIds): Builder => $query->whereIn('orders.user_id', $userIds)
+                                !empty($data['user_id']),
+                                fn (Builder $query) => $query->whereIn('orders.user_id', $data['user_id'])
                             )
                             ->when(
-                                $data['client_id'],
-                                fn (Builder $query, $secondIds): Builder => $query->whereIn('orders.client_id', $secondIds)
+                                !empty($data['client_id']),
+                                fn (Builder $query) => $query->whereIn('orders.client_id', $data['client_id'])
                             );
                     }),
             ])
