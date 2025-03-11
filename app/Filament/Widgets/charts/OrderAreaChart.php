@@ -7,15 +7,14 @@ use App\Filament\Resources\OrderReportResource\Pages\ListOrdersReport;
 use App\Filament\Resources\SalesReportResource;
 use Filament\Widgets\ChartWidget;
 use Filament\Widgets\Concerns\InteractsWithPageTable;
-use Str;
+use Illuminate\Support\Str;
 
-class OrderAreaChart  extends ChartWidget
+class OrderAreaChart extends ChartWidget
 {
     use InteractsWithPageTable;
 
     protected static ?string $maxHeight = '300px';
-    private static $data;
-    private static $resource = OrderReportResource::class;
+    protected static ?string $pollingInterval = null;
 
     protected function getType(): string
     {
@@ -25,30 +24,33 @@ class OrderAreaChart  extends ChartWidget
     protected function getOptions(): array
     {
         return [
-            'scales' => [
-                'yAxis' => [
-                    'display' => false,
+            'plugins' => [
+                'legend' => [
+                    'display' => true,
+                    'position' => 'bottom',
                 ],
-                'xAxis' => [
-                    'display' => false,
+                'tooltip' => [
+                    'enabled' => true,
                 ],
             ],
         ];
     }
+
     protected function getTablePage(): string
     {
         return ListOrdersReport::class;
     }
 
     protected $backgroundColor = [
-        'rgba(75, 192, 192, 0.2)',
-        'rgba(54, 162, 235, 0.2)',
-        'rgba(255, 99, 132, 0.2)',
-        'rgba(153, 102, 255, 0.2)',
-        'rgba(201, 203, 207, 0.2)',
-        'rgba(255, 205, 86, 0.2)',
-        'rgba(255, 159, 64, 0.2)',
+        'rgba(75, 192, 192, 0.5)',
+        'rgba(54, 162, 235, 0.5)',
+        'rgba(255, 99, 132, 0.5)',
+        'rgba(153, 102, 255, 0.5)',
+        'rgba(201, 203, 207, 0.5)',
+        'rgba(255, 205, 86, 0.5)',
+        'rgba(255, 159, 64, 0.5)',
     ];
+
     protected $borderColor = [
         'rgb(75, 192, 192)',
         'rgb(54, 162, 235)',
@@ -57,7 +59,7 @@ class OrderAreaChart  extends ChartWidget
         'rgb(201, 203, 207)',
         'rgb(255, 205, 86)',
         'rgb(255, 159, 64)',
-      ];
+    ];
 
     public function getHeading(): string
     {
@@ -66,13 +68,31 @@ class OrderAreaChart  extends ChartWidget
 
     protected function getData(): array
     {
+        $labels = $this->getLabels();
+        $data = $this->getChartData($labels);
+
         return [
-            'datasets' => $this->getDataSets(),
-            'labels' => $this->getLabels(),
+            'datasets' => [
+                [
+                    'label' => 'Area Orders',
+                    'data' => $data,
+                    'backgroundColor' => $this->backgroundColor,
+                    'borderColor' => $this->borderColor,
+                ],
+            ],
+            'labels' => $labels,
         ];
     }
-    private function getLabels(): array {
-        return array_values($this->getPageTableRecords()->pluck('area_name')->unique()->toArray());
+
+    private function getLabels(): array
+    {
+        $records = $this->getPageTableRecords();
+
+        if ($records->isEmpty()) {
+            return ['No Data Available'];
+        }
+
+        return array_values($records->pluck('area_name')->filter()->unique()->toArray());
     }
 
     public function getColumnSpan(): int|string|array
@@ -80,24 +100,19 @@ class OrderAreaChart  extends ChartWidget
         return 1;
     }
 
-    private function getDataSets()
+    private function getChartData(array $labels): array
     {
-        $datasets = [
-            [
-                'label' => 'Area chart',
-                'data'=> $this->getChartData(),
-                'backgroundColor' => $this->backgroundColor,
-                'borderColor' => $this->borderColor,
-            ],
-        ];
-        return $datasets;
-    }
+        $records = $this->getPageTableRecords();
 
-    public function getChartData(): array {
+        if ($records->isEmpty() || empty($labels) || $labels[0] === 'No Data Available') {
+            return [1]; // Return dummy data to prevent chart errors
+        }
+
         $data = [];
 
-        foreach($this->getLabels() as $label){
-            $data[] = $this->getPageTableRecords()->where('area_name', $label)->sum('total');
+        foreach ($labels as $label) {
+            $areaTotal = $records->where('area_name', $label)->sum('total');
+            $data[] = $areaTotal > 0 ? $areaTotal : 0;
         }
 
         return $data;
