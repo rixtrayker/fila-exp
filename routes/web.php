@@ -8,7 +8,7 @@ use App\Models\Brick;
 use App\Models\Client;
 use Illuminate\Support\Facades\DB;
 use Laravel\Octane\Swoole\SwooleExtension;
-
+use App\Jobs\FixOrdersWith0Total;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -59,6 +59,11 @@ Route::get('/admin/ops/migrate-plan-data', function () {
     Artisan::call('db:seed', [
         '--class' => 'MigratePlanData',
     ]);
+    return true;
+});
+
+Route::get('/admin/ops/fix-orders-with-0-total', function () {
+    dispatch(new FixOrdersWith0Total());
     return true;
 });
 
