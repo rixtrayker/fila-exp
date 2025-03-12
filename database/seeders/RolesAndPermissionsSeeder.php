@@ -3,8 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Collection;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -12,105 +12,264 @@ use Spatie\Permission\PermissionRegistrar;
 class RolesAndPermissionsSeeder extends Seeder
 {
     /**
+     * Models that require standard CRUD permissions
+     */
+    private array $standardModels = [
+        'Area',
+        'Brick',
+        'BusinessOrder',
+        'CallType',
+        'City',
+        'Client',
+        'ClientRequest',
+        'ClientRequestType',
+        'ClientType',
+        'Company',
+        'CompanyBranch',
+        'Country',
+        'DailyVisit',
+        'EditRequest',
+        'Expenses',
+        'Governorate',
+        'Hospital',
+        'Message',
+        'Order',
+        'OrderProduct',
+        'Permission',
+        'Plan',
+        'PlanShift',
+        'Product',
+        'ProductCategory',
+        'ProductVisit',
+        'Region',
+        'Role',
+        'Speciality',
+        'User',
+        'Vacation',
+        'VacationDuration',
+        'VacationRequest',
+        'VacationType',
+        'Visit',
+        'VisitType',
+    ];
+
+     /**
+     * Report models that only need view permission
+     */
+    private array $reportModels = [
+        'OrderReport',
+        'SalesReport',
+        'VisitReport',
+        'VacationsReport',
+        'ExpensesReport',
+        'FrequencyReport',
+        'CoverageReport',
+    ];
+
+
+    /**
+     * Standard CRUD actions for models
+     */
+    private array $standardActions = [
+        'view-any', 'view', 'create', 'update', 'delete', 'restore', 'force-delete'
+    ];
+
+    /**
      * Run the database seeds.
      *
      * @return void
      */
     public function run()
     {
+        // Clear permission cache
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        $miscPermission = Permission::create(['name' => 'N/A']);
+        // Create permissions
+        $allPermissions = $this->createPermissions();
 
-        $permissions = [];
-        $models = ['CallType','City','Client','ClientRequest','ClientRequestType','ClientType','Company','CompanyBranch','EditRequest','Expenses','Governorate','Hospital','Message','Order','OrderProduct','Permission','Plan','PlanShift','Product','ProductCategory','ProductVisit','Region','Role','Speciality','User','VacationRequest','VacationType','Visit','VisitType'];
+        // Create misc permission
+        $miscPermission = $this->createMiscPermission();
 
-        //admin
-        foreach($models as $model){
-            $permissions[] = Permission::create(['name' => 'view-any ' . $model]);
-            $permissions[] = Permission::create(['name' => 'view ' . $model]);
-            $permissions[] = Permission::create(['name' => 'create ' . $model]);
-            $permissions[] = Permission::create(['name' => 'update ' . $model]);
-            $permissions[] = Permission::create(['name' => 'delete ' . $model]);
-            $permissions[] = Permission::create(['name' => 'restore ' . $model]);
-            $permissions[] = Permission::create(['name' => 'force-delete ' . $model]);
-        }
+        // Create roles
+        $this->createRoles($allPermissions, $miscPermission);
 
-        $superAdminRole = Role::create(['name' => 'super-admin'])
-            ->syncPermissions(array_merge($permissions,[$miscPermission]));
-
-
-        // $permissions[] = Permission::create(['name' => 'replicate User']);
-        // $permissions[] = Permission::create(['name' => 'reorder user']);
-
-
-        $userRole = Role::create(['name' => 'user'])->syncPermissions([
-            $miscPermission
-        ]);
-
-        $superAdminRole = Role::create(['name' => 'super-admin'])
-            ->syncPermissions(array_merge($permissions,[$miscPermission]));
-
-        $moderatorRole = Role::create(['name' => 'moderator'])
-            ->syncPermissions([
-                $permissions[1],
-                $permissions[5],
-                $permissions[9],
-                $permissions[13],
-                ]
-            );
-
-        $developerRole = Role::create(['name' => 'developer'])
-            ->syncPermissions([
-                $permissions[13],
-                ]
-            );
-
-        User::create([
-            'name' => 'super admin',
-            'is_admin' => 1,
-            'email' => 'amr@super-admin.com',
-            'email_verified_at' => now(),
-            'password' => bcrypt('1234'),
-        ])->assignRole($superAdminRole);
-
-        User::create([
-            'name' => 'admin',
-            'email' => 'amr@admin.com',
-            'email_verified_at' => now(),
-            'password' => bcrypt('1234'),
-        ])->assignRole($moderatorRole);
-
-        User::create([
-            'name' => 'developer',
-            'email' => 'amr@developer.com',
-            'email_verified_at' => now(),
-            'password' => bcrypt('1234'),
-        ])->assignRole($developerRole);
-
-        for($i=0; $i<50; $i++){
-            User::create([
-                'name' => 'test'.$i,
-                'email' => 'test'.$i.'@user.com',
-                'email_verified_at' => now(),
-                'password' => bcrypt('1234'),
-            ])->assignRole($userRole);
-        }
-
+        // Create users
+        $this->createUsers();
     }
 
-    // public function getModels($path = app_path() . '/Models'){
-    //     $out = [];
-    //     $results = scandir($path);
-    //     foreach ($results as $result) {
-    //         if ($result === '.' or $result === '..') continue;
-    //         $filename = $path . '/' . $result;
-    //         if (is_dir($filename)) {
-    //             $out = array_merge($out, getModels($filename));
-    //         }else{
-    //             $out[] = substr($filename,0,-4);
-    //         }
-    //     }
-    //     return $out;
-    // }
+    /**
+     * Create all required permissions
+     *
+     * @return Collection
+     */
+    private function createPermissions(): Collection
+    {
+        $permissions = collect();
+
+        // Create standard CRUD permissions for regular models
+        foreach ($this->standardModels as $model) {
+            foreach ($this->standardActions as $action) {
+                $permissionName = "{$action} {$model}";
+                $permission = Permission::firstOrCreate(['name' => $permissionName]);
+                $permissions->push($permission);
+            }
+        }
+
+        // Create view-only permissions for report models
+        foreach ($this->reportModels as $reportModel) {
+            $permissionName = "view {$reportModel}";
+            $permission = Permission::firstOrCreate(['name' => $permissionName]);
+            $permissions->push($permission);
+        }
+
+        return $permissions;
+    }
+
+    /**
+     * Create the miscellaneous permission
+     *
+     * @return Permission
+     */
+    private function createMiscPermission(): Permission
+    {
+        return Permission::firstOrCreate(['name' => 'N/A']);
+    }
+
+    /**
+     * Create roles with their permissions
+     *
+     * @param Collection $allPermissions
+     * @param Permission $miscPermission
+     * @return void
+     */
+    private function createRoles(Collection $allPermissions, Permission $miscPermission): void
+    {
+        // User role - basic access only
+        Role::firstOrCreate(['name' => 'user'])
+            ->syncPermissions([$miscPermission]);
+
+        // Super Admin role - all permissions
+        Role::firstOrCreate(['name' => 'super-admin'])
+            ->syncPermissions($allPermissions->push($miscPermission));
+
+        // Moderator role - limited permissions
+        $moderatorPermissions = $this->getModeratorPermissions($allPermissions);
+        Role::firstOrCreate(['name' => 'moderator'])
+            ->syncPermissions($moderatorPermissions);
+
+        // Developer role - specific permissions
+        $developerPermissions = $this->getDeveloperPermissions($allPermissions);
+        Role::firstOrCreate(['name' => 'developer'])
+            ->syncPermissions($developerPermissions);
+    }
+
+    /**
+     * Get permissions for moderator role
+     *
+     * @param Collection $allPermissions
+     * @return Collection
+     */
+    private function getModeratorPermissions(Collection $allPermissions): Collection
+    {
+        return $allPermissions->filter(function ($permission) {
+            // Allow viewing any model, viewing clients, updating orders, and viewing reports
+            return str_starts_with($permission->name, 'view-any') ||
+                   $permission->name === 'view Client' ||
+                   $permission->name === 'update Order' ||
+                   (str_starts_with($permission->name, 'view') &&
+                    str_contains($permission->name, 'Report'));
+        });
+    }
+
+    /**
+     * Get permissions for developer role
+     *
+     * @param Collection $allPermissions
+     * @return Collection
+     */
+    private function getDeveloperPermissions(Collection $allPermissions): Collection
+    {
+        return $allPermissions->filter(function ($permission) {
+            // Allow updating orders and viewing reports
+            return $permission->name === 'update Order' ||
+                   (str_starts_with($permission->name, 'view') &&
+                    str_contains($permission->name, 'Report'));
+        });
+    }
+
+    /**
+     * Create default users for each role
+     *
+     * @return void
+     */
+    private function createUsers(): void
+    {
+        // Create admin user
+        $this->createUserWithRole(
+            'super admin',
+            'amr@super-admin.com',
+            'super-admin',
+            true
+        );
+
+        // Create moderator user
+        $this->createUserWithRole(
+            'admin',
+            'amr@admin.com',
+            'moderator'
+        );
+
+        // Create developer user
+        $this->createUserWithRole(
+            'developer',
+            'amr@developer.com',
+            'developer'
+        );
+
+        // Create test users
+        for ($i = 0; $i < 50; $i++) {
+            $this->createUserWithRole(
+                'test' . $i,
+                'test' . $i . '@user.com',
+                'user'
+            );
+        }
+    }
+
+    /**
+     * Create a user with the specified role
+     *
+     * @param string $name
+     * @param string $email
+     * @param string $roleName
+     * @param bool $isAdmin
+     * @return void
+     */
+    private function createUserWithRole(
+        string $name,
+        string $email,
+        string $roleName,
+        bool $isAdmin = false
+    ): void {
+        $userData = [
+            'name' => $name,
+            'email' => $email,
+            'email_verified_at' => now(),
+            'password' => bcrypt('1234'),
+        ];
+
+        if ($isAdmin) {
+            $userData['is_admin'] = 1;
+        }
+
+        $user = User::firstOrCreate(
+            ['email' => $email],
+            $userData
+        );
+
+        $role = Role::where('name', $roleName)->first();
+        if ($role) {
+            $user->syncRoles([$role]);
+        }
+    }
 }
