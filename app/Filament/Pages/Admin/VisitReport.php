@@ -13,11 +13,12 @@ use Filament\Pages\Concerns\InteractsWithFormActions;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
-
+use App\Traits\ResouerceHasPermission;
 class VisitReport extends Page
 {
     use HasFormComponentActions;
     use InteractsWithFormActions;
+    use ResouerceHasPermission;
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
 
