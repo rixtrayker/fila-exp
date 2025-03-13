@@ -2,6 +2,8 @@
 
 namespace App\Traits;
 
+use Illuminate\Support\Str;
+
 trait CanApprove {
     protected function approvalOrder(){
         if(auth()->user()->hasRole('district-manager'))
@@ -28,7 +30,9 @@ trait CanApprove {
 
     public function canApprove()
     {
-        if(auth()->user()->hasRole('medical-rep') || auth()->user()->hasRole('area-manager'))
+        $modelName = get_class($this);
+        $permissionName = 'approve '.Str::kebab($modelName);
+        if(!auth()->user()->can($permissionName))
             return false;
 
         if($this->approved != 0 )
@@ -39,7 +43,9 @@ trait CanApprove {
 
     public function canDecline()
     {
-        if(auth()->user()->hasRole('medical-rep') || auth()->user()->hasRole('area-manager') )
+        $modelName = get_class($this);
+        $permissionName = 'approve '.Str::kebab($modelName);
+        if(!auth()->user()->can($permissionName))
             return false;
 
         if($this->approved < 0 || $this->approved == $this->approvalOrder())

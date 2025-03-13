@@ -19,11 +19,14 @@ trait HasEditRequest{
     public static function bootHasEditRequest(){
         static::updating(function ($model)
         {
-            $user = auth()->user();
-
-            if( $user->hasRole(['super-admin','country-manager','district-manager'])){
+            if( auth()->user()->can('update edit-request')){
                 return true;
             }
+
+            // // can edit has role
+            // if( $user->hasRole(['super-admin','country-manager','district-manager'])){
+            //     return true;
+            // }
 
             $editable = isset($model->editable) ? $model->editable : $model->fillable;
 

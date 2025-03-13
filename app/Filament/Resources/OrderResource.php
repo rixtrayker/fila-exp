@@ -28,7 +28,7 @@ use App\Traits\ResouerceHasPermission;
 class OrderResource extends Resource
 {
     use ResouerceHasPermission;
-    
+
     protected static ?string $model = Order::class;
     protected static ?string $navigationLabel = 'Direct orders';
 
