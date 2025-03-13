@@ -16,7 +16,6 @@ class ClientRequest extends Model
     use HasEditRequest;
     use HasRoleScopeTrait;
 
-    // protected static bool $shouldRegisterNavigation = false;
 
     protected $fillable = [
         'user_id',

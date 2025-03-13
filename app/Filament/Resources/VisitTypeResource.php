@@ -5,7 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\VisitTypeResource\Pages;
 use App\Filament\Resources\VisitTypeResource\RelationManagers;
 use App\Models\VisitType;
-use App\Traits\RolesOnlyResources;
+use App\Traits\ResouerceHasPermission;
 use Filament\Forms;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class VisitTypeResource extends Resource
 {
-    use RolesOnlyResources;
+    use ResouerceHasPermission;
     protected static ?string $model = VisitType::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-tag';
@@ -58,10 +58,5 @@ class VisitTypeResource extends Resource
         return [
             'index' => Pages\ManageVisitTypes::route('/'),
         ];
-    }
-
-    public static function canAccessMe(): array
-    {
-        return ['super-admin','moderator', 'district-manager'];
     }
 }

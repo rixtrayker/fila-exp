@@ -23,9 +23,12 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Traits\ResouerceHasPermission;
 
 class OrderResource extends Resource
 {
+    use ResouerceHasPermission;
+    
     protected static ?string $model = Order::class;
     protected static ?string $navigationLabel = 'Direct orders';
 

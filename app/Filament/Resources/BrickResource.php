@@ -5,7 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\BrickResource\Pages;
 use App\Filament\Resources\BrickResource\RelationManagers;
 use App\Models\Brick;
-use App\Traits\RepRoleResources;
+use App\Traits\ResouerceHasPermission;
 use Filament\Forms;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\DB;
 
 class BrickResource extends Resource
 {
-    use RepRoleResources;
+    use ResouerceHasPermission;
     protected static ?string $model = Brick::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';

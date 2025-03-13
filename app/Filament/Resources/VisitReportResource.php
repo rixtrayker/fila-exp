@@ -23,10 +23,11 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use App\Traits\ResouerceHasPermission;
 
 class VisitReportResource extends Resource
 {
-    use \App\Traits\RepRoleResources;
+    use ResouerceHasPermission;
     protected static ?string $model = Client::class;
     protected static ?string $label = 'Visit report';
 

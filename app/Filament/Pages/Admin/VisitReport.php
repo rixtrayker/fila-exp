@@ -26,7 +26,7 @@ class VisitReport extends Page
     protected static ?string $navigationLabel = 'Visits report';
     protected static ?string $slug = 'visits-report-test';
     protected static ?string $navigationGroup = 'Reports';
-    protected static bool $shouldRegisterNavigation = false;
+
     public $visits;
     public $from;
     public $to;

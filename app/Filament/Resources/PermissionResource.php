@@ -4,7 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\PermissionResource\Pages;
 use App\Filament\Resources\PermissionResource\RelationManagers;
-use App\Traits\RolesOnlyResources;
+use App\Traits\ResouerceHasPermission;
 use Spatie\Permission\Models\Permission;
 use Filament\Forms;
 use Filament\Forms\Components\Card;
@@ -19,7 +19,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class PermissionResource extends Resource
 {
-    use RolesOnlyResources;
+    use ResouerceHasPermission;
     protected static ?string $model = Permission::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-key';

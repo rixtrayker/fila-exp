@@ -5,7 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ProductCategoryResource\Pages;
 use App\Filament\Resources\ProductCategoryResource\RelationManagers;
 use App\Models\ProductCategory;
-use App\Traits\RolesOnlyResources;
+use App\Traits\ResouerceHasPermission;
 use Filament\Forms;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ProductCategoryResource extends Resource
 {
-    use RolesOnlyResources;
+    use ResouerceHasPermission;
     protected static ?string $model = ProductCategory::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-tag';
@@ -61,9 +61,5 @@ class ProductCategoryResource extends Resource
         return [
             'index' => Pages\ManageProductCategories::route('/'),
         ];
-    }
-    public static function canAccessMe(): array
-    {
-        return ['super-admin','moderator', 'district-manager'];
     }
 }

@@ -6,7 +6,7 @@ use App\Filament\Resources\CityResource\Pages;
 use App\Filament\Resources\CityResource\RelationManagers;
 use App\Filament\Resources\CityResource\RelationManagers\BricksRelationManager;
 use App\Models\City;
-use App\Traits\RolesOnlyResources;
+use App\Traits\ResouerceHasPermission;
 use Filament\Forms;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -20,7 +20,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class CityResource extends Resource
 {
-    use RolesOnlyResources;
+    use ResouerceHasPermission;
     protected static ?string $model = City::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
@@ -78,10 +78,5 @@ class CityResource extends Resource
             'create' => Pages\CreateCity::route('/create'),
             'edit' => Pages\EditCity::route('/{record}/edit'),
         ];
-    }
-
-    public static function canAccessMe(): array
-    {
-        return ['super-admin','moderator', 'district-manager'];
     }
 }

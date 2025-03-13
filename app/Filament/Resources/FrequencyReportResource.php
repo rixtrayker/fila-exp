@@ -6,7 +6,7 @@ use App\Filament\Resources\FrequencyReportResource\Pages;
 use App\Models\Brick;
 use App\Models\Client;
 use App\Models\User;
-use App\Traits\RepRoleResources;
+use App\Traits\ResouerceHasPermission;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Tables\Table;
@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 
 class FrequencyReportResource extends Resource
 {
-    use RepRoleResources;
+    use ResouerceHasPermission;
     protected static ?string $model = Client::class;
     protected static ?string $label = 'Frequency report';
 
@@ -27,7 +27,6 @@ class FrequencyReportResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
     protected static ?string $slug = 'frequency-report';
 
-    // protected static bool $shouldRegisterNavigation = false;
     protected static $avgGrade;
     protected static $bricks;
     protected static $medicalReps;

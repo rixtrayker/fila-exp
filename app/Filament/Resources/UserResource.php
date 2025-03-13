@@ -8,7 +8,7 @@ use App\Filament\Resources\UserResource\RelationManagers\RolesRelationManager;
 use App\Models\Area;
 use App\Models\Brick;
 use App\Models\User;
-use App\Traits\RolesOnlyResources;
+use App\Traits\ResouerceHasPermission;
 use Awcodes\FilamentTableRepeater\Components\TableRepeater;
 use Filament\Forms;
 use Filament\Forms\Components\CheckboxList;
@@ -34,7 +34,7 @@ use Str;
 
 class UserResource extends Resource
 {
-    use RolesOnlyResources;
+    use ResouerceHasPermission;
     protected static ?string $model = User::class;
 
     protected static ?string $navigationIcon = 'heroicon-s-users';
@@ -42,7 +42,6 @@ class UserResource extends Resource
     protected static ?int $navigationSort = 1;
 
 
-    // protected static bool $shouldRegisterNavigation = false;
 
     public static function form(Form $form): Form
     {
@@ -140,10 +139,5 @@ class UserResource extends Resource
             'create' => Pages\CreateUser::route('/create'),
             'edit' => Pages\EditUser::route('/{record}/edit'),
         ];
-    }
-
-    public static function canAccessMe(): array
-    {
-        return ['super-admin','moderator'];
     }
 }

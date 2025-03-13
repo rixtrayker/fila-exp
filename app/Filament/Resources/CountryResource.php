@@ -5,7 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\CountryResource\Pages;
 use App\Filament\Resources\CountryResource\RelationManagers;
 use App\Models\Country;
-use App\Traits\RolesOnlyResources;
+use App\Traits\ResouerceHasPermission;
 use Filament\Forms;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class CountryResource extends Resource
 {
-    use RolesOnlyResources;
+    use ResouerceHasPermission;
 
     protected static ?string $model = Country::class;
 
@@ -69,10 +69,5 @@ class CountryResource extends Resource
             'create' => Pages\CreateCountry::route('/create'),
             'edit' => Pages\EditCountry::route('/{record}/edit'),
         ];
-    }
-
-    public static function canAccessMe(): array
-    {
-        return ['super-admin','moderator', 'district-manager'];
     }
 }

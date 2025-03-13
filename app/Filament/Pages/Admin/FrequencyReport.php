@@ -23,8 +23,6 @@ class FrequencyReport extends Page
     // protected static ?string $navigationIcon = 'heroicon-o-calendar';
     protected static ?string $slug = 'frequency-report-dep';
     protected static ?string $navigationGroup = 'Reports';
-    protected static bool $shouldRegisterNavigation = false;
-
 
     // protected static ?int $navigationSort = 11;
     public $clients;

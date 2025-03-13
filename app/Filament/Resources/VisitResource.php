@@ -8,7 +8,7 @@ use App\Models\ClientType;
 use App\Models\User;
 use App\Models\Visit;
 use App\Models\VisitType;
-use App\Traits\RepRoleResources;
+use App\Traits\ResouerceHasPermission;
 use Awcodes\FilamentTableRepeater\Components\TableRepeater;
 use Closure;
 use Filament\Forms;
@@ -26,14 +26,14 @@ use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Collection;
 use SplFileInfo;
 use Str;
+
 class VisitResource extends Resource
 {
-    use RepRoleResources;
+    use ResouerceHasPermission;
     protected static ?string $model = Visit::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-building-office';
 
-    // protected static bool $shouldRegisterNavigation = false;
     protected static ?int $navigationSort = 1;
 
     protected static $templates = [

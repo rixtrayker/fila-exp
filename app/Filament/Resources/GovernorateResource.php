@@ -6,7 +6,7 @@ use App\Filament\Resources\GovernorateResource\Pages;
 use App\Filament\Resources\GovernorateResource\RelationManagers;
 use App\Filament\Resources\GovernorateResource\RelationManagers\CitiesRelationManager;
 use App\Models\Governorate;
-use App\Traits\RolesOnlyResources;
+use App\Traits\ResouerceHasPermission;
 use Filament\Forms;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -20,7 +20,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class GovernorateResource extends Resource
 {
-    use RolesOnlyResources;
+    use ResouerceHasPermission;
 
     protected static ?string $model = Governorate::class;
 
@@ -78,9 +78,5 @@ class GovernorateResource extends Resource
             'create' => Pages\CreateGovernorate::route('/create'),
             'edit' => Pages\EditGovernorate::route('/{record}/edit'),
         ];
-    }
-    public static function canAccessMe(): array
-    {
-        return ['super-admin','moderator', 'district-manager'];
     }
 }

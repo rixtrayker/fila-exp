@@ -10,7 +10,7 @@ use App\Models\ClientRequestType;
 use App\Models\Scopes\GetMineScope;
 use App\Models\User;
 use App\Models\VisitType;
-use App\Traits\RepRoleResources;
+use App\Traits\ResouerceHasPermission;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
@@ -27,11 +27,10 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ClientRequestResource extends Resource
 {
-    use RepRoleResources;
+    use ResouerceHasPermission;
     protected static ?string $model = ClientRequest::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-receipt-percent';
-    // protected static bool $shouldRegisterNavigation = false;
     protected static ?int $navigationSort = 4;
 
 

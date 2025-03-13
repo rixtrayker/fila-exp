@@ -5,7 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\EditRequestResource\Pages;
 use App\Filament\Resources\EditRequestResource\RelationManagers;
 use App\Models\EditRequest;
-use App\Traits\RepRoleResources;
+use App\Traits\ResouerceHasPermission;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Str;
 class EditRequestResource extends Resource
 {
-    use RepRoleResources;
+    use ResouerceHasPermission;
     protected static ?string $slug = 'edit-requests';
 
     protected static ?string $navigationIcon = 'heroicon-o-pencil-square';
