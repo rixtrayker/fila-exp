@@ -214,6 +214,8 @@ class OrderResource extends Resource
                     ->sortable(),
                 TextColumn::make('product_list')
                     ->label('Product List')
+                    // ->limit(length: 80)
+                    ->wrap()
                     ->sortable(),
                 IconColumn::make('approved')
                     ->colors(function($record){
