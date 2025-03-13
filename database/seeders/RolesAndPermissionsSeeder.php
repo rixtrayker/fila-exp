@@ -57,15 +57,24 @@ class RolesAndPermissionsSeeder extends Seeder
      * Report models that only need view permission
      */
     private array $reportModels = [
-        'order-report',
-        'sales-report',
-        'visit-report',
-        'vacations-report',
+        'coverage-report',
         'expenses-report',
         'frequency-report',
-        'coverage-report',
+        'order-report',
+        'sales-report',
+        'vacations-report',
+        'visit-report',
     ];
 
+    /**
+     * Models that require approval permissions
+     */
+    private array $approvalModels = [
+        'client-request',
+        'order',
+        'plan',
+        'vacation-request',
+    ];
 
     /**
      * Standard CRUD actions for models
@@ -118,6 +127,13 @@ class RolesAndPermissionsSeeder extends Seeder
         // Create view-only permissions for report models
         foreach ($this->reportModels as $reportModel) {
             $permissionName = "view {$reportModel}";
+            $permission = Permission::firstOrCreate(['name' => $permissionName]);
+            $permissions->push($permission);
+        }
+
+        // Create approve permissions for models that need approval
+        foreach ($this->approvalModels as $model) {
+            $permissionName = "approve {$model}";
             $permission = Permission::firstOrCreate(['name' => $permissionName]);
             $permissions->push($permission);
         }
