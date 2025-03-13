@@ -161,21 +161,21 @@ class RolesAndPermissionsSeeder extends Seeder
     private function createRoles(Collection $allPermissions, Permission $miscPermission): void
     {
         // User role - basic access only
-        Role::firstOrCreate(['name' => 'user'])
+        Role::firstOrCreate(['name' => 'user', 'display_name' => 'User'])
             ->syncPermissions([$miscPermission]);
 
         // Super Admin role - all permissions
-        Role::firstOrCreate(['name' => 'super-admin'])
+        Role::firstOrCreate(['name' => 'super-admin'], ['display_name' => 'Super Admin'])
             ->syncPermissions($allPermissions->push($miscPermission));
 
         // Moderator role - limited permissions
         $moderatorPermissions = $this->getModeratorPermissions($allPermissions);
-        Role::firstOrCreate(['name' => 'moderator'])
+        Role::firstOrCreate(['name' => 'moderator', 'display_name' => 'Moderator'])
             ->syncPermissions($moderatorPermissions);
 
         // Developer role - specific permissions
         $developerPermissions = $this->getDeveloperPermissions($allPermissions);
-        Role::firstOrCreate(['name' => 'developer'])
+        Role::firstOrCreate(['name' => 'developer', 'display_name' => 'Developer'])
             ->syncPermissions($developerPermissions);
     }
 
@@ -224,8 +224,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $this->createUserWithRole(
             'super admin',
             'amr@super-admin.com',
-            'super-admin',
-            true
+            'super-admin'
         );
 
         // Create moderator user
@@ -265,7 +264,6 @@ class RolesAndPermissionsSeeder extends Seeder
         string $name,
         string $email,
         string $roleName,
-        bool $isAdmin = false
     ): void {
         $userData = [
             'name' => $name,
@@ -274,9 +272,6 @@ class RolesAndPermissionsSeeder extends Seeder
             'password' => bcrypt('1234'),
         ];
 
-        if ($isAdmin) {
-            $userData['is_admin'] = 1;
-        }
 
         $user = User::firstOrCreate(
             ['email' => $email],
