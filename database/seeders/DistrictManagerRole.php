@@ -1,9 +1,9 @@
 <?php
 
-namespace Database\Seeders\Roles;
+namespace Database\Seeders;
 
-use Althinect\FilamentSpatieRolesPermissions\Commands\Permission;
 use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class DistrictManagerRole extends Seeder
