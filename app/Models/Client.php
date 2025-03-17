@@ -27,6 +27,8 @@ class Client extends Model
         'am_work',
         'client_type_id',
         'speciality_id',
+        'lat',
+        'lng',
     ];
     public $editable = [
         'name_en',

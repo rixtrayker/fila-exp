@@ -3,16 +3,26 @@
 namespace App\Filament\Resources\VisitResource\Pages;
 
 use App\Filament\Resources\VisitResource;
+use App\Models\Client;
 use App\Models\ProductVisit;
 use App\Models\Visit;
 use Filament\Pages\Actions;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Support\Exceptions\Halt;
-
+use App\Helpers\LocationHelpers;
+use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Session;
+use App\Models\Feature;
 class CreateVisit extends CreateRecord
 {
+    protected static string $view = 'vendor.filament.pages.create-visit';
     protected static string $resource = VisitResource::class;
     protected $isRegularVisit;
+
+    // 2 variables to store the location
+    protected $latitude;
+    protected $longitude;
+
     protected function mutateFormDataBeforeCreate($data): array
     {
         $templates = [
@@ -40,6 +50,23 @@ class CreateVisit extends CreateRecord
         $temp = $data['template'];
         $data = $data['temp_content'][$templatesRev[$temp]];
         $data['visit_type_id'] = $temp;
+
+        $location = $this->getLocation();
+
+        if(Feature::isEnabled('location')){
+            $data['lat'] = $location['latitude'];
+            $data['lng'] = $location['longitude'];
+        }
+
+        if(!$this->validateLocation($data['client_id'], $location) && Feature::isEnabled('location'))
+        {
+            Notification::make()
+                ->title('Error')
+                ->body('Location is too far from the client')
+                ->danger()
+                ->send();
+            throw new Halt();
+        }
 
         if(auth()->user()->hasRole('medical-rep') )
             $data['user_id'] = auth()->id();
@@ -166,5 +193,41 @@ class CreateVisit extends CreateRecord
         }
 
         ProductVisit::insert($insertData);
+    }
+
+    private function validateLocation($clientId, $location) : bool
+    {
+        $client = Client::find($clientId);
+
+        if(!$client)
+            return false;
+
+        if(!$client->lat || !$client->lng)
+            return true;
+
+        $lat = $location['latitude'];
+        $lng = $location['longitude'];
+
+        if(LocationHelpers::isValidDistance($lat, $lng, $client->latitude, $client->longitude))
+            return true;
+        else
+            return false;
+    }
+
+    protected $listeners = ['location-fetched' => 'updateLocation'];
+
+    public function updateLocation($data)
+    {
+        $this->setLocation($data);
+    }
+
+    public function setLocation($data)
+    {
+        Session::put($this->getId().'-location', $data);
+    }
+
+    public function getLocation()
+    {
+        return Session::get($this->getId().'-location');
     }
 }

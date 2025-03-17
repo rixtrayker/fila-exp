@@ -11,6 +11,7 @@ use Awcodes\FilamentTableRepeater\Components\TableRepeater;
 use Closure;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Fieldset;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Section;
@@ -22,6 +23,7 @@ use Str;
 final class Regular
 {
     public static $doubleCallTypeId;
+
     public static function title()
     {
         return 'Regular';
@@ -134,7 +136,7 @@ final class Regular
                     ->columnSpan('full')
                     ->minLength('3')
                     ->required(),
-        ])
-        ->columns(3)];
+            ])->columns(3)
+        ];
     }
 }
