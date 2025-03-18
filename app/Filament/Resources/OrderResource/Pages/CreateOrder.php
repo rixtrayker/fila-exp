@@ -16,6 +16,14 @@ class CreateOrder extends CreateRecord
     {
         $data['user_id'] = auth()->id();
         $data['order_date'] = today();
+
+        $formData = $this->form->getRawState();
+        $subtotal = $this->calculateSubtotal($formData);
+        $total = $this->calculateTotal($data, $subtotal);
+
+        $data['sub_total'] = $subtotal;
+        $data['total'] = $total;
+
         return $data;
     }
     public function afterCreate()
@@ -88,5 +96,25 @@ class CreateOrder extends CreateRecord
     protected function getRedirectUrl(): string
     {
         return OrderResource::getUrl('index');
+    }
+    private function calculateSubtotal($data){
+        $systemProducts = Product::pluck('price','id')->toArray();
+        $subtotal = 0;
+        $products = $data['products'];
+        foreach($products as $product){
+            $subtotal += $systemProducts[$product['product_id']] * $product['count'];
+        }
+        return $subtotal;
+    }
+    private function calculateTotal($data, $subtotal){
+        $discount = $this->calculateDiscount($subtotal, $data['discount_type'], $data['discount']);
+        $total = $subtotal - $discount;
+        return $total;
+    }
+    private function calculateDiscount($subtotal, $discountType, $discount){
+        if($discountType == 'percentage'){
+            $discount = $subtotal * $discount / 100;
+        }
+        return floatval($discount);
     }
 }
