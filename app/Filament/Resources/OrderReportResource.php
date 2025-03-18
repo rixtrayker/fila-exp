@@ -55,6 +55,7 @@ class OrderReportResource extends Resource
                 TextColumn::make('brick_name')
                     ->label('Brick Name'),
                 TextColumn::make('product_list_report')
+                    ->wrap()
                     ->label('Products List'),
                 TextColumn::make('categories_list')
                     ->label('Categories List'),
