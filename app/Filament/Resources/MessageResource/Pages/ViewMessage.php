@@ -17,4 +17,10 @@ class ViewMessage extends ViewRecord
                     ->visible( fn($record) => now()->subMinutes(5)->isBefore($record->created_at)),
         ];
     }
+
+    public function beforeFill()
+    {
+        $this->record->users()->syncWithPivotValues($this->record->rolesUsers,['read' => 1]);
+    }
+
 }

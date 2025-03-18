@@ -5,6 +5,7 @@ namespace App\Filament\Resources\MessageResource\Pages;
 use App\Filament\Resources\MessageResource;
 use Filament\Pages\Actions;
 use Filament\Resources\Pages\CreateRecord;
+use Kalnoy\Nestedset\Collection as KCollection;
 
 class CreateMessage extends CreateRecord
 {
@@ -22,7 +23,7 @@ class CreateMessage extends CreateRecord
         $this->record->users()->sync($users);
 
         if(!$this->form->getRawState()['roles'])
-            return
+            return;
         $usersId = $this->record->rolesUsers()->pluck('users.id');
         $this->record->users()->syncWithPivotValues($usersId,['hidden' => 1]);
     }
