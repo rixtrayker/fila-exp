@@ -50,8 +50,8 @@ class UserResource extends Resource
                 TextInput::make('name')
                     ->required()
                     ->maxLength(255),
-                Toggle::make('is_admin')
-                    ->required(),
+                // Toggle::make('is_admin')
+                //     ->required(),
                 TextInput::make('email')
                     ->email()
                     ->required()
