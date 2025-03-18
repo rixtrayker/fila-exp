@@ -53,12 +53,21 @@ class CreateVisit extends CreateRecord
 
         $location = $this->getLocation();
 
-        if(Feature::isEnabled('location')){
-            $data['lat'] = $location['latitude'];
-            $data['lng'] = $location['longitude'];
+        if (Feature::isEnabled('location')) {
+            if($location){
+                $data['lat'] = $location->get('latitude');
+                $data['lng'] = $location->get('longitude');
+            } else {
+                Notification::make()
+                    ->title('Error')
+                    ->body('Location service is not enabled')
+                    ->danger()
+                    ->send();
+                throw new Halt();
+            }
         }
 
-        if(!$this->validateLocation($data['client_id'], $location) && Feature::isEnabled('location'))
+        if (Feature::isEnabled('location') && !$this->validateLocation($data['client_id'], $location))
         {
             Notification::make()
                 ->title('Error')
@@ -197,6 +206,8 @@ class CreateVisit extends CreateRecord
 
     private function validateLocation($clientId, $location) : bool
     {
+        if(!$location)
+            return false;
         $client = Client::find($clientId);
 
         if(!$client)
@@ -205,8 +216,8 @@ class CreateVisit extends CreateRecord
         if(!$client->lat || !$client->lng)
             return true;
 
-        $lat = $location['latitude'];
-        $lng = $location['longitude'];
+        $lat = $location->get('latitude');
+        $lng = $location->get('longitude');
 
         if(LocationHelpers::isValidDistance($lat, $lng, $client->latitude, $client->longitude))
             return true;
@@ -218,7 +229,10 @@ class CreateVisit extends CreateRecord
 
     public function updateLocation($data)
     {
-        $this->setLocation($data);
+        $data = collect($data);
+        if($data->has('latitude') && $data->has('longitude')){
+            $this->setLocation($data);
+        }
     }
 
     public function setLocation($data)
@@ -228,6 +242,11 @@ class CreateVisit extends CreateRecord
 
     public function getLocation()
     {
-        return Session::get($this->getId().'-location');
+        $location = Session::get($this->getId().'-location');
+
+        if($location){
+            return collect($location);
+        }
+        return null;
     }
 }
