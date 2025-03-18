@@ -4,12 +4,15 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\OrderResource\Fields;
 use App\Filament\Resources\OrderResource\Pages;
-use App\Filament\Resources\OrderResource\Tables;
+use App\Filament\Resources\OrderResource\Tables\OrderColumns;
 use App\Models\Order;
 use App\Traits\ResouerceHasPermission;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Tables\Actions\ViewAction;
+use Filament\Tables\Actions\Action;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
@@ -34,10 +37,27 @@ class OrderResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->columns(Tables\OrderColumns::getColumns())
+            ->columns(OrderColumns::getColumns())
             ->filters([])
-            ->actions(Tables\OrderActions::getActions())
-            ->bulkActions(Tables\OrderBulkActions::getActions());
+            ->actions([
+                ViewAction::make(),
+                Action::make('approve')
+                    ->label('Approve')
+                    ->color('success')
+                    ->icon('heroicon-o-check')
+                    ->visible(fn($record) => $record->canApprove())
+                    ->action(fn($record) => $record->approve()),
+                Action::make('decline')
+                    ->label('Decline')
+                    ->color('danger')
+                    ->icon('heroicon-m-x-mark')
+                    ->visible(fn($record) => $record->canDecline())
+                    ->action(fn($record) => $record->reject()),
+            ])
+            ->bulkActions([
+                Tables\Actions\RestoreBulkAction::make(),
+                Tables\Actions\DeleteBulkAction::make(),
+            ]);
     }
 
     public static function getRelations(): array
