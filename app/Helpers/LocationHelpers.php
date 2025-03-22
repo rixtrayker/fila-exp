@@ -2,6 +2,8 @@
 
 namespace App\Helpers;
 
+use App\Models\Setting;
+
 class LocationHelpers
 {
     public static function calculateDistance($latitude1, $longitude1, $latitude2, $longitude2)
@@ -34,6 +36,6 @@ class LocationHelpers
     public static function isValidDistance($lat1, $lng1, $lat2, $lng2)
     {
         $distance = self::getDistanceInMeters($lat1, $lng1, $lat2, $lng2);
-        return $distance <= 300;
+        return $distance <= Setting::getSetting('visit-distance')->value;
     }
 }
