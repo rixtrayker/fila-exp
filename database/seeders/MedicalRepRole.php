@@ -16,6 +16,7 @@ class MedicalRepRole extends Seeder
     {
         $resources = [
             'governorate' => ['view', 'create', 'update', 'delete'],
+            'office-work' => ['view', 'create', 'update', 'delete'],
             'product-category' => ['view', 'create', 'update', 'delete'],
             'user' => ['view', 'create', 'update', 'delete'],
             'vacation' => ['view', 'create', 'update', 'delete'],

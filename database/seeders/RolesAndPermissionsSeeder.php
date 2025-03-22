@@ -33,6 +33,7 @@ class RolesAndPermissionsSeeder extends Seeder
         'governorate',
         'hospital',
         'message',
+        'office-work',
         'order',
         'order-product',
         'permission',
