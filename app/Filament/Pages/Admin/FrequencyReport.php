@@ -17,7 +17,7 @@ class FrequencyReport extends Page
     use HasFormComponentActions;
     use InteractsWithFormActions;
 
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
+    protected static ?string $navigationIcon = 'heroicon-o-document-chart-bar';
 
     protected static string $view = 'filament.admin.pages.frequency-report';
 

@@ -27,7 +27,7 @@ class DailyVisitResource extends Resource
     protected static ?string $navigationLabel = 'Daily visits';
     protected static ?string $label = 'Daily visits';
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-check';
     protected static ?string $slug = 'daily-visits';
 
     public static function form(Form $form): Form
