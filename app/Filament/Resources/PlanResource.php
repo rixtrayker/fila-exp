@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use LucasGiovanny\FilamentMultiselectTwoSides\Forms\Components\Fields\MultiselectTwoSides as newMultiSelect;
 use App\Livewire\MultiSelect2Sides as MultiselectTwoSides;
+use App\Models\ClientType;
 use App\Models\Plan;
 use App\Models\Visit;
 use App\Traits\ResouerceHasPermission;
@@ -39,8 +40,11 @@ class PlanResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-calendar';
     protected static ?string $slug = 'plans';
     protected static ?int $navigationSort = 2;
-    protected static $clients = [];
-
+    protected static bool $isPrepared = false;
+    protected static array $allClients = [];
+    protected static array $amClients = [];
+    protected static array $pmClients = [];
+    protected static array $pharmacyClients = [];
     public static function form(Form $form): Form
     {
         for($i=0; $i<7; $i++){
@@ -103,14 +107,39 @@ class PlanResource extends Resource
         ];
     }
 
-    public static function getClients(): array
+    public static function getClients($type = null): array
     {
-        if(self::$clients)
-            return self::$clients;
+        if(!self::$isPrepared){
+            self::prepareData();
+        }
 
-        self::$clients = Client::inMyAreas()->pluck('name_en', 'id')->toArray();
-        return self::$clients;
+        return match($type){
+            'am' => self::$amClients,
+            'pm' => self::$pmClients,
+            'pharmacy' => self::$pharmacyClients,
+            'all' => self::$allClients,
+            default => self::$allClients
+        };
     }
+
+    private static function prepareData(): void{
+        $allClients = Client::inMyAreas()->select('client_type_id','name_en', 'id')->get();
+
+        $clientTypes = ClientType::all();
+        // Hospital, Resuscitation Centre, Incubators Centre is AM
+        // doctor, clinic, polyclinic is PM
+        $amTypeIDs = $clientTypes->whereIn('name',['Hospital', 'Resuscitation Centre', 'Incubators Centre'])->pluck('id')->toArray();
+        $pmTypeIDs = $clientTypes->whereIn('name',['doctor', 'clinic', 'polyclinic'])->pluck('id')->toArray();
+        $pharmacyTypeIDs = $clientTypes->whereIn('name',['pharmacy'])->pluck('id')->toArray();
+
+        self::$allClients = $allClients->pluck('name_en', 'id')->toArray();
+        self::$amClients = $allClients->whereIn('client_type_id', $amTypeIDs)->pluck('name_en', 'id')->toArray();
+        self::$pmClients = $allClients->whereIn('client_type_id', $pmTypeIDs)->pluck('name_en', 'id')->toArray();
+        self::$pharmacyClients = $allClients->whereIn('client_type_id', $pharmacyTypeIDs)->pluck('name_en', 'id')->toArray();
+
+        self::$isPrepared = true;
+    }
+
     public static function visitDates(): array{
         return [];
     }
@@ -166,9 +195,9 @@ class PlanResource extends Resource
                 Select::make($day.'_am_shift')
                     ->label('AM shift')
                     ->searchable()
-                    ->default(fn($record)=> request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans') ? $record->shiftClient($days[$key])->am_shift : null)
+                    ->default(state: fn($record)=> request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans') ? $record->shiftClient($days[$key])->am_shift : null)
                     ->getSearchResultsUsing(fn (string $search) => Client::inMyAreas()->where('name_en', 'like', "%{$search}%")->orWhere('name_ar', 'like', "%{$search}%")->limit(50)->pluck('name_en', 'id'))
-                    ->options(self::getClients())
+                    ->options(self::getClients('am'))
                     ->preload(),
                 TimePicker::make($day.'_time_am')
                     ->default(fn($record)=> request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans') ? $record->shiftClient($days[$key])->am_time : null)
@@ -180,7 +209,7 @@ class PlanResource extends Resource
                     ->searchable()
                     ->default(fn($record)=> request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans') ? $record->shiftClient($days[$key])->pm_shift : null)
                     ->getSearchResultsUsing(fn (string $search) => Client::inMyAreas()->where('name_en', 'like', "%{$search}%")->orWhere('name_ar', 'like', "%{$search}%")->limit(50)->pluck('name_en', 'id'))
-                    ->options(self::getClients())
+                    ->options(self::getClients('pm'))
                     ->preload(),
                 TimePicker::make($day.'_time_pm')
                     ->default(fn($record)=> request()->fingerprint && Str::contains(request()->fingerprint['name'],'list-plans') ? $record->shiftClient($days[$key])->pm_time : null)
@@ -190,7 +219,7 @@ class PlanResource extends Resource
                 Select::make($day.'_clients')
                     ->label('Clients')
                     ->multiple()
-                    ->options(self::getClients())
+                    ->options(self::getClients('all'))
                     // ->relationship($days[$key].'Clients', 'name_en')
                     ->preload(),
             ]);
