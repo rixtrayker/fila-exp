@@ -5,6 +5,7 @@ namespace App\Filament\Resources\VisitResource\Widgets;
 use App\Services\Stats\VisitStatsService;
 use App\Services\Stats\OrderStatsService;
 use App\Services\Stats\ClientStatsService;
+use App\Services\Stats\OfficeWorkStatsService;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Card;
 use Illuminate\Support\Collection;
@@ -16,12 +17,13 @@ class StatsOverview extends BaseWidget
     private VisitStatsService $visitStatsService;
     private OrderStatsService $orderStatsService;
     private ClientStatsService $clientStatsService;
-
+    private OfficeWorkStatsService $officeWorkStatsService;
     public function __construct()
     {
         $this->visitStatsService = new VisitStatsService();
         $this->orderStatsService = new OrderStatsService();
         $this->clientStatsService = new ClientStatsService();
+        $this->officeWorkStatsService = new OfficeWorkStatsService();
     }
 
     protected function getCards(): array
@@ -46,10 +48,11 @@ class StatsOverview extends BaseWidget
 
     private function workStats(): Stat
     {
-        return Stat::make('Work', '100%')
-            ->description('Work')
-            ->descriptionIcon('heroicon-m-arrow-trending-up')
-            ->color('success');
+        $stats = $this->officeWorkStatsService->getOfficeWorkStats();
+
+        return Stat::make('Total activities', $stats['totalActivities'])
+            ->description("Activities {$stats['activities']} - Office work {$stats['officeWork']}")
+            ->color($stats['color']);
     }
 
     private function coveredClientsStats(): Stat
@@ -58,7 +61,7 @@ class StatsOverview extends BaseWidget
 
         return Stat::make('Covered clients', $stats['count'])
             ->description("{$stats['count']} / {$stats['dailyTarget']} ({$stats['percentage']}%)")
-            ->descriptionIcon('heroicon-m-arrow-trending-up')
+            // ->descriptionIcon('heroicon-m-arrow-trending-up')
             ->color('success');
     }
 
