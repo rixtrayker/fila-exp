@@ -2,115 +2,72 @@
 
 namespace App\Filament\Resources\VisitResource\Widgets;
 
-use App\Helpers\DateHelper;
-use App\Models\Order;
-use App\Models\VacationRequest;
-use App\Models\Visit;
-use DateTime;
+use App\Services\Stats\VisitStatsService;
+use App\Services\Stats\OrderStatsService;
+use App\Services\Stats\ClientStatsService;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Card;
 use Illuminate\Support\Collection;
+use Filament\Widgets\StatsOverviewWidget\Stat;
+use App\Models\Client;
 
 class StatsOverview extends BaseWidget
 {
-    private static $visits;
+    private VisitStatsService $visitStatsService;
+    private OrderStatsService $orderStatsService;
+    private ClientStatsService $clientStatsService;
+
+    public function __construct()
+    {
+        $this->visitStatsService = new VisitStatsService();
+        $this->orderStatsService = new OrderStatsService();
+        $this->clientStatsService = new ClientStatsService();
+    }
 
     protected function getCards(): array
     {
         return [
-            Card::make('Daily achieved vists', $this->achievedVisits())
-                ->descriptionIcon('heroicon-m-arrow-trending-up')
-                ->color('success'),
-            Card::make('Done plan visits', $this->donePlanVisits()),
-            Card::make('Direct orders', $this->directOrders()),
-            Card::make('Remaining vacations', $this->remainingVacations()),
+            $this->visitsStats(),
+            $this->workStats(),
+            $this->coveredClientsStats(),
+            $this->directOrdersStats(),
         ];
     }
 
-    private function achievedVisits(): string
+    private function visitsStats(): Stat
     {
-        $totalVisits = self::getVisits()
-            ->whereNotNull('plan_id')
-            ->where('visit_date', DateHelper::today())
-            ->count();
+        $stats = $this->visitStatsService->getVisitStats();
 
-        $planDoneVisits = self::getVisits()
-            ->whereNotNull('plan_id')
-            ->where('visit_date', DateHelper::today())
-            ->where('status', 'visited')
-            ->count();
-
-        if($planDoneVisits === 0)
-            return '0 %';
-
-        $percentage = ($planDoneVisits / $totalVisits) * 100;
-
-        $achievedRatio = round($percentage, 2);
-
-        return "$achievedRatio %";
+        return Stat::make('Done visits', $this->visitStatsService->getAchievedVisits())
+            ->description($stats['descriptionMessage'])
+            ->descriptionIcon('heroicon-s-document-text')
+            ->color($stats['color']);
     }
 
-    private function donePlanVisits(): int
+    private function workStats(): Stat
     {
-        return self::getVisits()
-            ->where('status','visited')
-            ->count();
+        return Stat::make('Work', '100%')
+            ->description('Work')
+            ->descriptionIcon('heroicon-m-arrow-trending-up')
+            ->color('success');
     }
 
-    private function directOrders(): int
+    private function coveredClientsStats(): Stat
     {
-       return Order::query()
-            ->where('created_at', today())
-            ->where('approved', '>', 0)
-            ->count();
+        $stats = $this->clientStatsService->getCoveredClientsStats();
+
+        return Stat::make('Covered clients', $stats['count'])
+            ->description("{$stats['count']} / {$stats['dailyTarget']} ({$stats['percentage']}%)")
+            ->descriptionIcon('heroicon-m-arrow-trending-up')
+            ->color('success');
     }
 
-    private function remainingVacations()
+    private function directOrdersStats(): Stat
     {
-        $vacations = 0;
-        $userVacations = VacationRequest::query()
-            ->with('vacationDurations')
-            ->where('created_at','>=',today()->firstOfYear())
-            ->where('user_id',auth()->id())
-            ->where('approved','>',0)
-            ->get();
+        $stats = $this->orderStatsService->getOrderStats();
 
-        foreach ($userVacations as $vacation) {
-            $requestDurations =  $vacation->vacationDurations;
-            foreach( $requestDurations as $duration){
-                $date1 = new DateTime($duration->start);
-                $date2 = new DateTime($duration->end);
-                $interval = $date1->diff($date2);
-                $diffInDays = $interval->days;
-                $vacations += $diffInDays;
-
-                if($duration->start_shift === $duration->end_shift){
-                    $vacations += 0.5;
-                }
-
-                if($duration->start_shift == 'AM' && $duration->end_shift == 'PM'){
-                    $vacations += 1;
-                }
-            }
-        }
-
-        return 21 - $vacations;
-    }
-    private static function getVisits(): Collection{
-        if(self::$visits){
-            return self::$visits;
-        }
-
-        $startOfPlan = DateHelper::getFirstOfWeek();
-        $endOfPlan = (clone $startOfPlan)->addDays(7);
-
-        self::$visits = Visit::query()
-            ->select(['visit_date','status','plan_id'])
-            ->whereIn('status', ['visited', 'pending'])
-            ->whereDate('visit_date', '>=', $startOfPlan)
-            ->whereDate('visit_date', '<=', $endOfPlan)
-            ->get();
-
-        return self::$visits;
+        return Stat::make('Direct orders', $stats['label'])
+            ->description($stats['descriptionMessage'])
+            ->color($stats['color']);
     }
 }
