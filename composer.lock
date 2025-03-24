@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "594364714844debdc846d9fd8b5ca69c",
+    "content-hash": "fc0bb04a5ee592a673ff0ca8ac23c7af",
     "packages": [
         {
             "name": "althinect/filament-spatie-roles-permissions",
@@ -68,6 +68,72 @@
                 "source": "https://github.com/Althinect/filament-spatie-roles-permissions/tree/v2.2.8"
             },
             "time": "2023-11-28T16:44:05+00:00"
+        },
+        {
+            "name": "arbermustafa/filament-locationpickr-field",
+            "version": "2.0.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/arbermustafa/filament-locationpickr-field.git",
+                "reference": "4cec47af76384fa2f4642002a0765dc9285f6ce6"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/arbermustafa/filament-locationpickr-field/zipball/4cec47af76384fa2f4642002a0765dc9285f6ce6",
+                "reference": "4cec47af76384fa2f4642002a0765dc9285f6ce6",
+                "shasum": ""
+            },
+            "require": {
+                "filament/forms": "^3.0",
+                "php": "^8.1",
+                "spatie/laravel-package-tools": "^1.13.5"
+            },
+            "require-dev": {
+                "pestphp/pest": "^2.10"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "ArberMustafa\\FilamentLocationPickrField\\LocationPickrFieldServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "ArberMustafa\\FilamentLocationPickrField\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Arber Mustafa",
+                    "email": "info@arbermustafa.com",
+                    "homepage": "https://arbermustafa.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Location picker field for Filament Php using Google Maps",
+            "homepage": "https://github.com/arbermustafa/filament-locationpickr-field",
+            "keywords": [
+                "arbermustafa",
+                "field",
+                "filament-locationpickr-field",
+                "filament-plugin",
+                "form",
+                "google-maps",
+                "laravel",
+                "maps",
+                "php"
+            ],
+            "support": {
+                "issues": "https://github.com/arbermustafa/filament-locationpickr-field/issues",
+                "source": "https://github.com/arbermustafa/filament-locationpickr-field/tree/2.0.4"
+            },
+            "time": "2023-12-29T08:14:10+00:00"
         },
         {
             "name": "awcodes/filament-table-repeater",
@@ -13413,12 +13479,12 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": [],
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": "^8.1"
     },
-    "platform-dev": [],
+    "platform-dev": {},
     "plugin-api-version": "2.6.0"
 }

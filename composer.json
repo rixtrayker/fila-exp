@@ -7,6 +7,7 @@
     "require": {
         "php": "^8.1",
         "althinect/filament-spatie-roles-permissions": "^2.2",
+        "arbermustafa/filament-locationpickr-field": "^2.0",
         "awcodes/filament-table-repeater": "^2.0",
         "blade-ui-kit/blade-heroicons": "^2.1",
         "doctrine/dbal": "^3.7",
@@ -82,7 +83,8 @@
         "preferred-install": "dist",
         "sort-packages": true,
         "allow-plugins": {
-            "pestphp/pest-plugin": true
+            "pestphp/pest-plugin": true,
+            "php-http/discovery": true
         }
     },
     "minimum-stability": "dev",

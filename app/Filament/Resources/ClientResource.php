@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ClientResource\Pages;
 use App\Filament\Resources\ClientResource\RelationManagers;
+use ArberMustafa\FilamentLocationPickrField\Forms\Components\LocationPickr;
 use App\Models\Brick;
 use App\Models\City;
 use App\Models\Client;
@@ -15,10 +16,14 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Table;
 use Filament\Tables;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
+use Cheesegrits\FilamentGoogleMaps\Fields\Map;
+
 use Str;
 
 class ClientResource extends Resource
@@ -92,18 +97,30 @@ class ClientResource extends Resource
                 TextColumn::make('email')
                     ->sortable()
                     ->searchable()
+                    ->toggleable(isToggledHiddenByDefault:true)
                     ->label('Email'),
                 TextColumn::make('phone')
                     ->sortable()
                     ->searchable()
+                    ->toggleable(isToggledHiddenByDefault:true)
                     ->label('Phone'),
                 TextColumn::make('am_work')
                     ->sortable()
                     ->searchable()
+                    ->toggleable(isToggledHiddenByDefault:true)
                     ->label('AM work'),
+                IconColumn::make('mapUrl')
+                    ->label('Map URL')
+                    ->url(fn($record) => $record->mapUrl ?? '#')
+                    ->visible(true)
+                    ->openUrlInNewTab()
+                    ->icon('heroicon-o-map-pin')
+                    ->tooltip(fn($record) => $record->mapUrl ? 'Open in Google Maps' : 'Capture location first')
+                    ->color(fn($record) => $record->mapUrl ? 'success' : 'danger'),
                 TextColumn::make('address')
                     ->sortable()
                     ->searchable()
+                    ->toggleable(isToggledHiddenByDefault:true)
                     ->label('Address'),
                 TextColumn::make('related_pharmacy')
                     ->sortable()
@@ -119,6 +136,7 @@ class ClientResource extends Resource
                 TextColumn::make('shift')
                     ->sortable()
                     ->searchable()
+                    ->toggleable(isToggledHiddenByDefault:true)
                     ->label('Shift'),
                 TextColumn::make('clientType.name')
                     ->sortable()
@@ -137,6 +155,7 @@ class ClientResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                self::captureLocation(),
             ])
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),
@@ -175,5 +194,33 @@ class ClientResource extends Resource
         });
 
         return $result;
+    }
+    public static function captureLocation():Action
+    {
+        return Action::make('captureLocation')
+            ->icon('heroicon-o-map-pin')
+            ->modalHeading('Capture Location')
+            ->modalDescription('Are you sure you want to capture the location?')
+            ->label(fn($record)=>$record->mapUrl ? 'Edit Location' : 'Add Location')
+            ->form([
+                LocationPickr::make('location')
+                    ->mapControls([
+                        'mapTypeControl'    => false,
+                        'scaleControl'      => true,
+                        'streetViewControl' => false,
+                        'rotateControl'     => false,
+                        'fullscreenControl' => true,
+                        'searchBoxControl'  => true,
+                        'zoomControl'       => true,
+                    ])
+                    ->defaultZoom(15)
+                    ->defaultView('roadmap')
+                    ->defaultLocation([30.608837,32.3063521])
+                    ->draggable()
+                    ->clickable()
+                    ->height('40vh'),
+            ])
+            ->action(fn($record,array $data)=> $record->setLocation($data['location']))
+            ->color(fn($record)=>$record->mapUrl ? 'warning' : 'success');
     }
 }

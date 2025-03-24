@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\HasEditRequest;
+use Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Staudenmeir\EloquentHasManyDeep\HasRelationships;
@@ -13,13 +14,14 @@ class Client extends Model
     use HasEditRequest;
     use HasRelationships;
 
-    protected $appends = ['name'];
+    protected $appends = ['name', 'mapUrl', 'location'];
     protected $fillable = [
         'name_en',
         'name_ar',
         'email',
         'phone',
         'address',
+        'location',
         'brick_id',
         'grade',
         'shift',
@@ -36,6 +38,7 @@ class Client extends Model
         'email',
         'phone',
         'address',
+        // 'location',
         'brick_id',
         'grade',
         'shift',
@@ -44,6 +47,16 @@ class Client extends Model
         'client_type_id',
         'speciality_id',
     ];
+
+    public function getLocationAttribute()
+    {
+        return json_decode($this->location, true);
+    }
+
+    public function setLocationAttribute($value)
+    {
+        $this->attributes['location'] = json_encode($value);
+    }
 
     public function visits()
     {
@@ -69,6 +82,26 @@ class Client extends Model
     public function getNameAttribute()
     {
         return $this->name_en .' - '. $this->name_ar;
+    }
+
+    public function mapUrl(): string|null
+    {
+        if (!$this->lat || !$this->lng) {
+            return null;
+        }
+        return 'https://www.google.com/maps/@' . $this->lat . ',' . $this->lng . ',15z';
+    }
+
+    public function getMapUrlAttribute(): string|null
+    {
+        return $this->mapUrl();
+    }
+
+    public function setLocation($value){
+        $this->lat = $value['lat'];
+        $this->lng = $value['lng'];
+        $this->location = $value;
+        $this->save();
     }
 
     public function scopeFilter($query, array $filters)
