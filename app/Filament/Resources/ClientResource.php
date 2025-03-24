@@ -221,6 +221,6 @@ class ClientResource extends Resource
                     ->height('40vh'),
             ])
             ->action(fn($record,array $data)=> $record->setLocation($data['location']))
-            ->color(fn($record)=>$record->mapUrl ? 'warning' : 'success');
+            ->color(fn($record)=>$record->mapUrl ? 'secondary' : 'success');
     }
 }
