@@ -137,6 +137,10 @@ class User extends Authenticatable  implements FilamentUser
     {
         return $this->belongsTo(User::class,'parent_id');
     }
+    public function managedUsers()
+    {
+        return $this->hasMany(User::class, 'parent_id');
+    }
     // public function firstRole()
     // {
     //     return $this->morphToMany(
