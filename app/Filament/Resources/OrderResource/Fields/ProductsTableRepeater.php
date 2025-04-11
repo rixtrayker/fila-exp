@@ -34,6 +34,7 @@ class ProductsTableRepeater
                     ->placeholder('select a product')
                     ->options(Product::pluck('name', 'id'))
                     ->required()
+                    ->searchable()
                     ->reactive()
                     ->afterStateUpdated(function($set, $get) {
                         $product = Product::find($get('product_id'));
@@ -78,6 +79,9 @@ class ProductsTableRepeater
                     ->disabled()
                     ->hiddenLabel(),
             ])
+            ->afterStateUpdated(function($set, $get) {
+                TotalsCalculator::updateTotals($get, $set);
+            })
             ->columnSpanFull()
             ->defaultItems(1);
     }

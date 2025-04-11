@@ -30,8 +30,8 @@ class VacationResource extends Resource
     use ResouerceHasPermission;
     protected static ?string $model = VacationRequest::class;
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-    protected static ?int $navigationSort = 7;
-
+    protected static ?int $navigationSort = 2;
+    protected static ?string $navigationGroup = 'Requests';
 
     public static function form(Form $form): Form
     {

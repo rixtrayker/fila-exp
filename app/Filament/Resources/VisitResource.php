@@ -34,6 +34,8 @@ class VisitResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-building-office';
 
+    protected static ?string $navigationLabel = 'Visits';
+    protected static ?string $navigationGroup = 'Visits';
     protected static ?int $navigationSort = 1;
 
     protected static $templates = [

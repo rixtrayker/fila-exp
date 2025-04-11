@@ -29,8 +29,8 @@ class ExpensesResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
 
-    protected static ?int $navigationSort = 8;
-
+    protected static ?string $navigationGroup = 'Requests';
+    protected static ?int $navigationSort = 3;
 
     public static function form(Form $form): Form
     {

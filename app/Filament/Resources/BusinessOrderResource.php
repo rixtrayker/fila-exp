@@ -24,7 +24,8 @@ class BusinessOrderResource extends Resource
     protected static ?string $model = BusinessOrder::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-truck';
-
+    protected static ?int $navigationSort = 2;
+    protected static ?string $navigationGroup = 'Orders';
     public static function form(Form $form): Form
     {
         return $form
