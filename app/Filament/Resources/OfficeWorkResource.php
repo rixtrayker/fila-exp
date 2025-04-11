@@ -26,6 +26,10 @@ class OfficeWorkResource extends Resource
     protected static ?string $model = OfficeWork::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-inbox-stack';
+    protected static ?string $navigationLabel = 'Office work';
+    protected static ?string $navigationGroup = 'Visits';
+    protected static ?int $navigationSort = 2;
+
     public static function form(Form $form): Form
     {
         return $form
@@ -35,21 +39,22 @@ class OfficeWorkResource extends Resource
                     ->maxLength(255),
                 Textarea::make('description')
                     ->required()
+                    ->rows(3)
                     ->maxLength(65535),
                 TimePicker::make('time_from')
                     ->label('Time from')
                     ->native(false)
-                    ->required(),
+                    ->nullable(),
                 TimePicker::make('time_to')
                     ->label('Time to')
                     ->native(false)
-                    ->required(),
-                Select::make('status')
-                    ->options([
-                        'pending' => 'Pending',
-                        'approved' => 'Approved',
-                    ])
-                    ->required(),
+                    ->nullable(),
+                // Select::make('status')
+                //     ->options([
+                //         'pending' => 'Pending',
+                //         'approved' => 'Approved',
+                //     ])
+                //     ->required(),
             ]);
     }
 
@@ -68,7 +73,11 @@ class OfficeWorkResource extends Resource
                 TextColumn::make('status')
                     ->sortable()
                     ->badge()
-                    ->color(fn($state) => $state == 'pending' ? 'warning' : 'success'),
+                    ->color(fn($state) => match($state) {
+                        'pending' => 'warning',
+                        'approved' => 'success',
+                        'rejected' => 'danger',
+                    }),
                 TextColumn::make('user.name')
                     ->label('Created by')
                     ->sortable()
@@ -84,6 +93,22 @@ class OfficeWorkResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('approve')
+                    ->label('Approve')
+                    ->icon('heroicon-o-check')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->modalDescription('Are you sure you want to approve this office work?')
+                    ->visible(fn($record) => $record->status == 'pending' && $record->user->parent_id == auth()->id())
+                    ->action(fn($record) => $record->approve()),
+                Tables\Actions\Action::make('reject')
+                    ->label('Reject')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalDescription('Are you sure you want to reject this office work?')
+                    ->visible(fn($record) => $record->status == 'pending' && $record->user->parent_id == auth()->id())
+                    ->action(fn($record) => $record->reject()),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

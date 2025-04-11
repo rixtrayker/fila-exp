@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('office_works', function (Blueprint $table) {
             $table->id();
             $table->string('title');
-            $table->text('description');
-            $table->dateTime('time_from');
-            $table->dateTime('time_to');
-            $table->enum('status', ['pending', 'approved'])->default('pending');
+            $table->text('description')->nullable();
+            $table->dateTime('time_from')->nullable();
+            $table->dateTime('time_to')->nullable();
+            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->foreignId('user_id')->constrained();
             $table->timestamps();
         });

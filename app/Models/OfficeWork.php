@@ -15,6 +15,7 @@ class OfficeWork extends Model
         'time_from',
         'time_to',
         'status',
+        'user_id',
     ];
 
     // protected $casts = [
@@ -25,5 +26,17 @@ class OfficeWork extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function approve()
+    {
+        $this->status = 'approved';
+        $this->save();
+    }
+
+    public function reject()
+    {
+        $this->status = 'rejected';
+        $this->save();
     }
 }

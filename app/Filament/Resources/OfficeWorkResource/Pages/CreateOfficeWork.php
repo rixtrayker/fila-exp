@@ -9,4 +9,10 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateOfficeWork extends CreateRecord
 {
     protected static string $resource = OfficeWorkResource::class;
+
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        $data['user_id'] = auth()->id();
+        return $data;
+    }
 }
