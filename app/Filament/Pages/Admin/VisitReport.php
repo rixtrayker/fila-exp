@@ -28,6 +28,23 @@ class VisitReport extends Page
     protected static ?string $slug = 'visits-report-test';
     protected static ?string $navigationGroup = 'Reports';
 
+    // mmmm disable this page from being accessed
+
+    // canAccess
+    public static function canAccess(): bool
+    {
+        return false;
+    }
+
+    public static function canViewAny(): bool
+    {
+        return false;
+    }
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
+
     public $visits;
     public $from;
     public $to;
