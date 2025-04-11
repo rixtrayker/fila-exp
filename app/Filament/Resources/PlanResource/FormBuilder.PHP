@@ -92,7 +92,7 @@ class FormBuilder
                     ->searchable()
                     ->default(state: fn($record) => $isListPlanPage($record) ? $record->shiftClient($day)?->am_shift : null)
                     ->getSearchResultsUsing(fn(string $search) => ClientManager::searchClients($search))
-                    ->options(PlanResource::getClients('am'))
+                    ->options(PlanResource::getClients('am', $day))
                     ->preload(),
 
                 TimePicker::make($day . '_time_am')
@@ -106,7 +106,7 @@ class FormBuilder
                     ->searchable()
                     ->default(fn($record) => $isListPlanPage($record) ? $record->shiftClient($day)?->pm_shift : null)
                     ->getSearchResultsUsing(fn(string $search) => ClientManager::searchClients($search))
-                    ->options(PlanResource::getClients('pm'))
+                    ->options(PlanResource::getClients('pm', $day))
                     ->preload(),
 
                 TimePicker::make($day . '_time_pm')
@@ -118,7 +118,7 @@ class FormBuilder
                 Select::make($day . '_clients')
                     ->label('Clients')
                     ->multiple()
-                    ->options(PlanResource::getClients('all'))
+                    ->options(PlanResource::getClients('all', $day))
                     ->preload(),
             ]);
     }

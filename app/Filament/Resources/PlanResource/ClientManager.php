@@ -4,32 +4,34 @@ namespace App\Filament\Resources\PlanResource;
 
 use App\Models\Client;
 use App\Models\ClientType;
-
+use App\Models\Visit;
+use App\Helpers\DateHelper;
+use Carbon\Carbon;
+use Illuminate\Support\Str;
 class ClientManager
 {
     // Client cache management
     private static bool $isPrepared = false;
     private static array $allClients = [];
-    private static array $amClients = [];
+    private static array $clients = [];
     private static array $pmClients = [];
     private static array $pharmacyClients = [];
 
     /**
      * Get clients by type from the cache
      */
-    public static function getClients($type = null): array
+    public static function getClients($type = null, $day = null): array
     {
         if (!self::$isPrepared) {
             self::prepareData();
         }
 
-        return match($type) {
-            'am' => self::$amClients,
-            'pm' => self::$pmClients,
-            'pharmacy' => self::$pharmacyClients,
-            'all' => self::$allClients,
-            default => self::$allClients
-        };
+        $key = $type ?? 'all';
+        if (auth()->user()->hasRole('district_manager')) {
+            $key = $day. '-' . $type;
+        }
+
+        return self::$clients[$key] ?? [];
     }
 
     /**
@@ -57,11 +59,27 @@ class ClientManager
             'pharmacy'
         ])->pluck('id')->toArray();
 
-        // Cache client lists
-        self::$allClients = $allClients->pluck('name_en', 'id')->toArray();
-        self::$amClients = $allClients->whereIn('client_type_id', $amTypeIDs)->pluck('name_en', 'id')->toArray();
-        self::$pmClients = $allClients->whereIn('client_type_id', $pmTypeIDs)->pluck('name_en', 'id')->toArray();
-        self::$pharmacyClients = $allClients->whereIn('client_type_id', $pharmacyTypeIDs)->pluck('name_en', 'id')->toArray();
+        self::$clients['all'] = $allClients->pluck('name_en', 'id')->toArray();
+        self::$clients['am'] = $allClients->whereIn('client_type_id', $amTypeIDs)->pluck('name_en', 'id')->toArray();
+        self::$clients['pm'] = $allClients->whereIn('client_type_id', $pmTypeIDs)->pluck('name_en', 'id')->toArray();
+        self::$clients['pharmacy'] = $allClients->whereIn('client_type_id', $pharmacyTypeIDs)->pluck('name_en', 'id')->toArray();
+
+        $dates = DateHelper::calculateVisitDates();
+        $days = array_map(function($date) {
+            return Str::lower(Carbon::parse($date)->format('D'));
+        }, $dates);
+
+        $plannedClients = Visit::districtManagerClients();
+        if (auth()->user()->hasRole('district_manager')) {
+            foreach ($dates as $i => $date) {
+                $day = $days[$i];
+                $clients = $plannedClients->where('visit_date', $date)->pluck('client_id', 'id')->toArray();
+                self::$clients[$day] = $clients;
+                self::$clients[$day.'-am'] = $allClients->whereIn('client_type_id', $amTypeIDs)->pluck('name_en', 'id')->toArray();
+                self::$clients[$day.'-pm'] = $allClients->whereIn('client_type_id', $pmTypeIDs)->pluck('name_en', 'id')->toArray();
+                self::$clients[$day.'-pharmacy'] = $allClients->whereIn('client_type_id', $pharmacyTypeIDs)->pluck('name_en', 'id')->toArray();
+            }
+        }
 
         self::$isPrepared = true;
     }

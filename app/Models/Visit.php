@@ -2,12 +2,16 @@
 
 namespace App\Models;
 
+use App\Helpers\DateHelper;
 use App\Models\Scopes\GetMineScope;
-use Illuminate\Contracts\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class Visit extends Model
 {
@@ -120,5 +124,32 @@ class Visit extends Model
     public function swapable()
     {
         return $this->plan->lastOfPlan < today();
+    }
+
+    public static function plannedVisitsNextWeekQuery(Builder $query): Builder
+    {
+        $dates = DateHelper::calculateVisitDates();
+
+        return $query
+            ->whereIn('visit_date', $dates)
+            ->where('status', 'planned');
+    }
+
+    public static function plannedVisitsForDistrictManager(Builder $query): Builder
+    {
+        $myId = auth()->id() ?? 0;
+        $medicalReps = User::where('parent_id', $myId)->pluck('id');
+        return self::plannedVisitsNextWeekQuery($query)->whereIn('user_id', $medicalReps);
+    }
+
+    public static function districtManagerClients(): Collection
+    {
+        $visits = self::plannedVisitsForDistrictManager(self::query())->with('client')->get();
+        $visits->each(callback: function($visit) {
+            $day = Carbon::parse($visit->visit_date)->format('D');
+            $visit->day = Str::lower($day);
+        });
+
+        return $visits;
     }
 }

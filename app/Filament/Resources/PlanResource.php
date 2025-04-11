@@ -23,6 +23,7 @@ class PlanResource extends Resource
     protected static ?string $model = Plan::class;
     protected static ?string $navigationLabel = 'Weekly plans';
     protected static ?string $navigationIcon = 'heroicon-o-calendar';
+    protected static ?string $navigationGroup = 'Visits';
     protected static ?string $slug = 'plans';
     protected static ?int $navigationSort = 2;
 
@@ -81,9 +82,9 @@ class PlanResource extends Resource
     /**
      * Get clients by type from the ClientManager
      */
-    public static function getClients($type = null): array
+    public static function getClients($type = null, $day = null): array
     {
-        return ClientManager::getClients($type);
+        return ClientManager::getClients($type, $day);
     }
 
     /**
