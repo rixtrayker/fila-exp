@@ -46,6 +46,8 @@ class Client extends Model
         'am_work',
         'client_type_id',
         'speciality_id',
+        'lat',
+        'lng',
     ];
 
     public function getLocationAttribute()
@@ -89,7 +91,7 @@ class Client extends Model
         if (!$this->lat || !$this->lng) {
             return null;
         }
-        return 'https://www.google.com/maps/@' . $this->lat . ',' . $this->lng . ',15z';
+        return 'https://www.google.com/maps/place/'. $this->lat . ',' . $this->lng;
     }
 
     public function getMapUrlAttribute(): string|null
