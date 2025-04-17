@@ -31,6 +31,7 @@ class DailyVisitResource extends Resource
     protected static ?string $slug = 'daily-visits';
     protected static ?int $navigationSort = 1;
     protected static ?string $navigationGroup = 'Visits';
+    protected static string $view = 'vendor.filament.pages.create-visit';
 
     public static function form(Form $form): Form
     {
