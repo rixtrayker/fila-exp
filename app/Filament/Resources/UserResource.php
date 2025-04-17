@@ -89,6 +89,13 @@ class UserResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name'),
+                IconColumn::make('is_active')
+                    ->label('Status')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->falseIcon('heroicon-o-x-circle')
+                    ->trueColor('success')
+                    ->falseColor('danger'),
                 IconColumn::make('is_admin')
                     ->boolean(),
                 TextColumn::make('roles.display_name'),
@@ -107,6 +114,18 @@ class UserResource extends Resource
             ])
             ->actions([
                 EditAction::make(),
+                Tables\Actions\Action::make('toggleStatus')
+                    ->label(fn (User $record): string => $record->is_active ? 'Disable' : 'Enable')
+                    ->icon(fn (User $record): string => $record->is_active ? 'heroicon-o-x-circle' : 'heroicon-o-check-circle')
+                    ->color(fn (User $record): string => $record->is_active ? 'danger' : 'success')
+                    ->requiresConfirmation()
+                    ->modalHeading(fn (User $record): string => $record->is_active ? 'Disable User' : 'Enable User')
+                    ->modalDescription(fn (User $record): string => $record->is_active
+                        ? 'Are you sure you want to disable this user? They will not be able to access the system.'
+                        : 'Are you sure you want to enable this user? They will be able to access the system.')
+                    ->action(function (User $record): void {
+                        $record->update(['is_active' => !$record->is_active]);
+                    }),
                 DeleteAction::make(),
                 Tables\Actions\RestoreAction::make()
                     ->hidden(fn($record) => $record->deleted_at == null),
@@ -122,6 +141,7 @@ class UserResource extends Resource
         return parent::getEloquentQuery()
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
+                'active',
             ]);
     }
 

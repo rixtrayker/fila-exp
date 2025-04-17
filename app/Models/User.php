@@ -23,6 +23,8 @@ use Illuminate\Support\Facades\DB;
 use Spatie\Permission\PermissionRegistrar;
 use Spatie\Permission\Traits\HasRoles;
 use \Staudenmeir\LaravelMergedRelations\Eloquent\HasMergedRelationships;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class User extends Authenticatable  implements FilamentUser
 {
@@ -50,6 +52,7 @@ class User extends Authenticatable  implements FilamentUser
         'email',
         'password',
         'parent_id',
+        'is_active',
     ];
 
     /**
@@ -71,6 +74,7 @@ class User extends Authenticatable  implements FilamentUser
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'is_active' => 'boolean',
     ];
 
     /**
@@ -188,12 +192,16 @@ class User extends Authenticatable  implements FilamentUser
 
     protected static function boot()
     {
+        parent::boot();
+
+        static::addGlobalScope('active', function (Builder $builder) {
+            $builder->where('is_active', true);
+        });
+
         static::updated(function ($model) {
             if( $model->isDirty('parent_id') ){
                 self::fixTree();
             }
         });
-
-        parent::boot();
     }
 }
