@@ -3,95 +3,86 @@
 namespace App\Filament\Resources\VisitResource\Pages;
 
 use App\Filament\Resources\VisitResource;
-use App\Models\Client;
-use App\Models\ProductVisit;
+use App\Models\Feature;
 use App\Models\Visit;
+use App\Services\LocationService;
+use App\Services\VisitService;
 use Filament\Pages\Actions;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Support\Exceptions\Halt;
-use App\Helpers\LocationHelpers;
 use Filament\Notifications\Notification;
-use Illuminate\Support\Facades\Session;
-use App\Models\Feature;
+use Illuminate\Support\Facades\Auth;
+use Spatie\Permission\Models\Role;
+
 class CreateVisit extends CreateRecord
 {
     protected static string $view = 'vendor.filament.pages.create-visit';
     protected static string $resource = VisitResource::class;
-    protected $isRegularVisit;
 
-    // 2 variables to store the location
-    protected $latitude;
-    protected $longitude;
+    protected LocationService $locationService;
+    protected VisitService $visitService;
 
-    protected function mutateFormDataBeforeCreate($data): array
+    public function __construct()
     {
-        $templates = [
-            'Regular' => 1,
-            'HealthDay' => 2,
-            'GroupMeeting' => 3,
-            'Conference' => 4,
-        ];
-        $templatesRev = [
-             1 => 'Regular',
-             2 => 'HealthDay',
-             3 => 'GroupMeeting',
-             4 => 'Conference',
-        ];
+        $this->locationService = app(LocationService::class);
+        $this->visitService = app(VisitService::class);
+    }
 
-        foreach($data['temp_content'] as $key => $value)
-        {
-            foreach($value as $key2 => $value2) {
-                $data[$key2] = $value2;
-            }
-        }
-
-        $this->isRegularVisit = $data['template'] == 1;
-
-        $temp = $data['template'];
-        $data = $data['temp_content'][$templatesRev[$temp]];
-        $data['visit_type_id'] = $temp;
-
-        $location = $this->getLocation();
-
-        if (Feature::isEnabled('location')) {
-            if($location){
-                $data['lat'] = $location->get('latitude');
-                $data['lng'] = $location->get('longitude');
-            } else {
-                Notification::make()
-                    ->title('Error')
-                    ->body('Location service is not enabled')
-                    ->danger()
-                    ->send();
-                throw new Halt();
-            }
-        }
-
-        if (Feature::isEnabled('location') && !$this->validateLocation($data['client_id'], $location))
-        {
-            Notification::make()
-                ->title('Error')
-                ->body('Location is too far from the client')
-                ->danger()
-                ->send();
-            throw new Halt();
-        }
-
-        if(auth()->user()->hasRole('medical-rep') )
-            $data['user_id'] = auth()->id();
-        $data['status'] = 'visited';
-
-
-        if(auth()->user()->hasRole('medical-rep') &&  $data['visit_type_id'] == 1){
-            $data['visit_date'] = today();
-        }
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        $this->validateLocation($data);
+        $this->setUserData($data);
 
         return $data;
     }
-    public function afterCreate()
+
+    protected function validateLocation(array &$data): void
     {
-        if($this->isRegularVisit)
-            $this->saveProducts($this->record);
+        $featureEnabled = Feature::isEnabled('location');
+
+        if (!$featureEnabled) {
+            return;
+        }
+
+        $location = $this->locationService->getLocation($this->getId());
+
+        if (!$location) {
+            $this->sendLocationError('Location service is not enabled');
+        }
+
+        if (!$this->locationService->validateVisitLocation($data['client_id'], $location)) {
+            $this->sendLocationError('Location is too far from the client');
+        }
+
+        $data['lat'] = $location->get('latitude');
+        $data['lng'] = $location->get('longitude');
+    }
+
+    protected function setUserData(array &$data): void
+    {
+        $isMedicalRep = $this->isMedicalRep();
+
+        if ($isMedicalRep) {
+            $data['user_id'] = Auth::id();
+            $data['visit_date'] = today();
+        }
+
+        $data['status'] = 'visited';
+    }
+
+    protected function isMedicalRep(): bool
+    {
+        return auth()->user()?->hasRole('medical-rep');
+    }
+
+    protected function sendLocationError(string $message): void
+    {
+        Notification::make()
+            ->title('Error')
+            ->body($message)
+            ->danger()
+            ->send();
+        throw new Halt();
     }
 
     public function create(bool $another = false): void
@@ -100,58 +91,18 @@ class CreateVisit extends CreateRecord
 
         try {
             $this->callHook('beforeValidate');
-
             $data = $this->form->getState();
-
             $this->callHook('afterValidate');
-
             $data = $this->mutateFormDataBeforeCreate($data);
 
-            $visit = null;
+            $visit = $this->visitService->findExistingVisit($data);
 
-            if(isset($data['client_id'])){
-                $visit = Visit::withTrashed()
-                    ->where('user_id',$data['user_id'])
-                    ->where('client_id',$data['client_id'])
-                    ->where('visit_date',$data['visit_date'])
-                    ->first();
-            }
-
-            if($visit){
-                $this->record = $visit;
-
-                $visit->second_user_id = $data['second_user_id'];
-                $visit->visit_type_id = $data['visit_type_id'];
-                $visit->call_type_id = $data['call_type_id'];
-                $visit->next_visit = $data['next_visit'];
-                $visit->comment = $data['comment'];
-                $visit->save();
-
-                if($visit->status == 'visited'){
-                    if($visit->deleted_at)
-                        $visit->restore();
-                    $this->getCreatedNotification()?->send();
-                    $this->redirect($this->getRedirectUrl());
-                    return;
-                }
-
-                $visit->status = 'visited';
-                $visit->save();
-                $data = $this->form->getRawState();
-                $this->saveProducts($visit);
-
-                $this->getCreatedNotification()?->send();
-                $this->redirect($this->getRedirectUrl());
+            if ($visit) {
+                $this->handleExistingVisit($visit, $data);
                 return;
             }
 
-            $this->callHook('beforeCreate');
-            $data['status'] = 'visited';
-            $this->record = $this->handleRecordCreation($data);
-
-            // $this->form->model($this->record)->saveRelationships();
-
-            $this->callHook('afterCreate');
+            $this->createNewVisit($data);
         } catch (Halt $exception) {
             return;
         }
@@ -159,94 +110,51 @@ class CreateVisit extends CreateRecord
         $this->getCreatedNotification()?->send();
 
         if ($another) {
-            // Ensure that the form record is anonymized so that relationships aren't loaded.
-            $this->form->model($this->record::class);
-            $this->record = null;
-
-            $this->fillForm();
-
+            $this->resetForm();
             return;
         }
 
         $this->redirect($this->getRedirectUrl());
     }
 
-    private function saveProducts($visit)
+    protected function handleExistingVisit(Visit $visit, array $data): void
     {
-        $data = $this->form->getRawState()['temp_content']['Regular'];
+        $this->record = $visit;
+        $this->visitService->updateExistingVisit($visit, $data);
 
-        if(!isset($data['products'])){
+        if ($visit->status === 'visited') {
+            $this->getCreatedNotification()?->send();
+            $this->redirect($this->getRedirectUrl());
             return;
         }
 
-        $products = $data['products'];
-        $visitId = $this->record->id;
-
-        $insertData = [];
-        $now = now();
-
-        foreach($products as $product){
-            $count = 0;
-            if(isset($product['count']) && $product['count'])
-                $count = $product['count'];
-            if(!isset($product['product_id']) || !$product['product_id'])
-                continue;
-
-            $insertData[] = [
-                'visit_id' => $visitId,
-                'product_id' =>  $product['product_id'],
-                'count' => $count,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ];
-        }
-
-        ProductVisit::insert($insertData);
+        $this->visitService->saveProducts($visit, $this->form->getRawState());
+        $this->getCreatedNotification()?->send();
+        $this->redirect($this->getRedirectUrl());
     }
 
-    private function validateLocation($clientId, $location) : bool
+    protected function createNewVisit(array $data): void
     {
-        if(!$location)
-            return false;
-        $client = Client::find($clientId);
+        $this->callHook('beforeCreate');
+        $data['status'] = 'visited';
+        $this->record = $this->handleRecordCreation($data);
+        $this->callHook('afterCreate');
+    }
 
-        if(!$client)
-            return false;
-
-        if(!$client->lat || !$client->lng)
-            return true;
-
-        $lat = $location->get('latitude');
-        $lng = $location->get('longitude');
-
-        if(LocationHelpers::isValidDistance($lat, $lng, $client->latitude, $client->longitude))
-            return true;
-        else
-            return false;
+    protected function resetForm(): void
+    {
+        $this->form->model($this->record::class);
+        $this->record = null;
+        $this->fillForm();
     }
 
     protected $listeners = ['location-fetched' => 'updateLocation'];
 
-    public function updateLocation($data)
+    public function updateLocation($data): void
     {
         $data = collect($data);
-        if($data->has('latitude') && $data->has('longitude')){
-            $this->setLocation($data);
+        if ($data->has('latitude') && $data->has('longitude')) {
+            $this->locationService->setLocation($this->getId(), $data);
         }
-    }
-
-    public function setLocation($data)
-    {
-        Session::put($this->getId().'-location', $data);
-    }
-
-    public function getLocation()
-    {
-        $location = Session::get($this->getId().'-location');
-
-        if($location){
-            return collect($location);
-        }
-        return null;
     }
 }

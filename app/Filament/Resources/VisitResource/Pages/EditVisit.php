@@ -7,6 +7,8 @@ use App\Helpers\DateHelper;
 use App\Models\ProductVisit;
 use Filament\Pages\Actions;
 use Filament\Resources\Pages\EditRecord;
+use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Auth;
 
 class EditVisit extends EditRecord
 {
@@ -19,68 +21,26 @@ class EditVisit extends EditRecord
         ];
     }
 
-    protected  $isRegularVisit;
-    protected static $templates = [
-        1 =>'Regular',
-        2 =>'GroupMeeting',
-        3 =>'Conference',
-        4 =>'HealthDay',
-    ];
-
-    protected function mutateFormDataBeforeFill(array $data): array
-    {
-
-
-        $data['template'] = $data['visit_type_id'];
-
-        $data['temp_content'][self::$templates[$data['visit_type_id']]] = $data;
-
-        // $data['temp_content'][] = $data['content'];
-        // unset($data['content']);
-
-        return $data;
-    }
-
     protected function mutateFormDataBeforeSave($data): array
     {
-        $templates = [
-            'Regular' => 1,
-            'HealthDay' => 2,
-            'GroupMeeting' => 3,
-            'Conference' => 4,
-        ];
+        $isMedicalRep = Auth::check() && Auth::user() instanceof \App\Models\User &&
+            Role::where('name', 'medical-rep')->whereHas('users', function($q) {
+                $q->where('id', Auth::id());
+            })->exists();
 
-        $templatesRev = [
-            1 => 'Regular',
-            2 => 'HealthDay',
-            3 => 'GroupMeeting',
-            4 => 'Conference',
-       ];
+        $isAreaManager = Auth::check() && Auth::user() instanceof \App\Models\User &&
+            Role::where('name', 'area-manager')->whereHas('users', function($q) {
+                $q->where('id', Auth::id());
+            })->exists();
 
-        foreach($data['temp_content'] as $key => $value)
-        {
-            $data['visit_type_id'] = $templates[$key];
-            foreach($value as $key2 => $value2) {
-                $data[$key2] = $value2;
-            }
-        }
-
-        $this->isRegularVisit = $data['template'] == 1;
-
-        $temp = $data['template'];
-        $data = $data['temp_content'][$templatesRev[$temp]];
-        $data['visit_type_id'] = $temp;
-
-        $isRep = auth()->user()->hasRole(['medical-rep','area-manager']) ;
-
-        if($isRep)
-            $data['user_id'] = auth()->id();
+        if($isMedicalRep || $isAreaManager)
+            $data['user_id'] = Auth::id();
 
         $data['status'] = 'visited';
 
-        if($isRep && $this->record->plan_id){
-            $data['visit_date'] = DateHelper::today(); // todo: logical bug
-        } elseif($isRep && !isset($data['visit_date']) && $data['visit_type_id'] == 1){
+        if($isMedicalRep && $this->record->plan_id){
+            $data['visit_date'] = DateHelper::today();
+        } elseif($isMedicalRep && !isset($data['visit_date'])){
             $data['visit_date'] = today();
         }
 
@@ -90,8 +50,7 @@ class EditVisit extends EditRecord
     public function afterValidate()
     {
         $data = $this->form->getRawState();
-        if($this->isRegularVisit)
-            $this->saveProducts($data);
+        $this->saveProducts($data);
     }
 
     private function saveProducts($data)
@@ -105,12 +64,14 @@ class EditVisit extends EditRecord
 
         $insertData = [];
         $now = now();
+
         foreach($products as $product){
             $count = 0;
             if(isset($product['count']) && $product['count'])
                 $count = $product['count'];
             if(!isset($product['product_id']) || !$product['product_id'])
                 continue;
+
             $insertData[] = [
                 'visit_id' => $visitId,
                 'product_id' =>  $product['product_id'],
@@ -122,5 +83,4 @@ class EditVisit extends EditRecord
 
         ProductVisit::insert($insertData);
     }
-    // todo sync products
 }

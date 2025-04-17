@@ -4,15 +4,28 @@ namespace App\Filament\Resources\DailyVisitResource\Pages;
 
 use App\Filament\Resources\DailyVisitResource;
 use App\Helpers\DateHelper;
-use App\Models\ProductVisit;
+use App\Models\Feature;
+use App\Models\Visit;
+use App\Services\LocationService;
+use App\Services\VisitService;
 use Filament\Pages\Actions;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Support\Exceptions\Halt;
+use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
 
 class EditDailyVisit extends EditRecord
 {
     protected static string $resource = DailyVisitResource::class;
+
+    protected LocationService $locationService;
+    protected VisitService $visitService;
+
+    public function __construct()
+    {
+        $this->locationService = app(LocationService::class);
+        $this->visitService = app(VisitService::class);
+    }
 
     protected function getHeaderActions(): array
     {
@@ -20,87 +33,66 @@ class EditDailyVisit extends EditRecord
             // Actions\DeleteAction::make(),
         ];
     }
-    public $isRegularVisit;
-    protected static $templates = [
-        1 =>'Regular',
-        2 =>'GroupMeeting',
-        3 =>'Conference',
-        4 =>'HealthDay',
-    ];
-    protected function mutateFormDataBeforeFill(array $data): array
-    {
-        $oldData = $data;
-        $data = [];
-        $data['template'] = $oldData['visit_type_id'];
 
-        $data['temp_content'][self::$templates[$oldData['visit_type_id']]] = $oldData;
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        $this->validateLocation($data);
         return $data;
     }
 
-    public function afterSave()
+    protected function validateLocation(array $data): void
     {
-        $this->saveProducts();
-    }
+        $featureEnabled = Feature::isEnabled('location');
 
-    private function saveProducts()
-    {
-        $data = $this->form->getRawState()['temp_content']['Regular'];
-        if(!isset($data['products'])){
+        if (!$featureEnabled) {
             return;
         }
 
-        $products = $data['products'];
+        $location = $this->locationService->getLocation($this->getId());
 
-        $insertData = [];
-        $now = now();
-
-        foreach($products as $product){
-            $count = 0;
-            if(isset($product['count']) && $product['count'])
-                $count = $product['count'];
-            if(!isset($product['product_id']) || !$product['product_id'])
-                continue;
-            $insertData[] = [
-                'visit_id' => $this->record->id,
-                'product_id' =>  $product['product_id'],
-                'count' => $count,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ];
+        if (!$location) {
+            $this->sendLocationError('Location service is not enabled');
         }
 
-        ProductVisit::insert($insertData);
+        if (!$this->locationService->validateVisitLocation($data['client_id'], $location)) {
+            $this->sendLocationError('Location is too far from the client');
+        }
+
+        $this->record->lat = $location->get('latitude');
+        $this->record->lng = $location->get('longitude');
     }
 
-
-    public function save(bool $shouldRedirect = true): void
+    protected function sendLocationError(string $message): void
     {
-        $this->authorizeAccess();
+        Notification::make()
+            ->title('Error')
+            ->body($message)
+            ->danger()
+            ->send();
+        throw new Halt();
+    }
 
+    public function afterSave(): void
+    {
         try {
-            $this->callHook('beforeValidate');
-
-            $data = collect($this->form->getRawState()['temp_content']['Regular'])->only(['next_visit','call_type_id','comment'])->toArray();
-            $data['status'] = 'visited';
-            $data['visit_date'] = DateHelper::today();
-
-            $this->callHook('afterValidate');
-
-            $data = $this->mutateFormDataBeforeSave($data);
-
-            $this->callHook('beforeSave');
-
-            $this->handleRecordUpdate($this->getRecord(), $data);
-
-            $this->callHook('afterSave');
-        } catch (Halt $exception) {
-            return;
+            $this->visitService->saveProducts($this->record, $this->form->getRawState());
+        } catch (\Exception $e) {
+            Log::error('Error saving products: ' . $e->getMessage());
+            Notification::make()
+                ->title('Error')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
         }
+    }
 
-        $this->getSavedNotification()?->send();
+    protected $listeners = ['location-fetched' => 'updateLocation'];
 
-        if ($shouldRedirect && ($redirectUrl = $this->getRedirectUrl())) {
-            $this->redirect($redirectUrl);
+    public function updateLocation($data): void
+    {
+        $data = collect($data);
+        if ($data->has('latitude') && $data->has('longitude')) {
+            $this->locationService->setLocation($this->getId(), $data);
         }
     }
 }
