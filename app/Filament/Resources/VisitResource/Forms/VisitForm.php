@@ -28,7 +28,7 @@ class VisitForm
             self::getSecondUserSelect(),
             self::getClientSelect($isDailyVisits),
             self::getCallTypeSelect(),
-            self::getDatePickers(),
+            ...self::getDatePickers(),
             self::getProductsSection(),
             self::getCommentField(),
         ];
