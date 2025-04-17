@@ -169,6 +169,31 @@ class User extends Authenticatable  implements FilamentUser
 
         return $builder;
     }
+
+    /**
+     * Get all users including inactive ones
+     */
+    public function scopeAllMine($builder)
+    {
+        return $builder->withoutGlobalScopes()->getMine();
+    }
+
+    /**
+     * Get all users including inactive ones with a specific role
+     */
+    public function scopeAllWithRole($builder, $role)
+    {
+        return $builder->withoutGlobalScopes()->role($role);
+    }
+
+    /**
+     * Get all users including inactive ones with specific roles
+     */
+    public function scopeAllWithRoles($builder, array $roles)
+    {
+        return $builder->withoutGlobalScopes()->role($roles);
+    }
+
     // public function roles(): BelongsToMany
     // {
     //     $relation = $this->morphToMany(

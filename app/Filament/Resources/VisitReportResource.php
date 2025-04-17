@@ -165,7 +165,7 @@ class VisitReportResource extends Resource
         if(self::$medicalReps)
             return self::$medicalReps;
 
-        self::$medicalReps = User::getMine()->pluck('name','id')->toArray();
+        self::$medicalReps = User::allMine()->pluck('name','id')->toArray();
         return self::$medicalReps;
     }
     private static function getDistrictManagers(): array
@@ -173,7 +173,7 @@ class VisitReportResource extends Resource
         if(self::$districtManager)
             return self::$districtManager;
 
-        self::$districtManager = User::role('district-manager')->pluck('name','id')->toArray();
+        self::$districtManager = User::allWithRole('district-manager')->pluck('name','id')->toArray();
         return self::$districtManager;
     }
 

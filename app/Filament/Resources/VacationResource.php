@@ -37,15 +37,6 @@ class VacationResource extends Resource
     {
         return $form
             ->schema([
-                // Select::make('user_id')
-                //     ->label('Medical Rep')
-                //     ->searchable()
-                //     ->placeholder('Search name')
-                //     ->getSearchResultsUsing(fn (string $search) => User::mine()->where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'))
-                //     ->options(User::role('medical-rep')->pluck('name', 'id'))
-                //     ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
-                //     ->preload()
-                //     ->hidden(auth()->user()->hasRole('medical-rep')),
                 Select::make('vacation_type_id')
                     ->label('Vacation Type')
                     ->options(VacationType::all()->pluck('name', 'id'))

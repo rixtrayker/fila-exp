@@ -83,11 +83,11 @@ class VisitTable
                 Select::make('user_id')
                     ->label('Medical Rep')
                     ->multiple()
-                    ->options(User::getMine()->pluck('name', 'id')),
+                    ->options(User::allMine()->pluck('name', 'id')),
                 Select::make('second_user_id')
                     ->label('Manager')
                     ->multiple()
-                    ->options(User::role('district-manager')->getMine()->pluck('name', 'id')),
+                    ->options(User::allWithRole('district-manager')->getMine()->pluck('name', 'id')),
             ])
             ->query(function (Builder $query, array $data): Builder {
                 return $query

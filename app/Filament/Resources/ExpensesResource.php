@@ -40,8 +40,8 @@ class ExpensesResource extends Resource
                     ->label('Medical Rep')
                     ->searchable()
                     ->placeholder('Search name')
-                    ->getSearchResultsUsing(fn (string $search) => User::where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'))
-                    ->options(User::pluck('name', 'id'))
+                    ->getSearchResultsUsing(fn (string $search) => User::allMine()->where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'))
+                    ->options(User::allMine()->pluck('name', 'id'))
                     ->preload()
                     ->hidden(auth()->user()->hasRole('medical-rep')),
                 DatePicker::make('date')

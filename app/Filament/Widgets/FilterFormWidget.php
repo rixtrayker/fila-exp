@@ -42,7 +42,7 @@ class FilterFormWidget extends Widget implements HasForms
                 ->multiple()
                 ->placeholder('Search name')
                 // ->getSearchResultsUsing(fn (string $search) => User::role('medical-rep')->mine()->where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'))
-                ->options(User::getMine()->pluck('name', 'id'))
+                ->options(User::allMine()->pluck('name', 'id'))
                 // ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
                 ->preload(),
             DatePicker::make('from')

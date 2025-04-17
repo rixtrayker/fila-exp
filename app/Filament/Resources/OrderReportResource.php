@@ -215,7 +215,7 @@ class OrderReportResource extends Resource
         if(self::$medicalReps)
             return self::$medicalReps;
 
-        self::$medicalReps = User::getMine()->pluck('name','id')->toArray();
+        self::$medicalReps = User::allMine()->pluck('name','id')->toArray();
         return self::$medicalReps;
     }
     private static function getClients(): array
