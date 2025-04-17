@@ -31,6 +31,7 @@ class RolesAndPermissionsSeeder extends Seeder
         'daily-visit',
         'edit-request',
         'expenses',
+        'feature',
         'governorate',
         'hospital',
         'message',
