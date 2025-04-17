@@ -83,7 +83,7 @@ class ProductsTableRepeater
                 TotalsCalculator::updateTotals($get, $set);
             })
             ->deleteAction(function($set, $get) {
-                TotalsCalculator::updateTotals($get, $set);
+                TotalsCalculator::updateTotals($get, $set, false);
             })
             ->columnSpanFull()
             ->defaultItems(1);
