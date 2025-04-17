@@ -82,6 +82,9 @@ class ProductsTableRepeater
             ->afterStateUpdated(function($set, $get) {
                 TotalsCalculator::updateTotals($get, $set);
             })
+            ->deleteAction(function($set, $get) {
+                TotalsCalculator::updateTotals($get, $set);
+            })
             ->columnSpanFull()
             ->defaultItems(1);
     }
