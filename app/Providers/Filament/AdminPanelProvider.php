@@ -44,6 +44,40 @@ class AdminPanelProvider extends PanelProvider
                 Pages\Dashboard::class,
                 FrequencyReport::class,
             ])
+            ->navigationGroups([
+                NavigationGroup::make()
+                    ->label('Visits')
+                    ->collapsible()
+                    ->collapsed(),
+                NavigationGroup::make()
+                    ->label('Reports')
+                    ->collapsible()
+                    ->collapsed(),
+                NavigationGroup::make()
+                    ->label('Requests')
+                    ->collapsible()
+                    ->collapsed(),
+                NavigationGroup::make()
+                    ->label('Orders')
+                    ->collapsible()
+                    ->collapsed(),
+                NavigationGroup::make()
+                    ->label('Admin management')
+                    ->collapsible()
+                    ->collapsed(),
+                NavigationGroup::make()
+                    ->label('Companies management')
+                    ->collapsible()
+                    ->collapsed(),
+                NavigationGroup::make()
+                    ->label('Zone management')
+                    ->collapsible()
+                    ->collapsed(),
+                NavigationGroup::make()
+                    ->label('Types management')
+                    ->collapsible()
+                    ->collapsed(),
+            ])
             // ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
                 StatsOverview::class,
