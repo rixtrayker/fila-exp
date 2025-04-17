@@ -33,6 +33,7 @@ class MedicalRepRole extends Seeder
             'vacations-report' => ['view'],
             'visit-report' => ['view'],
             'coverage-report' => ['view'],
+            'activity' => ['view', 'create', 'update', 'delete'],
         ];
 
         $role = Role::where('name', 'medical-rep')->first();

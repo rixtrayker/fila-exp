@@ -37,7 +37,6 @@ class DistrictManagerRole extends Seeder
             'region' => ['view', 'create', 'update', 'delete'],
             'user' => ['view', 'create', 'update', 'delete'],
             'vacation-type' => ['view', 'create', 'update', 'delete'],
-            'visit-type' => ['view', 'create', 'update', 'delete'],
         ];
 
 

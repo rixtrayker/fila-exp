@@ -7,20 +7,14 @@ use App\Models\Client;
 use App\Models\ClientType;
 use App\Models\User;
 use App\Models\Visit;
-use App\Models\VisitType;
-use BladeUI\Icons\Components\Icon;
 use Filament\Forms;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\FontWeight;
 use Filament\Support\Enums\IconPosition;
 use Filament\Tables\Table;
 use Filament\Tables;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Filters\TrashedFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use App\Traits\ResouerceHasPermission;
@@ -38,7 +32,6 @@ class VisitReportResource extends Resource
     protected static ?string $slug = 'visits-report';
     protected static $avgGrade;
     protected static $clientTypes;
-    protected static $visitTypes;
     protected static $medicalReps;
     protected static $districtManager;
 
@@ -144,21 +137,14 @@ class VisitReportResource extends Resource
                                     $data['status'],
                                     fn (Builder $query, $data): Builder => $query->where('status', $data)
                                 );}),
-                Tables\Filters\Filter::make('visit_client_types')
+                Tables\Filters\Filter::make('client_types')
                     ->form([
-                        Select::make('visit_type_id')
-                            ->label('Visit Type')
-                            ->options(self::getVisitTypes()),
                         Select::make('client_type_id')
                             ->label('Client Type')
                             ->options(self::getClientTypes())
                         ])->columns(2)
                         ->query(function (Builder $query, array $data): Builder {
                             return $query
-                                ->when(
-                                    $data['visit_type_id'],
-                                    fn (Builder $query, $data): Builder => $query->where('visit_type_id', $data)
-                                )
                                 ->when(
                                     $data['client_type_id'],
                                     fn (Builder $query, $data): Builder => $query->where('clients.client_type_id', $data)
@@ -191,15 +177,6 @@ class VisitReportResource extends Resource
         return self::$districtManager;
     }
 
-    private static function getVisitTypes() : array {
-        if(self::$visitTypes){
-            return self::$visitTypes;
-        }
-        else{
-            self::$visitTypes = VisitType::pluck('name','id')->toArray();
-            return self::$visitTypes;
-        }
-    }
     private static function getClientTypes() : array {
         if(self::$clientTypes){
             return self::$clientTypes;
@@ -237,7 +214,6 @@ class VisitReportResource extends Resource
             ->leftJoin('product_visits', 'product_visits.visit_id', '=', 'visits.id')
             ->leftJoin('products', 'product_visits.product_id', '=', 'products.id')
             ->leftJoin('bricks', 'clients.brick_id', '=', 'bricks.id')
-            ->leftJoin('visit_types', 'visit_types.id', '=', 'visits.visit_type_id')
             ->groupBy('visits.id')
             ->orderBy('visits.id', 'DESC');
     }

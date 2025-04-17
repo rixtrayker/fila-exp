@@ -48,7 +48,6 @@ class VisitReport extends Page
     public $visits;
     public $from;
     public $to;
-    public $visit_type_id;
     public $client_type_id;
     public $user_id;
     public $grade;
@@ -69,7 +68,6 @@ class VisitReport extends Page
         $this->user_id = $eventData['user_id'];
         $this->grade = $eventData['grade'];
         $this->client_type_id = $eventData['client_type_id'];
-        $this->visit_type_id = $eventData['visit_type_id'];
         $this->initData();
     }
     public function getReportQuery(){
@@ -79,7 +77,6 @@ class VisitReport extends Page
             )
             ->leftJoin('users', 'visits.user_id', '=', 'users.id')
             ->leftJoin('clients', 'visits.client_id', '=', 'clients.id')
-            ->leftJoin('visit_types', 'visits.visit_type_id', '=', 'visit_types.id')
             ->leftJoin('product_visits', 'product_visits.visit_id', '=', 'visits.id')
             ->leftJoin('products', 'product_visits.product_id', '=', 'products.id')
             ->groupBy('visits.id','clients.id')
@@ -96,10 +93,6 @@ class VisitReport extends Page
             fn (Builder $query, $grade): Builder => $query->where('grade', $grade)
         );
 
-        $query->when($this->visit_type_id,
-            fn (Builder $query, $ids): Builder => $query->whereIn('visit_type_id', $ids)
-
-        );
 
         $query->when($this->client_type_id,
             fn (Builder $query, $ids): Builder => $query->whereIn('client_type_id', $ids)

@@ -3,15 +3,11 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ClientRequestResource\Pages;
-use App\Filament\Resources\ClientRequestResource\RelationManagers;
 use App\Models\Client;
 use App\Models\ClientRequest;
 use App\Models\ClientRequestType;
-use App\Models\Scopes\GetMineScope;
 use App\Models\User;
-use App\Models\VisitType;
 use App\Traits\ResouerceHasPermission;
-use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -22,8 +18,6 @@ use Filament\Tables\Table;
 use Filament\Tables;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ClientRequestResource extends Resource
 {

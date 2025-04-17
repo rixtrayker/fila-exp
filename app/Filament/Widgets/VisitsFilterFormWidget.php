@@ -2,11 +2,9 @@
 
 namespace App\Filament\Widgets;
 
-use App\Filament\Pages\Admin\FrequencyReport;
 use App\Models\Client;
 use App\Models\ClientType;
 use App\Models\User;
-use App\Models\VisitType;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -25,7 +23,6 @@ class VisitsFilterFormWidget extends Widget implements HasForms
     public $user_id = [];
     public $grade = [];
     public $client_type_id = [];
-    public $visit_type_id = [];
     public $query = [];
 
     private static $medicalReps;
@@ -40,7 +37,6 @@ class VisitsFilterFormWidget extends Widget implements HasForms
             'user_id' => $this->user_id,
             'grade' => $this->grade,
             'client_type_id' => $this->client_type_id,
-            'visit_type_id' => $this->visit_type_id,
         ]);
     }
 
@@ -60,10 +56,6 @@ class VisitsFilterFormWidget extends Widget implements HasForms
             Select::make('grade')
                 ->default($this->grade)
                 ->options(fn()=>self::gradeAVG()),
-            Select::make('visit_type_id')
-                ->label('Visit Type')
-                ->multiple()
-                ->options(VisitType::pluck('name','id')),
             Select::make('client_type_id')
                 ->label('Client Type')
                 ->multiple()

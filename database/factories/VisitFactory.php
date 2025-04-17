@@ -22,7 +22,6 @@ class VisitFactory extends Factory
             'client_id' => 72,
             'status' => ['verified','visited'][random_int(0,1)],
             'call_type_id' => 1,
-            'visit_type_id' => 1,
             'comment' => '11',
         ];
     }

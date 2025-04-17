@@ -23,7 +23,7 @@ class ExportVisits implements FromCollection
         $result = [];
         for($i=0;$i < $max;$i++){
             $result[]= [
-                count($this->visited) - $i > 0 ? ($this->visited[$i]->visit_type_id === 1 ? $this->visited[$i]?->client?->name : $this->visited[$i]?->visitType->name ) : null,
+                count($this->visited) - $i > 0 ? $this->visited[$i]?->client?->name : null,
                 count($this->visited) - $i > 0 ? $this->visited[$i]->visit_date->format('Y-m-d') : null,
                 count($this->pending) - $i > 0 ? $this->pending[$i]?->client?->name : null,
                 count($this->pending) - $i > 0 ? $this->pending[$i]->visit_date->format('Y-m-d') : null,

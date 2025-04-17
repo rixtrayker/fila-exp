@@ -17,7 +17,7 @@
                     id="s_ms-two-sides_selectableOptions">
                     @foreach($this->visited as $value)
                         <li class="cursor-pointer p-1 hover:bg-chartgreen hover:text-chartgreenB transition" style="justify-content:space-between;display:flex">
-                            {{$value->client?->name_en}} @if(!$value->client){{$value->visitType?->name}}@endif
+                            {{$value->client?->name_en}}
                             <span>
                             {{ $value->visit_date->format('d M y') }}
                             </span>
@@ -49,7 +49,7 @@
                     id="122_ms-two-sides_selectedOptions">
                     @foreach($this->pending as $value)
                         <li class="cursor-pointer p-1 hover:bg-chartblue hover:text-chartblueB" style="justify-content:space-between;display:flex" >
-                            {{ $value->client?->name_en}} @if(!$value->client){{$value->visitType?->name}}@endif
+                            {{ $value->client?->name_en}}
                             <span>
                             {{ $value->visit_date->format('d M y') }}
                             </span>
@@ -81,7 +81,7 @@
                     id="122_ms-two-sides_selectedOptions">
                     @foreach($this->missed as $value)
                         <li class="cursor-pointer p-1 hover:bg-chartred hover:text-chartredB" style="justify-content:space-between;display:flex" >
-                            {{ $value->client?->name_en}} @if(!$value->client){{$value->visitType?->name}}@endif
+                            {{ $value->client?->name_en}}
                             <span>
                             {{ $value->visit_date->format('d M y') }}
                             </span>

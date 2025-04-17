@@ -51,7 +51,7 @@ class RolesAndPermissionsSeeder extends Seeder
         'vacation-request',
         'vacation-type',
         'visit',
-        'visit-type',
+        'activity',
     ];
 
      /**

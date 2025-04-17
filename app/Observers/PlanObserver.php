@@ -75,7 +75,6 @@ class PlanObserver
                     'visit_date' => $visitDate,
                     'plan_id' => $this->plan->id,
                     'client_id' => $client,
-                    'visit_type_id' => 1,
                     'status' => $this->plan->approved ? 'pending' : 'planned',
                     'created_at' => $now,
                     'updated_at' => $now,

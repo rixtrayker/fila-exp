@@ -4,7 +4,6 @@ use App\Models\Client;
 use App\Models\User;
 use App\Models\CallType;
 use App\Models\Plan;
-use App\Models\VisitType;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -28,7 +27,6 @@ return new class extends Migration
             $table->date('next_visit')->nullable();
             $table->enum('status',['pending','verified','visited','cancelled','planned'])->default('pending');
             $table->foreignIdFor(CallType::class);
-            $table->foreignIdFor(VisitType::class);
             $table->string('place')->nullable();
             $table->integer('atendees_number')->nullable();
             $table->text('comment')->nullable();

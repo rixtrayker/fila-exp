@@ -30,7 +30,6 @@ class Visit extends Model
         'atendees_number',
         'second_user_id',
         'client_id',
-        'visit_type_id',
         'call_type_id',
         'next_visit',
         'visit_date',
@@ -85,10 +84,6 @@ class Visit extends Model
         return $this->belongsTo(User::class, 'second_user_id');
     }
 
-    public function visitType()
-    {
-        return $this->belongsTo(VisitType::class);
-    }
 
     public function callType()
     {

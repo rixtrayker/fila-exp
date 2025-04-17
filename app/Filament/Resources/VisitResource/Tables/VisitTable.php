@@ -4,7 +4,6 @@ namespace App\Filament\Resources\VisitResource\Tables;
 
 use App\Models\ClientType;
 use App\Models\User;
-use App\Models\VisitType;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Tables;
@@ -54,8 +53,6 @@ class VisitTable
                 ->dateTime('d-M-Y')
                 ->sortable()
                 ->searchable(),
-            TextColumn::make('visitType.name')
-                ->label('Visit Type'),
             TextColumn::make('comment')
                 ->limit(100)
                 ->wrap(),
@@ -71,7 +68,6 @@ class VisitTable
             self::getUserFilter(),
             self::getDateFilter(),
             self::getGradeFilter(),
-            self::getVisitTypeFilter(),
             self::getClientTypeFilter(),
             TrashedFilter::make(),
         ];
@@ -142,25 +138,6 @@ class VisitTable
                 if ($data['values']) {
                     return $query->whereHas('client', function ($q) use ($data) {
                         $q->whereIn('grade', $data['values']);
-                    });
-                }
-                return $query;
-            });
-    }
-
-    /**
-     * Get the visit type filter configuration.
-     */
-    private static function getVisitTypeFilter(): SelectFilter
-    {
-        return SelectFilter::make('visit_type_id')
-            ->label('Visit Type')
-            ->multiple()
-            ->options(VisitType::pluck('name', 'id'))
-            ->query(function (Builder $query, array $data): Builder {
-                if ($data['values']) {
-                    return $query->whereHas('client', function ($q) use ($data) {
-                        $q->whereIn('visit_type_id', $data['values']);
                     });
                 }
                 return $query;

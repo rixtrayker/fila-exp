@@ -2,16 +2,14 @@
 
 namespace App\Services\Stats;
 
+use App\Models\Activity;
 use App\Models\OfficeWork;
-use App\Models\Visit;
-use App\Models\VisitType;
 class OfficeWorkStatsService
 {
     public function getOfficeWorkStats(): array
     {
         $officeWork = OfficeWork::count();
-        $visitTypes = VisitType::whereIn('name', ['HealthDay', 'GroupMeeting', 'Conference'])->get();
-        $activities = Visit::whereIn('visit_type_id', $visitTypes->pluck('id'))->count();
+        $activities = Activity::count();
         $totalActivities = $activities + $officeWork;
         $color = 'success';
 

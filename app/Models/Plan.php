@@ -84,7 +84,6 @@ class Plan extends Model
             $data = [
                 'user_id' => $this->user_id,
                 'client_id' => $shift->am_shift,
-                'visit_type_id' => 1,
                 'plan_id' => $this->id,
                 'status' => 'planned',
                 'visit_date' => $visitDate,
