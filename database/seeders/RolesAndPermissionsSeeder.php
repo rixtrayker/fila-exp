@@ -15,6 +15,7 @@ class RolesAndPermissionsSeeder extends Seeder
      * Models that require standard CRUD permissions
      */
     private array $standardModels = [
+        'activity',
         'area',
         'brick',
         'business-order',
@@ -44,6 +45,7 @@ class RolesAndPermissionsSeeder extends Seeder
         'product-visit',
         'region',
         'role',
+        'setting',
         'speciality',
         'user',
         'vacation',
@@ -51,7 +53,6 @@ class RolesAndPermissionsSeeder extends Seeder
         'vacation-request',
         'vacation-type',
         'visit',
-        'activity',
     ];
 
      /**
