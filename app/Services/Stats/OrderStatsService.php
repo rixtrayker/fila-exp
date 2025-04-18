@@ -52,7 +52,7 @@ class OrderStatsService
         $lastWeekCount = $this->getLatestOrdersCountAvg();
         $ratio = $lastWeekCount > 0 ? $this->calculatePercentage($priceAvg, $lastWeekCount) : 0;
 
-        $color = $priceAvg > $lastWeekPriceAvg ? 'success' : 'warning';
+        $color = $priceAvg > $lastWeekPriceAvg ? 'success' : 'info';
         $descriptionMessage = "last week avg: $lastWeekPriceAvg";
         $label = "$priceAvg ($ratio%)";
 

@@ -77,7 +77,7 @@ class VisitStatsService
             return [
                 'achievedRatio' => 0,
                 'descriptionMessage' => "No planned visits",
-                'color' => 'warning',
+                'color' => 'info',
                 'actualVisits' => 0,
                 'plannedVisits' => 0
             ];
