@@ -62,8 +62,7 @@ class ActivityResource extends Resource
                 Tables\Columns\TextColumn::make('date')
                     ->date(),
                 Tables\Columns\TextColumn::make('place'),
-                Tables\Columns\TextColumn::make('attendees_number')
-                    ->visible(fn (Activity $record) => $record->type === 'group-meeting'),
+                Tables\Columns\TextColumn::make('attendees_number'),
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('Created By'),
             ])

@@ -51,9 +51,9 @@ class ClientManager
         ])->pluck('id')->toArray();
 
         $pmTypeIDs = $clientTypes->whereIn('name', [
-            'doctor',
-            'clinic',
-            'polyclinic'
+            // 'doctor',
+            'Clinic',
+            'Poly Clinic'
         ])->pluck('id')->toArray();
 
         $pharmacyTypeIDs = $clientTypes->whereIn('name', [
