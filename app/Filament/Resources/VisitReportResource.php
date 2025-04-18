@@ -200,7 +200,6 @@ class VisitReportResource extends Resource
             'bricks.name as brick_name',
             'visits.status as status',
             'users.name as medical_rep',
-            'visit_types.name as visit_type_name',
             'visits.visit_date as visit_date',
             // 'visits.second_user_id as second_user_id',
             DB::raw('GROUP_CONCAT( products.name SEPARATOR ", ") AS product_list')

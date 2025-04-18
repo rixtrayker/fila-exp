@@ -64,8 +64,6 @@ class ListVisitReports extends ListRecords implements HasInfolists
                     ->label('Medical Reps'),
                 TextEntry::make('grade')
                     ->label('Grades'),
-                TextEntry::make('visit_types')
-                    ->label('Visit Types'),
                 TextEntry::make('bricks_names')
                     ->columnSpan(['lg' => 3, 'sm' => 1])
                     ->label('Bricks Names'),
@@ -117,7 +115,6 @@ class ListVisitReports extends ListRecords implements HasInfolists
         $summary['grade'] = implode(', ', array_unique($records->pluck('grade')->toArray()));
         $summary['bricks_count'] = count(array_unique($records->pluck('brick_id')->toArray()));
         $summary['bricks_names'] = implode(', ', array_unique($records->pluck('brick_name')->toArray()));
-        $summary['visit_types'] = implode(', ', array_unique($records->pluck('visit_types')->toArray()));
         $summary['from_date'] = $this->table->getFilter('visit_date')->getState()['from_date'];
         $summary['to_date'] = $this->table->getFilter('visit_date')->getState()['to_date'];
         $summary['done_visits_count'] = $records->sum('done_visits_count');
