@@ -15,10 +15,10 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\DB;
-use App\Traits\ResouerceHasPermission;
+use App\Traits\ResourceHasPermission;
 class ExpensesReportResource extends Resource
 {
-    use ResouerceHasPermission;
+    use ResourceHasPermission;
     protected static ?string $model = Expenses::class;
 
     protected static ?string $navigationGroup = 'Reports';

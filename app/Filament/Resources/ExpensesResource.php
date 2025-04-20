@@ -6,7 +6,7 @@ use App\Filament\Resources\ExpensesResource\Pages;
 use App\Filament\Resources\ExpensesResource\RelationManagers;
 use App\Models\Expenses;
 use App\Models\User;
-use App\Traits\ResouerceHasPermission;
+use App\Traits\ResourceHasPermission;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
@@ -24,7 +24,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ExpensesResource extends Resource
 {
-    use ResouerceHasPermission;
+    use ResourceHasPermission;
     protected static ?string $model = Expenses::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';

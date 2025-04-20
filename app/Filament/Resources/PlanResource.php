@@ -7,7 +7,7 @@ use App\Filament\Resources\PlanResource\FormBuilder;
 use App\Filament\Resources\PlanResource\Pages;
 use App\Helpers\DateHelper;
 use App\Models\Plan;
-use App\Traits\ResouerceHasPermission;
+use App\Traits\ResourceHasPermission;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions;
@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 class PlanResource extends Resource
 {
-    use ResouerceHasPermission;
+    use ResourceHasPermission;
 
     protected static ?string $model = Plan::class;
     protected static ?string $navigationLabel = 'Weekly plans';

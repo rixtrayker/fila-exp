@@ -62,6 +62,31 @@ Route::get('/admin/ops/migrate-plan-data', function () {
     return true;
 });
 
+// php version
+Route::get('/admin/ops/php-version', function () {
+    return phpversion();
+});
+
+// seed all roles and permissions
+Route::get('/admin/ops/seed-roles-and-permissions', function () {
+    DB::statement('SET FOREIGN_KEY_CHECKS = 0');
+    DB::table('permissions')->truncate();
+    DB::statement('SET FOREIGN_KEY_CHECKS = 1');
+
+    $seeders = [
+        'RolesAndPermissionsSeeder',
+        'MedicalRepRole',
+        'DistrictManagerRole',
+        'AreaManagerRole',
+        'CountryManagerRole',
+    ];
+
+    foreach ($seeders as $seeder) {
+        Artisan::call('db:seed', ['--class' => $seeder]);
+    }
+    return true;
+});
+
 Route::get('/admin/ops/fix-orders-with-0-total', function () {
     dispatch(new FixOrdersWith0Total());
     return true;

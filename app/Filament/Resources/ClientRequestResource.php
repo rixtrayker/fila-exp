@@ -7,7 +7,7 @@ use App\Models\Client;
 use App\Models\ClientRequest;
 use App\Models\ClientRequestType;
 use App\Models\User;
-use App\Traits\ResouerceHasPermission;
+use App\Traits\ResourceHasPermission;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -21,7 +21,7 @@ use Filament\Tables\Columns\TextColumn;
 
 class ClientRequestResource extends Resource
 {
-    use ResouerceHasPermission;
+    use ResourceHasPermission;
     protected static ?string $model = ClientRequest::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-receipt-percent';

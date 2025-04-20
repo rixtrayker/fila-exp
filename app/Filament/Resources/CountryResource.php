@@ -5,7 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\CountryResource\Pages;
 use App\Filament\Resources\CountryResource\RelationManagers;
 use App\Models\Country;
-use App\Traits\ResouerceHasPermission;
+use App\Traits\ResourceHasPermission;
 use Filament\Forms;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class CountryResource extends Resource
 {
-    use ResouerceHasPermission;
+    use ResourceHasPermission;
 
     protected static ?string $model = Country::class;
 

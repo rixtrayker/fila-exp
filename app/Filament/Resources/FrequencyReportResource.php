@@ -6,7 +6,7 @@ use App\Filament\Resources\FrequencyReportResource\Pages;
 use App\Models\Brick;
 use App\Models\Client;
 use App\Models\User;
-use App\Traits\ResouerceHasPermission;
+use App\Traits\ResourceHasPermission;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Tables\Table;
@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 
 class FrequencyReportResource extends Resource
 {
-    use ResouerceHasPermission;
+    use ResourceHasPermission;
     protected static ?string $model = Client::class;
     protected static ?string $label = 'Frequency report';
 

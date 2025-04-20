@@ -6,7 +6,7 @@ use App\Filament\Resources\RegionResource\Pages;
 use App\Filament\Resources\RegionResource\RelationManagers;
 use App\Filament\Resources\RegionResource\RelationManagers\GovernoratesRelationManager;
 use App\Models\Region;
-use App\Traits\ResouerceHasPermission;
+use App\Traits\ResourceHasPermission;
 use Filament\Forms;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -20,7 +20,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class RegionResource extends Resource
 {
-    use ResouerceHasPermission;
+    use ResourceHasPermission;
 
     protected static ?string $model = Region::class;
 

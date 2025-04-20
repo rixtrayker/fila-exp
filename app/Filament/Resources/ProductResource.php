@@ -21,11 +21,11 @@ use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use App\Traits\ResouerceHasPermission;
+use App\Traits\ResourceHasPermission;
 
 class ProductResource extends Resource
 {
-    use ResouerceHasPermission;
+    use ResourceHasPermission;
     protected static ?string $model = Product::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-beaker';

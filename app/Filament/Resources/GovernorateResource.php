@@ -6,7 +6,7 @@ use App\Filament\Resources\GovernorateResource\Pages;
 use App\Filament\Resources\GovernorateResource\RelationManagers;
 use App\Filament\Resources\GovernorateResource\RelationManagers\CitiesRelationManager;
 use App\Models\Governorate;
-use App\Traits\ResouerceHasPermission;
+use App\Traits\ResourceHasPermission;
 use Filament\Forms;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -20,7 +20,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class GovernorateResource extends Resource
 {
-    use ResouerceHasPermission;
+    use ResourceHasPermission;
 
     protected static ?string $model = Governorate::class;
 

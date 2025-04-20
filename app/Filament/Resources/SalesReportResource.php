@@ -7,7 +7,7 @@ use App\Models\BusinessOrder;
 use App\Models\Company;
 use App\Models\CompanyBranch;
 use App\Models\Product;
-use App\Traits\ResouerceHasPermission;
+use App\Traits\ResourceHasPermission;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\DB;
 
 class SalesReportResource extends Resource
 {
-    use ResouerceHasPermission;
+    use ResourceHasPermission;
     protected static ?string $model = BusinessOrder::class;
 
     protected static ?string $navigationLabel = 'Sales report';

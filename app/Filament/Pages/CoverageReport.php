@@ -6,7 +6,7 @@ use App\Filament\Widgets\FilterFormWidget;
 use App\Filament\Widgets\OverallChart;
 use App\Models\Visit;
 use App\Exports\ExportVisits;
-use App\Traits\ResouerceHasPermission;
+use App\Traits\ResourceHasPermission;
 use Filament\Actions\Action;
 use Filament\Pages\Page;
 use Filament\Forms\Concerns\HasFormComponentActions;
@@ -18,7 +18,7 @@ class CoverageReport extends Page
 {
     use HasFormComponentActions;
     use InteractsWithFormActions;
-    use ResouerceHasPermission;
+    use ResourceHasPermission;
 
     protected static ?string $permissionName = 'coverage-report';
     protected static ?string $navigationIcon = 'heroicon-o-chart-pie';

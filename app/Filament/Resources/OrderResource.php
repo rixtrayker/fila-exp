@@ -6,7 +6,7 @@ use App\Filament\Resources\OrderResource\Fields;
 use App\Filament\Resources\OrderResource\Pages;
 use App\Filament\Resources\OrderResource\Tables\OrderColumns;
 use App\Models\Order;
-use App\Traits\ResouerceHasPermission;
+use App\Traits\ResourceHasPermission;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class OrderResource extends Resource
 {
-    use ResouerceHasPermission;
+    use ResourceHasPermission;
 
     protected static ?string $model = Order::class;
     protected static ?string $navigationLabel = 'Direct orders';

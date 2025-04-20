@@ -17,11 +17,11 @@ use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
-use App\Traits\ResouerceHasPermission;
+use App\Traits\ResourceHasPermission;
 
 class VisitReportResource extends Resource
 {
-    use ResouerceHasPermission;
+    use ResourceHasPermission;
     protected static ?string $model = Client::class;
     protected static ?string $label = 'Visit report';
 

@@ -6,7 +6,7 @@ use App\Filament\Resources\VisitResource\Pages;
 use App\Filament\Resources\VisitResource\Forms\VisitForm;
 use App\Filament\Resources\VisitResource\Tables\VisitTable;
 use App\Models\Visit;
-use App\Traits\ResouerceHasPermission;
+use App\Traits\ResourceHasPermission;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables\Table;
@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class VisitResource extends Resource
 {
-    use ResouerceHasPermission;
+    use ResourceHasPermission;
 
     protected static ?string $model = Visit::class;
     protected static $doubleCallTypeId;

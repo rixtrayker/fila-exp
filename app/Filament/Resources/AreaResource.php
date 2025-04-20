@@ -6,7 +6,7 @@ use App\Filament\Resources\AreaResource\Pages;
 use App\Filament\Resources\AreaResource\RelationManagers;
 use App\Models\Area;
 use App\Models\Brick;
-use App\Traits\ResouerceHasPermission;
+use App\Traits\ResourceHasPermission;
 use Awcodes\FilamentTableRepeater\Components\TableRepeater;
 use Filament\Forms;
 use Filament\Forms\Components\Section;
@@ -22,7 +22,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class AreaResource extends Resource
 {
-    use ResouerceHasPermission;
+    use ResourceHasPermission;
     protected static ?string $model = Area::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';

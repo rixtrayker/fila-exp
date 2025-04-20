@@ -6,7 +6,7 @@ use App\Filament\Resources\BusinessOrderResource\Pages;
 use App\Filament\Resources\BusinessOrderResource\RelationManagers;
 use App\Helpers\ImportHelper;
 use App\Models\BusinessOrder;
-use App\Traits\ResouerceHasPermission;
+use App\Traits\ResourceHasPermission;
 use Filament\Forms;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Form;
@@ -19,7 +19,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class BusinessOrderResource extends Resource
 {
-    use ResouerceHasPermission;
+    use ResourceHasPermission;
 
     protected static ?string $model = BusinessOrder::class;
 

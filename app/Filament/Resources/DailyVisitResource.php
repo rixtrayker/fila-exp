@@ -6,7 +6,7 @@ use App\Filament\Resources\DailyVisitResource\Pages;
 use App\Filament\Resources\DailyVisitResource\RelationManagers;
 use App\Helpers\DateHelper;
 use App\Models\Visit;
-use App\Traits\ResouerceHasPermission;
+use App\Traits\ResourceHasPermission;
 use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
@@ -22,7 +22,7 @@ use Illuminate\Support\Collection;
 
 class DailyVisitResource extends Resource
 {
-    use ResouerceHasPermission;
+    use ResourceHasPermission;
     protected static ?string $model = Visit::class;
     protected static ?string $navigationLabel = 'Daily visits';
     protected static ?string $label = 'Daily visits';

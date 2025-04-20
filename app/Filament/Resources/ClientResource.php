@@ -9,7 +9,7 @@ use App\Models\Brick;
 use App\Models\City;
 use App\Models\Client;
 use App\Models\ClientType;
-use App\Traits\ResouerceHasPermission;
+use App\Traits\ResourceHasPermission;
 use Filament\Forms;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
@@ -28,7 +28,7 @@ use Str;
 
 class ClientResource extends Resource
 {
-    use ResouerceHasPermission;
+    use ResourceHasPermission;
     protected static ?string $model = Client::class;
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
     protected static ?string $navigationGroup = 'Admin management';

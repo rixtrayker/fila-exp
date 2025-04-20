@@ -5,7 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\OfficeWorkResource\Pages;
 use App\Filament\Resources\OfficeWorkResource\RelationManagers;
 use App\Models\OfficeWork;
-use App\Traits\ResouerceHasPermission;
+use App\Traits\ResourceHasPermission;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -21,7 +21,7 @@ use Filament\Tables\Columns\TextColumn;
 
 class OfficeWorkResource extends Resource
 {
-    use ResouerceHasPermission;
+    use ResourceHasPermission;
 
     protected static ?string $model = OfficeWork::class;
 

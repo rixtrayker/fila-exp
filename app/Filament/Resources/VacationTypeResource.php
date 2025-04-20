@@ -5,7 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\VacationTypeResource\Pages;
 use App\Filament\Resources\VacationTypeResource\RelationManagers;
 use App\Models\VacationType;
-use App\Traits\ResouerceHasPermission;
+use App\Traits\ResourceHasPermission;
 use Filament\Forms;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class VacationTypeResource extends Resource
 {
-    use ResouerceHasPermission;
+    use ResourceHasPermission;
     protected static ?string $model = VacationType::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-tag';

@@ -8,7 +8,7 @@ use App\Filament\Resources\UserResource\RelationManagers\RolesRelationManager;
 use App\Models\Area;
 use App\Models\Brick;
 use App\Models\User;
-use App\Traits\ResouerceHasPermission;
+use App\Traits\ResourceHasPermission;
 use Awcodes\FilamentTableRepeater\Components\TableRepeater;
 use Filament\Forms;
 use Filament\Forms\Components\CheckboxList;
@@ -34,7 +34,7 @@ use Str;
 
 class UserResource extends Resource
 {
-    use ResouerceHasPermission;
+    use ResourceHasPermission;
     protected static ?string $model = User::class;
 
     protected static ?string $navigationIcon = 'heroicon-s-users';

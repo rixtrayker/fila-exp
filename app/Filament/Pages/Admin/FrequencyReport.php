@@ -9,11 +9,11 @@ use Filament\Forms\Concerns\HasFormComponentActions;
 use Filament\Pages\Concerns\InteractsWithFormActions;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\On;
-use App\Traits\ResouerceHasPermission;
+use App\Traits\ResourceHasPermission;
 
 class FrequencyReport extends Page
 {
-    use ResouerceHasPermission;
+    use ResourceHasPermission;
     use HasFormComponentActions;
     use InteractsWithFormActions;
 

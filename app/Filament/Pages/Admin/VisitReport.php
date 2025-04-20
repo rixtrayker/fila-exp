@@ -13,12 +13,12 @@ use Filament\Pages\Concerns\InteractsWithFormActions;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
-use App\Traits\ResouerceHasPermission;
+use App\Traits\ResourceHasPermission;
 class VisitReport extends Page
 {
     use HasFormComponentActions;
     use InteractsWithFormActions;
-    use ResouerceHasPermission;
+    use ResourceHasPermission;
 
     protected static ?string $permissionName = 'visit-report';
 

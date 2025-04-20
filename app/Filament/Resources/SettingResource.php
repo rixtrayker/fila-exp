@@ -10,11 +10,11 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use App\Traits\ResouerceHasPermission;
+use App\Traits\ResourceHasPermission;
 
 class SettingResource extends Resource
 {
-    use ResouerceHasPermission;
+    use ResourceHasPermission;
 
     protected static ?string $model = Setting::class;
 
