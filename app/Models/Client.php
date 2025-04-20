@@ -14,7 +14,7 @@ class Client extends Model
     use HasEditRequest;
     use HasRelationships;
 
-    protected $appends = ['name', 'mapUrl', 'location'];
+    protected $appends = ['name', 'mapUrl'];
     protected $fillable = [
         'name_en',
         'name_ar',
@@ -49,11 +49,6 @@ class Client extends Model
         'lat',
         'lng',
     ];
-
-    public function getLocationAttribute()
-    {
-        return json_decode($this->location, true);
-    }
 
     public function setLocationAttribute($value)
     {
