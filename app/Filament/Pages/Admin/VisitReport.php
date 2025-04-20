@@ -20,6 +20,8 @@ class VisitReport extends Page
     use InteractsWithFormActions;
     use ResouerceHasPermission;
 
+    protected static ?string $permissionName = 'visit-report';
+
     protected static ?string $navigationIcon = 'heroicon-o-presentation-chart-line';
 
     protected static string $view = 'filament.admin.pages.visits-report';

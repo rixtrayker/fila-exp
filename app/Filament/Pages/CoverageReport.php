@@ -20,6 +20,7 @@ class CoverageReport extends Page
     use InteractsWithFormActions;
     use ResouerceHasPermission;
 
+    protected static ?string $permissionName = 'coverage-report';
     protected static ?string $navigationIcon = 'heroicon-o-chart-pie';
 
     protected static string $view = 'filament.pages.coverage-report';
