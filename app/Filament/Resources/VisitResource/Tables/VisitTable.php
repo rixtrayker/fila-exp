@@ -53,6 +53,10 @@ class VisitTable
                 ->dateTime('d-M-Y')
                 ->sortable()
                 ->searchable(),
+            TextColumn::make('feedback')
+                ->label('Feedback')
+                ->searchable()
+                ->sortable(),
             TextColumn::make('comment')
                 ->limit(100)
                 ->wrap(),

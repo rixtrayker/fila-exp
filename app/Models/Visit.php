@@ -36,6 +36,7 @@ class Visit extends Model
         'lat',
         'lng',
         'comment',
+        'feedback',
     ];
 
     public function client()

@@ -4,6 +4,7 @@ namespace App\Filament\Resources\VisitResource\Forms;
 
 use App\Models\CallType;
 use App\Models\Client;
+use App\Models\ClientType;
 use App\Models\Product;
 use App\Models\User;
 use Awcodes\FilamentTableRepeater\Components\TableRepeater;
@@ -13,13 +14,30 @@ use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
 use Illuminate\Support\Facades\Route;
 
 class VisitForm
 {
+    protected static $clients;
+    protected static $clientOptions;
+    protected static $clientTypes;
+
+    public static function boot()
+    {
+        static::$clients = Client::inMyAreas()
+            ->select('id', 'name_en', 'client_type_id')
+            ->get()
+            ->keyBy('id');
+
+        static::$clientTypes = ClientType::pluck('name', 'id');
+        static::$clientOptions = self::$clients->mapWithKeys(function ($client) {
+            return [$client->id => $client->name_en];
+        });
+    }
+
     public static function schema(): array
     {
+        self::boot();
         $isMedicalRep = auth()->user()?->hasRole('medical-rep');
         $isDailyVisits = str_contains(Route::current()->uri(), 'daily-visits');
 
@@ -30,6 +48,7 @@ class VisitForm
             self::getCallTypeSelect(),
             ...self::getDatePickers(),
             self::getProductsSection(),
+            self::getFeedbackField(),
             self::getCommentField(),
         ];
     }
@@ -107,9 +126,10 @@ class VisitForm
                     ->limit(50)
                     ->pluck('name_en', 'id');
             })
-            ->options(Client::inMyAreas()->pluck('name_en', 'id'))
-            ->getOptionLabelUsing(fn ($value): ?string => Client::find($value)?->name)
+            ->options(self::$clientOptions)
+            ->getOptionLabelUsing(fn ($value): ?string => self::getClientName($value))
             ->preload()
+            ->reactive()
             ->required(!$isDailyVisits);
     }
 
@@ -181,6 +201,20 @@ class VisitForm
     }
 
     /**
+     * Get the feedback select field.
+     */
+    private static function getFeedbackField(): Select
+    {
+        return Select::make('feedback')
+            ->label('Feedback')
+            ->options(function ($get) {
+                $clientId = $get('client_id');
+                return self::getFeedbackOptions($clientId);
+            })
+            ->required();
+    }
+
+    /**
      * Get the comment textarea field.
      */
     private static function getCommentField(): Textarea
@@ -190,5 +224,46 @@ class VisitForm
             ->columnSpan('full')
             ->minLength('3')
             ->required();
+    }
+    private static function getClientName(?int $clientId): ?string
+    {
+        if (!$clientId) {
+            return null;
+        }
+        return self::$clients->where('id', $clientId)->first()?->name_en;
+    }
+
+    private static function getFeedbackOptions(?int $clientId): array
+    {
+        $feedbackOptions = [
+            'default' => [
+                'Aware' => 'Aware',
+                'Un Aware' => 'Un Aware',
+                'Promise to prescribe' => 'Promise to prescribe',
+                'Prescribing' => 'Prescribing',
+                'Advocate' => 'Advocate',
+            ],
+            'pharmacy' => [
+                'Available' => 'Available',
+                'Not Available' => 'Not Available',
+                'Not Interested' => 'Not Interested',
+                'Requested' => 'Requested',
+            ],
+        ];
+
+        if (!$clientId) {
+            return $feedbackOptions['default'];
+        }
+
+        $client = self::$clients->where('id', $clientId)->first();
+        if (!$client) {
+            return $feedbackOptions['default'];
+        }
+
+        if ($client->client_type_id === static::$clientTypes->search('Pharmacy')) {
+            return $feedbackOptions['pharmacy'];
+        }
+
+        return $feedbackOptions['default'];
     }
 }
