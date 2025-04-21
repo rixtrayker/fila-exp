@@ -9,47 +9,24 @@ use Illuminate\Support\Facades\Auth;
 trait ResourceHasPermission
 {
     /**
-     * The class name of the resource
-     */
-    protected static string $className;
-
-    /**
-     * The model class name
-     */
-    protected static ?string $model = null;
-
-    /**
-     * The permission name for the resource
-     */
-    protected static ?string $permissionName = null;
-
-    /**
-     * Initialize the trait
-     */
-    public static function bootResourceHasPermission(): void
-    {
-        static::$className = static::class;
-    }
-
-    /**
      * Get the permission name for the resource
      *
      * @return string
-     * @throws \RuntimeException If neither $permissionName nor $model is defined
+     * @throws \RuntimeException If neither $pName nor $model is defined
      */
     public static function getPermissionName(): string
     {
-        if (static::$permissionName) {
-            return static::$permissionName;
+        if (property_exists(static::class, 'permissionName') && static::class::$permissionName) {
+            return static::class::$permissionName;
         }
 
-        if (!static::$model) {
+        if (!property_exists(static::class, 'model')) {
             throw new \RuntimeException(
-                sprintf('Neither $permissionName nor $model is defined in %s', static::class)
+                sprintf('Neither $pName nor $model is defined in %s', static::class)
             );
         }
 
-        return Str::kebab(class_basename(static::$model));
+        return Str::kebab(class_basename(static::class::$model));
     }
 
     /**
