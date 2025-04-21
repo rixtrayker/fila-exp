@@ -20,4 +20,8 @@ class Area extends Model
     public function getBricksNamesAttribute(){
         return join(" | ", $this->bricks->pluck('full_name')->toArray());
     }
+
+    public function getBricksIdsAttribute(){
+        return $this->bricks->pluck('id')->toArray();
+    }
 }
