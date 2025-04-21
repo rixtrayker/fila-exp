@@ -117,25 +117,44 @@ class Client extends Model
 
     public function scopeInMyAreas($builder)
     {
-        if(!auth()->user()){
+        if (!$this->isAuthenticated()) {
             return;
         }
 
-        if(auth()->user()->hasRole('super-admin')){
+        if ($this->isSuperAdmin()) {
             return $builder;
         }
 
-        $myAreas = auth()->user()->areas;
-        $ids = [];
+        $brickIds = $this->getUserBrickIds();
 
-        foreach($myAreas as $area){
-            $ids = $ids + $area->bricks()->pluck('bricks.id')->toArray();
+        return $builder->whereIn('brick_id', $brickIds);
+    }
+
+    private function isAuthenticated(): bool
+    {
+        return auth()->check();
+    }
+
+    private function isSuperAdmin(): bool
+    {
+        return auth()->user()->hasRole('super-admin');
+    }
+
+    private function getUserBrickIds(): array
+    {
+        $user = auth()->user();
+        $brickIds = [];
+
+        // Get brick IDs from user's areas
+        foreach ($user->areas as $area) {
+            $brickIds = array_merge($brickIds, $area->bricks()->pluck('bricks.id')->toArray());
         }
 
-        if(auth()->user()->hasRole('medical-rep')){
-            $ids += auth()->user()->bricks()->pluck('bricks.id')->toArray();
+        // If user is medical rep, add their direct brick assignments
+        if ($user->hasRole('medical-rep')) {
+            $brickIds = array_merge($brickIds, $user->bricks()->pluck('bricks.id')->toArray());
         }
 
-        return $builder->whereIn('brick_id', $ids);
+        return array_unique($brickIds);
     }
 }
