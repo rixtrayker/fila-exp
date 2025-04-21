@@ -16,7 +16,7 @@ class CreateExpenses extends CreateRecord
         $dailyAllowance = 0;
         $kmPrice = 0;
 
-        if(auth()->user()->hasRole('medial-rep')){
+        if(auth()->user()->hasRole('medical-rep')){
             $dailyAllowanceSetting = Setting::where('name','medical-rep-daily-allowance')->first();
             $kmPriceSetting = Setting::where('name','medical-rep-km-price')->first();
 
@@ -38,14 +38,15 @@ class CreateExpenses extends CreateRecord
 
         $data['daily_allowance'] = $dailyAllowance;
 
+        // Calculate total based on new structure
         $data['total'] = $data['transportation']
-            +$data['lodging']
-            +(($data['mileage']-$dailyAllowance) * $kmPrice)
-            +$data['meal']
-            +$data['telephone_postage']
-            +$data['daily_allowance']
-            +$data['medical_expenses']
-            +$data['others'];
+            + $data['accommodation']
+            + ($data['distance'] * $kmPrice)
+            + $data['meal']
+            + $data['telephone_postage']
+            + $data['daily_allowance']
+            + $data['medical_expenses']
+            + $data['others'];
 
         return $data;
     }

@@ -49,35 +49,50 @@ class ExpensesResource extends Resource
                     ->default(today())
                     ->closeOnDateSelection()
                     ->required(),
+                TextInput::make('from')
+                    ->label('From')
+                    ->required(),
+                TextInput::make('to')
+                    ->label('To')
+                    ->required(),
+                Textarea::make('description')
+                    ->label('Description')
+                    ->required(),
+                TextInput::make('distance')
+                    ->label('Distance (km)')
+                    ->numeric()
+                    ->minValue(0),
                 TextInput::make('transportation')
-                    ->label('Transportation')
+                    ->label('Transportation (if no car)')
                     ->numeric()
-                    ->helperText('Money value of transportation')
-                    ->minValue(1),
-                TextInput::make('lodging')
-                    ->label('Lodging')
+                    ->helperText('Money value of transportation if no car')
+                    ->minValue(0),
+                TextInput::make('accommodation')
+                    ->label('Accommodation (Hotel)')
                     ->numeric()
-                    ->minValue(1),
-                TextInput::make('mileage')
-                    ->label('Mileage')
-                    ->numeric()
-                    ->minValue(1),
+                    ->minValue(0),
                 TextInput::make('meal')
-                    ->label('Meal')
+                    ->label('Meals')
                     ->numeric()
-                    ->minValue(1),
+                    ->helperText('Money value of meals')
+                    ->minValue(0),
                 TextInput::make('telephone_postage')
                     ->label('Postage/Telephone/Fax')
                     ->numeric()
-                    ->minValue(1),
+                    ->minValue(0),
+                TextInput::make('daily_allowance')
+                    ->label('Daily Allowance')
+                    ->numeric()
+                    ->helperText('Daily allowance amount')
+                    ->minValue(0),
                 TextInput::make('medical_expenses')
                     ->label('Medical Expenses')
                     ->numeric()
-                    ->minValue(1),
+                    ->minValue(0),
                 TextInput::make('others')
                     ->label('Others')
                     ->numeric()
-                    ->minValue(1),
+                    ->minValue(0),
                 TextInput::make('others_description')
                     ->label('Others description')
                     ->requiredWith('others'),
@@ -99,24 +114,28 @@ class ExpensesResource extends Resource
                     ->label('M.Rep')
                     ->hidden(auth()->user()->hasRole('medical-rep'))
                     ->sortable(),
-                TextColumn::make('total')
-                    ->label('Total')
+                TextColumn::make('from')
+                    ->label('From')
+                    ->sortable()
+                    ->searchable(),
+                TextColumn::make('to')
+                    ->label('To')
+                    ->sortable()
+                    ->searchable(),
+                TextColumn::make('distance')
+                    ->label('Distance (km)')
                     ->sortable()
                     ->searchable(),
                 TextColumn::make('transportation')
                     ->label('Transportation')
                     ->sortable()
                     ->searchable(),
-                TextColumn::make('lodging')
-                    ->label('Lodging')
-                    ->sortable()
-                    ->searchable(),
-                TextColumn::make('mileage')
-                    ->label('Mileage')
+                TextColumn::make('accommodation')
+                    ->label('Accommodation')
                     ->sortable()
                     ->searchable(),
                 TextColumn::make('meal')
-                    ->label('Meal')
+                    ->label('Meals')
                     ->sortable()
                     ->searchable(),
                 TextColumn::make('telephone_postage')
@@ -135,8 +154,8 @@ class ExpensesResource extends Resource
                     ->label('Others')
                     ->sortable()
                     ->searchable(),
-                TextColumn::make('others_description')
-                    ->label('Others description')
+                TextColumn::make('total')
+                    ->label('Total')
                     ->sortable()
                     ->searchable(),
                 TextColumn::make('date')
