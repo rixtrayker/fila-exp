@@ -222,8 +222,7 @@ class VisitForm
         return Textarea::make('comment')
             ->label('Comment')
             ->columnSpan('full')
-            ->minLength('3')
-            ->required();
+            ->minLength('3');
     }
     private static function getClientName(?int $clientId): ?string
     {
