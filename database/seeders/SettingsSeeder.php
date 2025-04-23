@@ -70,5 +70,7 @@ class SettingsSeeder extends Seeder
                 $setting
             );
         }
+
+        Setting::whereNotIn('key', array_column($settings, 'key'))->delete();
     }
 }
