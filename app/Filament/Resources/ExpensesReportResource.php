@@ -38,8 +38,8 @@ class ExpensesReportResource extends Resource
                 'users.name as medical_rep',
                 'daily_allowance',
                 DB::raw('SUM(transportation) as transportation'),
-                DB::raw('SUM(lodging) as lodging'),
-                DB::raw('SUM(mileage) as mileage'),
+                DB::raw('SUM(accommodation) as accommodation'),
+                DB::raw('SUM(distance) as distance'),
                 DB::raw('SUM(meal) as meal'),
                 DB::raw('SUM(telephone_postage) as telephone_postage'),
                 DB::raw('SUM(medical_expenses) as medical_expenses'),
@@ -65,10 +65,10 @@ class ExpensesReportResource extends Resource
                     ->label('Medical Rep'),
                 TextColumn::make('transportation')
                     ->label('Transportation'),
-                TextColumn::make('lodging')
-                    ->label('Lodging'),
-                TextColumn::make('mileage')
-                    ->label('Mileage'),
+                TextColumn::make('accommodation')
+                    ->label('Accommodation'),
+                TextColumn::make('distance')
+                    ->label('Distance (km)'),
                 TextColumn::make('meal')
                     ->label('Meal'),
                 TextColumn::make('telephone_postage')
@@ -106,7 +106,7 @@ class ExpensesReportResource extends Resource
                     ->options(self::getMedicalReps())
                     ->query(function (Builder $query, array $data): Builder {
                         if(count($data['values'])){
-                            return $query->whereIn('vacation_requests.user_id', $data['values']);
+                            return $query->whereIn('expenses.user_id', $data['values']);
                         }
                         else
                             return $query;
