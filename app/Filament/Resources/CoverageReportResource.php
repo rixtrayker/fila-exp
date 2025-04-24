@@ -114,6 +114,15 @@ class CoverageReportResource extends Resource
                         'planned' => 'Planned',
                         'missed' => 'Missed',
                     ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        if (empty($data['values'])) {
+                            return $query;
+                        }
+
+                        return $query->whereHas('visits', function ($q) use ($data) {
+                            $q->whereIn('status', $data['values']);
+                        });
+                    })
                     ->multiple(),
                 Tables\Filters\Filter::make('visit_date')
                     ->form([
