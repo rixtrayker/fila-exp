@@ -24,13 +24,13 @@ class Setting extends Model
             return Cache::get('settings');
         }
 
-        self::cacheSettings();
+        return self::cacheSettings();
     }
 
     public static function cacheSettings()
     {
         return Cache::remember('settings', 60, function () {
-            return self::getSettingsByOrder();
+            return self::all();
         });
     }
 
