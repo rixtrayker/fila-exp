@@ -61,6 +61,17 @@ Route::get('/admin/ops/migrate-plan-data', function () {
     ]);
     return true;
 });
+// artisan migrate
+Route::get('/admin/ops/migrate', function () {
+    Artisan::call('migrate');
+    return Artisan::output();
+});
+
+// composer dump-autoload
+Route::get('/admin/ops/composer-dump-autoload', function () {
+    Artisan::call('composer dump-autoload');
+    return true;
+});
 
 // php version
 Route::get('/admin/ops/php-version', function () {
