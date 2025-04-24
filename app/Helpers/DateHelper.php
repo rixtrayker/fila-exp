@@ -64,4 +64,26 @@ class DateHelper{
 
         return $today;
     }
+
+    // working days in a date range
+    public static function countWorkingDays($startDate, $endDate): float
+    {
+       // friday is off and half of thursday it counts  0.5
+       // and saturday is stat of the week
+       $startDate = Carbon::parse($startDate);
+       $endDate = Carbon::parse($endDate);
+
+       $days = 0;
+       for($date = $startDate; $date->lte($endDate); $date->addDay()){
+            if ($date->isFriday()) {
+                continue;
+            } elseif ($date->isThursday()) {
+                $days += 0.5;
+            } else {
+                $days += 1;
+            }
+       }
+
+       return $days;
+    }
 }

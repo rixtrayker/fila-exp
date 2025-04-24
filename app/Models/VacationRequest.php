@@ -43,4 +43,15 @@ class VacationRequest extends Model
         $vacationDuration =  $this->vacationDurations()->latest()->first();
         return $vacationDuration->end;
     }
+
+    public function getDurationAttribute()
+    {
+        $vacationDuration =  $this->vacationDurations;
+        $sum = 0;
+        // handle 0.5 of day vacationm
+        foreach($vacationDuration as $duration){
+            $sum += $duration->duration;
+        }
+        return $sum;
+    }
 }

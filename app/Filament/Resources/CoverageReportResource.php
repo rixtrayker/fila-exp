@@ -69,7 +69,7 @@ class CoverageReportResource extends Resource
                     ->searchable()
                     ->label('Medical Rep'),
                 // area
-                TextColumn::make('area.name')
+                TextColumn::make('area_name')
                     ->searchable()
                     ->label('Area'),
                 // working days
@@ -91,11 +91,14 @@ class CoverageReportResource extends Resource
                 TextColumn::make('monthly_visit_target')
                     ->label('Monthly Visits Target'),
                 // SOPs
-                TextColumn::make('sops_count')
-                    ->label('SOPs %'),
+                TextColumn::make('sops')
+                    ->label('SOPs %')
+                    ->formatStateUsing(function ($state) {
+                        return "{$state}%";
+                    }),
                 // Daily report
-                TextColumn::make('daily_report_count')
-                    ->label('Daily Report'),
+                TextColumn::make('actual_visits')
+                    ->label('Actual Visits'),
                 // Call rate
                 TextColumn::make('call_rate')
                     ->label('Call Rate'),
