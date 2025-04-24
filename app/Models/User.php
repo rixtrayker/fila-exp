@@ -145,6 +145,19 @@ class User extends Authenticatable  implements FilamentUser
     {
         return $this->hasMany(User::class, 'parent_id');
     }
+    public function visits()
+    {
+        return $this->hasMany(Visit::class);
+    }
+    public function activities()
+    {
+        return $this->hasMany(Activity::class);
+    }
+    public function officeWorks()
+    {
+        return $this->hasMany(OfficeWork::class);
+    }
+    // clients within the same area and some range of distance
     // public function firstRole()
     // {
     //     return $this->morphToMany(
