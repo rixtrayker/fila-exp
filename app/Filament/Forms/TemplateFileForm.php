@@ -7,12 +7,14 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use App\Filament\Resources\TemplateFileResource\Pages\CreateTemplateFile;
-use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use App\Models\Country;
 
 class TemplateFileForm
 {
     public static function schema(): array
     {
+        $countries = Country::pluck('name', 'id')->toArray();
+        $defaultCountry = array_key_first($countries);
 
         return [
             FileUpload::make('path')
@@ -34,9 +36,11 @@ class TemplateFileForm
                 ->required()
                 ->maxLength(255),
             Select::make('country_id')
-                ->relationship('country', 'name')
+            // ->relationship('country', 'name')
+                ->options($countries)
+                ->default($defaultCountry)
                 ->visible(fn ($livewire) => self::isRequired($livewire))
-                ->required(fn ($livewire)=> self::isRequired($livewire)),
+                ->required(fn ($livewire) => self::isRequired($livewire)),
         ];
     }
 

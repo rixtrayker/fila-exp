@@ -43,16 +43,18 @@ class TemplateFileResource extends Resource
                             default => 'heroicon-o-document',
                         })
                         ->weight('bold'),
-                    Tables\Columns\TextColumn::make('country.name')
-                        ->badge()
-                        ->color('gray'),
+
                     Tables\Columns\TextColumn::make('size')
                         ->formatStateUsing(fn ($state) => number_format($state / 1024, 2) . ' KB')
                         ->color('gray'),
                     Tables\Columns\TextColumn::make('uploadedBy.name')
                         ->label('Uploaded by')
-                        ->color('gray'),
+                        ->color('gray')
+                        ->badge(),
                 ]),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime('d-m-Y H:i')
+                    ->color('gray'),
             ])
             ->contentGrid([
                 'md' => 2,
@@ -63,10 +65,10 @@ class TemplateFileResource extends Resource
                     ->icon('heroicon-o-arrow-down-tray')
                     ->url(fn (TemplateFile $record) => Storage::url($record->path))
                     ->openUrlInNewTab(),
-                Tables\Actions\EditAction::make()
-                    ->visible(fn () => auth()->user()->hasRole(['admin', 'country_manager'])),
+                // Tables\Actions\EditAction::make()
+                //     ->visible(auth()->user()->can('view template-file')),
                 Tables\Actions\DeleteAction::make()
-                    ->visible(fn () => auth()->user()->hasRole(['admin', 'country_manager'])),
+                    ->visible(auth()->user()->can('delete template-file')),
             ])
             ->defaultSort('created_at', 'desc');
     }
@@ -83,7 +85,7 @@ class TemplateFileResource extends Resource
         return [
             'index' => Pages\ListTemplateFiles::route('/'),
             'create' => Pages\CreateTemplateFile::route('/create'),
-            'edit' => Pages\EditTemplateFile::route('/{record}/edit'),
+            // 'edit' => Pages\EditTemplateFile::route('/{record}/edit'),
         ];
     }
 }
