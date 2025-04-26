@@ -42,7 +42,7 @@ class ViewEditRequest extends ViewRecord
         $this->callHook('afterFill');
     }
 
-    protected function refreshFormData(array $attributes): void
+    public function refreshFormData(array $attributes): void
     {
         $this->data = array_merge(
             $this->data,
