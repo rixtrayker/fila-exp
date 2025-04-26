@@ -14,7 +14,7 @@ class OverallChart extends ChartWidget
     public $to;
     public $user_id;
     protected static ?string $maxHeight = '300px';
-    public string $dataChecksum = '';
+    public ?string $dataChecksum = null;
 
 
     protected function getType(): string
