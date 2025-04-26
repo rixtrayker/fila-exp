@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Scopes\GetMineScope;
 
 class OfficeWork extends Model
 {
@@ -38,5 +39,11 @@ class OfficeWork extends Model
     {
         $this->status = 'rejected';
         $this->save();
+    }
+
+    public static function boot()
+    {
+        parent::boot();
+        static::addGlobalScope(new GetMineScope);
     }
 }
