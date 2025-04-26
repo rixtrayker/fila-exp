@@ -48,6 +48,7 @@ class RolesAndPermissionsSeeder extends Seeder
         'role',
         'setting',
         'speciality',
+        'template-file',
         'user',
         'vacation',
         'vacation-duration',
