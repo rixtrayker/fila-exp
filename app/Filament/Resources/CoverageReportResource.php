@@ -16,6 +16,7 @@ use Livewire\Attributes\On;
 use App\Models\User;
 use App\Models\Area;
 use App\Models\ClientType;
+use App\Exports\CoverageReportExport;
 
 class CoverageReportResource extends Resource
 {
@@ -203,7 +204,22 @@ class CoverageReportResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make(),
             ])
-            ->bulkActions([]);
+            ->bulkActions([
+                Tables\Actions\BulkAction::make('export')
+                    ->label('Export Selected')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->action(function ($records) {
+                        return (new CoverageReportExport($records->toQuery()))->download('coverage-report.xlsx');
+                    }),
+            ])
+            ->headerActions([
+                Tables\Actions\Action::make('export')
+                    ->label('Export All')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->action(function () {
+                        return (new CoverageReportExport(query: self::getEloquentQuery()))->download('coverage-report.xlsx');
+                    }),
+            ]);
     }
 
     public static function getPages(): array
