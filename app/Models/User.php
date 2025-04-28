@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -13,20 +12,16 @@ use Laravel\Sanctum\HasApiTokens;
 use App\Traits\HasEditRequest;
 use Filament\Models\Contracts\FilamentUser;
 use Finller\Kpi\HasKpi;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Kalnoy\Nestedset\NodeTrait;
 use App\Models\Role;
 use Filament\Panel;
 use Illuminate\Support\Facades\DB;
-use Spatie\Permission\PermissionRegistrar;
 use Spatie\Permission\Traits\HasRoles;
 use \Staudenmeir\LaravelMergedRelations\Eloquent\HasMergedRelationships;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use App\Helpers\DateHelper;
-use App\Services\VacationCalculator;
+use App\Models\Traits\Reports\HasCoverageReportStatistics;
 
 class User extends Authenticatable  implements FilamentUser
 {
@@ -43,6 +38,7 @@ class User extends Authenticatable  implements FilamentUser
     use TwoFactorAuthenticatable;
     use HasMergedRelationships;
     use HasKpi;
+    use HasCoverageReportStatistics;
 
     /**
      * The attributes that are mass assignable.
@@ -253,89 +249,5 @@ class User extends Authenticatable  implements FilamentUser
                 self::fixTree();
             }
         });
-    }
-
-    public static function getDateRange()
-    {
-        return [
-            request()->get('tableFilters.date_range.from_date') ?? today()->startOfMonth(),
-            request()->get('tableFilters.date_range.to_date') ?? today()->endOfMonth()
-        ];
-    }
-    // coverage report attributes vacations
-    // area_name ( first area)
-    public function getAreaNameAttribute()
-    {
-        return $this->areas()?->first()?->name;
-    }
-    // working days (calc_valid working days in that date range)
-
-    // actual working days = working days - vacations
-
-    // Actual visits = visits
-    public function getActualVisitsAttribute()
-    {
-        $fromDate = self::getDateRange()[0];
-        $toDate = self::getDateRange()[1];
-        return $this->visits()->whereBetween('visit_date', [$fromDate, $toDate])->count();
-    }
-    // vacations (count vacations in that date range)
-    public function getVacationsCountAttribute()
-    {
-        $fromDate = self::getDateRange()[0];
-        $toDate = self::getDateRange()[1];
-
-        return app(VacationCalculator::class)->calculateVacationDays($this, $fromDate, $toDate);
-    }
-    // working days
-    public function getWorkingDaysAttribute()
-    {
-        $fromDate = self::getDateRange()[0];
-        $toDate = self::getDateRange()[1];
-        return DateHelper::countWorkingDays($fromDate, $toDate);
-    }
-    // actual working days
-    public function getActualWorkingDaysAttribute()
-    {
-        $fromDate = self::getDateRange()[0];
-        $toDate = self::getDateRange()[1];
-        return DateHelper::countWorkingDays($fromDate, $toDate) - $this->vacations_count;
-    }
-    // Monthly visit target = actual working days * daily visit target
-    // medical rep visit target from settings is cached
-    public function getMonthlyVisitTargetAttribute()
-    {
-        $target = Setting::getSetting('medical_rep_visit_target')->value ?? 8;
-        return $this->actual_working_days * $target;
-    }
-
-
-    // Daily report
-    // public function getDailyReportCountAttribute()
-    // {
-    //     return $this->daily_reports()->count();
-    // }
-
-    // activities
-    public function getActivitiesCountAttribute()
-    {
-        return $this->activities()->count();
-    }
-    // office work
-    public function getOfficeWorkCountAttribute()
-    {
-        return $this->officeWorks()->count();
-    }
-    // SOPs = "{actual visits / monthly visits target * 100 } %" and rounded to 2 decimal places
-    public function getSopsAttribute()
-    {
-        $dailyTarget = Setting::getSetting('medical_rep_visit_target')->value ?? 8;
-        return round($this->actual_visits / ($this->actual_working_days * $dailyTarget) * 100, 2);
-    }
-    // Call rate = total visits / actual working days
-    public function getCallRateAttribute()
-    {
-        $dailyTarget = Setting::getSetting('medical_rep_visit_target')->value ?? 8;
-        return round($this->actual_visits / ($this->actual_working_days * $dailyTarget), 2);
     }
 }

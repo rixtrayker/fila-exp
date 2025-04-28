@@ -28,7 +28,7 @@ class ListCoverageReports extends ListRecords
     protected function getHeaderWidgets(): array
     {
         return [
-            OverallChart::class,
+            // OverallChart::class,
         ];
     }
 

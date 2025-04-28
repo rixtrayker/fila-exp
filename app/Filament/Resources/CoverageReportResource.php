@@ -42,9 +42,11 @@ class CoverageReportResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         // Get filter values from request
-        $fromDate = request()->get('tableFilters.visit_date.from_date') ?? today()->startOfMonth();
-        $toDate = request()->get('tableFilters.visit_date.to_date') ?? today()->endOfMonth();
-        $status = request()->get('tableFilters.status') ?? 'planned';
+        $dateRange = request()->get('tableFilters')['date_range'] ?? [];
+        $fromDate = $dateRange['from_date'] ?? today()->startOfMonth();
+        $toDate = $dateRange['to_date'] ?? today()->endOfMonth();
+
+        $status = request()->get('tableFilters')['status'] ?? null;
         // Only include medical-rep or district manager roles using spatie permission
         return User::role(['medical-rep', 'district-manager'])
             ->with(['visits' => function ($query) use ($fromDate, $toDate, $status) {
@@ -136,7 +138,8 @@ class CoverageReportResource extends Resource
                         });
                     })
                     ->multiple(),
-                Tables\Filters\Filter::make('visit_date')
+                Tables\Filters\Filter::make('date_range')
+                    ->label('Date Range')
                     ->form([
                         Forms\Components\DatePicker::make('from_date')
                             ->default(today()->subDays(7))

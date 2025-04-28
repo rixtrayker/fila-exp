@@ -2,6 +2,7 @@
 
 
     <div class="flex text-sm" >
+    
 
         <div class="flex-1 h-full border overflow-hidden rounded-lg shadow-sm text-chartgreenB @if(config('filament.dark_mode'))bg-chartgreen  border-gray-300 @endif">
 
