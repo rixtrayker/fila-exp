@@ -181,6 +181,13 @@ class RolesAndPermissionsSeeder extends Seeder
         $developerPermissions = $this->getDeveloperPermissions($allPermissions);
         Role::firstOrCreate(['name' => 'developer', 'display_name' => 'Developer'])
             ->syncPermissions($developerPermissions);
+
+        Role::firstOrCreate(['name' => 'medical-rep', 'display_name' => 'Medical Rep']);
+        Role::firstOrCreate(['name' => 'district-manager', 'display_name' => 'District Manager']);
+        Role::firstOrCreate(['name' => 'area-manager', 'display_name' => 'Area Manager']);
+        Role::firstOrCreate(['name' => 'country-manager', 'display_name' => 'Country Manager']);
+        Role::firstOrCreate(['name' => 'account-manager', 'display_name' => 'Account Manager']);
+        Role::firstOrCreate(['name' => 'account', 'display_name' => 'Account']);
     }
 
     /**
