@@ -27,6 +27,11 @@ class VacationRequest extends Model
         return $this->hasMany(VacationDuration::class);
     }
 
+    public function scopeApproved($query)
+    {
+        return $query->where('approved', '>', 0);
+    }
+
     public static function boot()
     {
         parent::boot();

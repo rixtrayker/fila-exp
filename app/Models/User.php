@@ -26,6 +26,7 @@ use \Staudenmeir\LaravelMergedRelations\Eloquent\HasMergedRelationships;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Helpers\DateHelper;
+use App\Services\VacationCalculator;
 
 class User extends Authenticatable  implements FilamentUser
 {
@@ -283,22 +284,8 @@ class User extends Authenticatable  implements FilamentUser
     {
         $fromDate = self::getDateRange()[0];
         $toDate = self::getDateRange()[1];
-        // $vacations = $this->vacationDurations()->whereDate('start', '>=', $fromDate)->whereDate('end', '=', $toDate)->get();
-        // get days intersection between vacation durations and the date range
-        // or get all vacations in that date range
-        $vacations = $this->vacationDurations()->where(function($query) use ($fromDate, $toDate){
-            $query->whereDate('start', '<=', $toDate)->whereDate('end', '>=', $fromDate);
-        })->orWhere(function($query) use ($fromDate, $toDate){
-            $query->whereDate('start', '<=', $fromDate)->whereDate('end', '>=', $toDate);
-        })->get();
 
-        $sum = 0;
-
-        foreach($vacations as $vacation){
-            $sum += $vacation->duration;
-        }
-
-        return $sum;
+        return app(VacationCalculator::class)->calculateVacationDays($this, $fromDate, $toDate);
     }
     // working days
     public function getWorkingDaysAttribute()

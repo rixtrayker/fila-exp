@@ -44,18 +44,30 @@ class CoverageReportResource extends Resource
         // Get filter values from request
         $fromDate = request()->get('tableFilters.visit_date.from_date') ?? today()->startOfMonth();
         $toDate = request()->get('tableFilters.visit_date.to_date') ?? today()->endOfMonth();
-
+        $status = request()->get('tableFilters.status') ?? 'planned';
         // Only include medical-rep or district manager roles using spatie permission
         return User::role(['medical-rep', 'district-manager'])
-            ->with(['visits' => function ($query) use ($fromDate, $toDate) {
-                $query->whereBetween('visit_date', [$fromDate, $toDate]);
-            }])
-            ->with(['activities' => function ($query) use ($fromDate, $toDate) {
-                $query->whereDate('created_at', '>=', $fromDate)->whereDate('created_at', '<=', $toDate);
-            }])
-            ->with(['officeWorks' => function ($query) use ($fromDate, $toDate) {
-                $query->whereDate('created_at', '>=', $fromDate)->whereDate('created_at', '<=', $toDate);
-            }]);
+            ->with(['visits' => function ($query) use ($fromDate, $toDate, $status) {
+                if ($fromDate){
+                    $query->where('visit_date', '>=', $fromDate);
+                }
+                if ($toDate){
+                    $query->where('visit_date', '<=', $toDate);
+                }
+                if ($status){
+                    $query->where('status', $status);
+                }
+            },
+            'activities' => function ($query) use ($fromDate, $toDate) {
+                if ($fromDate){
+                    $query->whereDate('created_at', '>=', $fromDate);
+                }
+                if ($toDate){
+                    $query->whereDate('created_at', '<=', $toDate);
+                }
+            },
+            // 'visits.client'
+        ]);
     }
 
     public static function table(Table $table): Table
@@ -127,13 +139,16 @@ class CoverageReportResource extends Resource
                 Tables\Filters\Filter::make('visit_date')
                     ->form([
                         Forms\Components\DatePicker::make('from_date')
-                            ->default(today()->subDays(7)),
+                            ->default(today()->subDays(7))
+                            ->maxDate(today()),
                         Forms\Components\DatePicker::make('to_date')
-                            ->default(today()),
+                            ->default(today())
+                            ->maxDate(today()),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
-                        // This filter doesn't directly apply to users but will be used in the getEloquentQuery
-                        return $query;
+                        return $query->whereHas('visits', function ($q) use ($data) {
+                            $q->whereBetween('visit_date', [$data['from_date'], $data['to_date']]);
+                        });
                     }),
                 Tables\Filters\SelectFilter::make('area')
                     ->label('Area')
