@@ -18,19 +18,19 @@
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-2">
-                    <a href="{{ route('filament.admin.resources.clients.view', ['record' => $clientId]) }}" target="_blank"
+                    <a href="{{ url("/admin/clients/$clientId") }}" target="_blank"
                        class="font-medium text-gray-900 dark:text-gray-100 hover:text-primary-500 dark:hover:text-primary-400">
                         {{ $clientVisits->first()?->client?->name ?? 'Unknown Client' }}
-                    </a>
                     <span class="text-sm text-gray-500 dark:text-gray-400">
-                        ({{ $clientVisits->count() }} visits)
+                        &nbsp;({{ $clientVisits->count() }} visits)
                     </span>
+                    </a>
                 </div>
             </div>
 
             <div class="mt-2 space-y-1">
                 @foreach($clientVisits as $visit)
-                    <a href="{{ route('filament.admin.resources.visits.view', ['record' => $visit->id]) }}" target="_blank"
+                    <a href="{{ url("/admin/visits/$visit->id") }}" target="_blank"
                        class="block text-sm text-gray-600 dark:text-gray-300 hover:text-primary-500 dark:hover:text-primary-400">
                         {{ $visit->visit_date->format('Y-m-d') }} -
                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
