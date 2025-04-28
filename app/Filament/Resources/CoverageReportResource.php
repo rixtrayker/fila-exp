@@ -17,6 +17,7 @@ use App\Models\User;
 use App\Models\Area;
 use App\Models\ClientType;
 use App\Exports\CoverageReportExport;
+use Illuminate\Contracts\View\View;
 
 class CoverageReportResource extends Resource
 {
@@ -36,8 +37,9 @@ class CoverageReportResource extends Resource
 
     public function __construct()
     {
-        $this->from = today()->subDays(7);
-        $this->to = today();
+        $dateRange = request()->get('tableFilters')['date_range'] ?? [];
+        $this->from = $dateRange['from_date'] ?? today()->startOfMonth();
+        $this->to = $dateRange['to_date'] ?? today()->endOfMonth();
     }
 
     public static function getEloquentQuery(): Builder
@@ -47,7 +49,7 @@ class CoverageReportResource extends Resource
         $fromDate = $dateRange['from_date'] ?? today()->startOfMonth();
         $toDate = $dateRange['to_date'] ?? today()->endOfMonth();
 
-        $status = request()->get('tableFilters')['status'] ?? null;
+        $status = request()->get('tableFilters')['status'] ?? 'visited';
         // Only include medical-rep or district manager roles using spatie permission
         return User::role(['medical-rep', 'district-manager'])
             ->with(['visits' => function ($query) use ($fromDate, $toDate, $status) {
@@ -129,6 +131,7 @@ class CoverageReportResource extends Resource
                         'planned' => 'Planned',
                         'missed' => 'Missed',
                     ])
+                    ->default('visited')
                     ->query(function (Builder $query, array $data): Builder {
                         if (empty($data['values'])) {
                             return $query;
@@ -203,6 +206,22 @@ class CoverageReportResource extends Resource
             ->paginated([10, 25, 50, 100, 1000, 'all'])
             ->actions([
                 Tables\Actions\ViewAction::make(),
+                Tables\Actions\Action::make('visit_breakdown')
+                    ->label('Visit Breakdown')
+                    ->icon('heroicon-o-clipboard-document-list')
+                    ->modalContent(fn (User $record, Table $table): View => view(
+                        'filament.resources.coverage-report-resource.pages.components.visit-breakdown-modal',
+                        [
+                            'user' => $record,
+                            // table filters static
+                            'fromDate' => $table->getFilter('date_range')->getState()['from_date'],
+                            'toDate' => $table->getFilter('date_range')->getState()['to_date'],
+                            'status' => $table->getFilter('status')->getState()['values'],
+                        ]
+                    ))
+                    ->modalSubmitAction(false)
+                    ->modalWidth('2xl')
+                    ->modalHeading(fn (User $record) => "Visit Breakdown for {$record->name}"),
             ])
             ->bulkActions([
                 Tables\Actions\BulkAction::make('export')

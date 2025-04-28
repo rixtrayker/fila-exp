@@ -19,11 +19,6 @@ class ListCoverageReports extends ListRecords
     public $to;
     public $user_id = [];
 
-    public function __construct()
-    {
-        $this->from = today()->subDays(7);
-        $this->to = today();
-    }
 
     protected function getHeaderWidgets(): array
     {
@@ -32,34 +27,34 @@ class ListCoverageReports extends ListRecords
         ];
     }
 
-    public function infolist(Infolist $infolist): Infolist
-    {
-        $query = $this->getTableQuery();
+    // public function infolist(Infolist $infolist): Infolist
+    // {
+    //     $query = $this->getTableQuery();
 
-        return $infolist
-            ->schema([
-                Section::make('Coverage Summary')
-                    ->schema([
-                        TextEntry::make('visited_count')
-                            ->label('Done Visits')
-                            ->getStateUsing(fn () => $query->where('status', 'visited')->count()),
-                        TextEntry::make('missed_count')
-                            ->label('Missed Visits')
-                            ->getStateUsing(fn () => $query->where('status', 'missed')->count()),
-                        TextEntry::make('pending_count')
-                            ->label('Pending Visits')
-                            ->getStateUsing(fn () => $query->whereIn('status', ['pending', 'planned'])->count()),
-                    ])
-                    ->columns(3),
-            ]);
-    }
+    //     return $infolist
+    //         ->schema([
+    //             Section::make('Coverage Summary')
+    //                 ->schema([
+    //                     TextEntry::make('visited_count')
+    //                         ->label('Done Visits')
+    //                         ->getStateUsing(fn () => $query->where('status', 'visited')->count()),
+    //                     TextEntry::make('missed_count')
+    //                         ->label('Missed Visits')
+    //                         ->getStateUsing(fn () => $query->where('status', 'missed')->count()),
+    //                     TextEntry::make('pending_count')
+    //                         ->label('Pending Visits')
+    //                         ->getStateUsing(fn () => $query->whereIn('status', ['pending', 'planned'])->count()),
+    //                 ])
+    //                 ->columns(3),
+    //         ]);
+    // }
 
-    #[On('updateVisitsList')]
-    public function updateVisitsList($eventData)
-    {
-        $this->from = $eventData['from'];
-        $this->to = $eventData['to'];
-        $this->user_id = $eventData['user_id'];
-        $this->dispatch('updateVisitsList', $eventData);
-    }
+    // #[On('updateVisitsList')]
+    // public function updateVisitsList($eventData)
+    // {
+    //     $this->from = $eventData['from'];
+    //     $this->to = $eventData['to'];
+    //     $this->user_id = $eventData['user_id'];
+    //     $this->dispatch('updateVisitsList', $eventData);
+    // }
 }
