@@ -59,7 +59,7 @@ class SystemUtilityController extends Controller
             // Run the command from the base path with the modified PATH environment
             $result = Process::path(base_path())
                          ->env(['PATH' => $newPath]) // Set the PATH for the command
-                         ->run('composer dump-autoload -o --no-dev --apcu'); // Added common optimization flags
+                         ->run('composer dump-autoload -o --apcu'); // Removed --no-dev flag
 
             if ($result->successful()) {
                 Log::info('composer dump-autoload executed successfully via endpoint.');
