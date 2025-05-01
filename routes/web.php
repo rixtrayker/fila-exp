@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\SystemUtilityController;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 use App\Jobs\OptimizeAppPerformance;
@@ -9,6 +10,8 @@ use App\Models\Client;
 use Illuminate\Support\Facades\DB;
 use Laravel\Octane\Swoole\SwooleExtension;
 use App\Jobs\FixOrdersWith0Total;
+use Symfony\Component\Process\Process;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -68,10 +71,8 @@ Route::get('/admin/ops/migrate', function () {
 });
 
 // composer dump-autoload
-Route::get('/admin/ops/composer-dump-autoload', function () {
-    Artisan::call('composer dump-autoload');
-    return true;
-});
+Route::get('/admin/ops/run-composer-dump-autoload', [SystemUtilityController::class, 'dumpAutoload']);
+    // ->middleware(['auth', 'can:run-system-commands']);
 
 // php version
 Route::get('/admin/ops/php-version', function () {

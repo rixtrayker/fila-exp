@@ -125,6 +125,8 @@ return [
 
     'cipher' => 'AES-256-CBC',
 
+    'dump_autoload_secret' => env('DUMP_AUTOLOAD_SECRET'),
+
     /*
     |--------------------------------------------------------------------------
     | Maintenance Mode Driver
