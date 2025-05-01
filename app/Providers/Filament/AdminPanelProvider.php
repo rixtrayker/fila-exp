@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Resources\VisitResource\Widgets\StatsOverview;
+use App\Filament\Resources\VisitResource\Widgets\VisitCompletionChart;
 use App\Filament\Resources\VisitResource\Widgets\WeeklyVisitsChart;
 use App\Filament\Resources\VisitResource\Widgets\YearVisitsChart;
 use App\Filament\Widgets\MonthlySalesChart;
@@ -80,8 +81,9 @@ class AdminPanelProvider extends PanelProvider
             // ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
                 StatsOverview::class,
+                VisitCompletionChart::class,
                 MonthlySalesChart::class,
-                WeeklyVisitsChart::class,
+                // WeeklyVisitsChart::class,
             ])
             ->middleware([
                 EncryptCookies::class,
