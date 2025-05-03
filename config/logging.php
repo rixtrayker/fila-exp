@@ -69,6 +69,11 @@ return [
             'level' => env('LOG_LEVEL', 'debug'),
             'days' => 14,
         ],
+        'fetch-holidays' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/fetch-holidays.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+        ],
 
         'slack' => [
             'driver' => 'slack',

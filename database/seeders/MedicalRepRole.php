@@ -25,6 +25,7 @@ class MedicalRepRole extends Seeder
             'expenses' => ['view', 'create', 'update', 'delete'],
             'frequency-report' => ['view'],
             'message' => ['view', 'create', 'update', 'delete'],
+            'official-holiday' => ['view'],
             'order-report' => ['view'],
             'order' => ['view', 'create', 'update', 'delete'],
             'plan' => ['view', 'create', 'update', 'delete'],

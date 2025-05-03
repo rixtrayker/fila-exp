@@ -4,6 +4,7 @@ namespace App\Console;
 
 use App\Jobs\CancelMissedVisitsJob;
 use App\Jobs\OptimizeAppPerformance;
+use App\Jobs\FetchOfficialHolidays;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use Illuminate\Support\Facades\Log;
@@ -25,7 +26,7 @@ class Kernel extends ConsoleKernel
         }
 
         $schedule->job(new OptimizeAppPerformance)->daily()->at('00:00');
-
+        $schedule->job(new FetchOfficialHolidays)->monthlyOn(1, '00:00');
     }
 
     /**

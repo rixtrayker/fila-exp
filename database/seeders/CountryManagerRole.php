@@ -24,5 +24,18 @@ class CountryManagerRole extends Seeder
 
         $role = Role::where('name', 'country-manager')->first();
         $role->permissions()->attach($permissions);
+
+        $resources = [
+            'official-holiday' => ['view', 'create', 'update', 'delete'],
+        ];
+
+        foreach ($resources as $resource => $permissions) {
+            $permissions = [];
+            foreach ($permissions as $permission) {
+                $permissions[] = $resource . ' ' . $permission;
+            }
+
+            $role->permissions()->attach($permissions);
+        }
     }
 }

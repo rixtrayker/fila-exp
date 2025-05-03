@@ -36,6 +36,7 @@ class RolesAndPermissionsSeeder extends Seeder
         'hospital',
         'message',
         'office-work',
+        'official-holiday',
         'order',
         'order-product',
         'permission',
