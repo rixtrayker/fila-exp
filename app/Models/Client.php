@@ -14,7 +14,9 @@ class Client extends Model
     use HasEditRequest;
     use HasRelationships;
 
-    protected $appends = ['name', 'mapUrl'];
+    protected $appends = ['name','mapUrl'];
+
+    protected $with = ['brick.area'];
     protected $fillable = [
         'name_en',
         'name_ar',
@@ -156,5 +158,17 @@ class Client extends Model
         }
 
         return array_unique($brickIds);
+    }
+
+    // achivement_percentage
+    public function getAchivementPercentageAttribute()
+    {
+        $clientGrade = $this->grade;
+        $clientDoneVisits = $this->visits()->where('status', 'visited')->count();
+        $ids = Client::where('grade', $clientGrade)->pluck('id');
+        $totalVisits = Visit::whereIn('client_id', $ids)->where('status', 'visited')->count();
+
+        $result = round($clientDoneVisits / $totalVisits * 100, 2);
+        return $result . '%';
     }
 }

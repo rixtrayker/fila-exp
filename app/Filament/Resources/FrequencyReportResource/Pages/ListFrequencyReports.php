@@ -90,7 +90,7 @@ class ListFrequencyReports extends ListRecords implements HasInfolists
                     TextEntry::make('total_visits_count')
                         ->label('Total Visits')
                         ->badge()
-                        ->color('gray')
+                        ->color('info')
                         ->size(TextEntry\TextEntrySize::Large)
                         ->icon('heroicon-m-list-bullet')
                         ->iconPosition(IconPosition::After),
@@ -109,8 +109,8 @@ class ListFrequencyReports extends ListRecords implements HasInfolists
         $summary['doctors_count'] = $records->count();
         $summary['grade'] = implode(', ', array_unique($records->pluck('grade')->toArray()));
         $summary['bricks_count'] = count(array_unique($records->pluck('brick_id')->toArray()));
-        $summary['from_date'] = $this->table->getFilter('visit_date')->getState()['from_date'];
-        $summary['to_date'] = $this->table->getFilter('visit_date')->getState()['to_date'];
+        $summary['from_date'] = $this->table->getFilter('date_range')->getState()['from_date'];
+        $summary['to_date'] = $this->table->getFilter('date_range')->getState()['to_date'];
         $summary['done_visits_count'] = $records->sum('done_visits_count');
         $summary['missed_visits_count'] = $records->sum('missed_visits_count');
         $summary['pending_visits_count'] = $records->sum('pending_visits_count');
@@ -119,11 +119,6 @@ class ListFrequencyReports extends ListRecords implements HasInfolists
             ->whereDate('visit_date', '>=', $summary['from_date'])
             ->whereDate('visit_date', '<=', $summary['to_date']);
 
-        $user_ids  =$this->table->getFilter('user_id')->getState()['values'];
-
-        if($user_ids){
-            $visitQuery->whereIn('user_id', $user_ids);
-        }
 
         $summary['medical_reps_count'] = $visitQuery
             ->distinct('user_id')
