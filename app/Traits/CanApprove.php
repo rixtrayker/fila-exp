@@ -30,20 +30,18 @@ trait CanApprove {
 
     public function canApprove()
     {
-        $modelName = get_class($this);
+        $modelName = class_basename(self::class);
         $permissionName = 'approve '.Str::kebab($modelName);
-        if(!auth()->user()->can($permissionName))
-            return false;
 
-        if($this->approved != 0 )
-            return false;
+        if(auth()->user()->can($permissionName) && $this->approved === 0 )
+            return true;
 
-        return true;
+        return false;
     }
 
     public function canDecline()
     {
-        $modelName = get_class($this);
+        $modelName = class_basename(self::class);
         $permissionName = 'approve '.Str::kebab($modelName);
         if(!auth()->user()->can($permissionName))
             return false;

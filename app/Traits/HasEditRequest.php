@@ -30,7 +30,7 @@ trait HasEditRequest{
 
             $editable = isset($model->editable) ? $model->editable : $model->fillable;
 
-            $modelName = get_class($model);
+            $modelName = class_basename(self::class);
             $hasEditables = EditRequest::where('status', 'pending')
                 ->where('editable_id', $model->id)
                 ->where('editable_type', $modelName)
@@ -79,7 +79,7 @@ trait HasEditRequest{
             $to = $model->$key;
         }
 
-        $modelName = get_class($model);
+        $modelName = class_basename(self::class);
 
         $preparedObject = [
             'attribute' => "{$actionEntity}",
