@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Setting;
+use Illuminate\Support\Facades\Cache;
 
 class SettingsSeeder extends Seeder
 {
@@ -62,6 +63,46 @@ class SettingsSeeder extends Seeder
                 'key' => 'visits-target',
                 'value' => 8,
             ],
+            [
+                'order' => 7,
+                'name' => 'Class A Daily Target',
+                'description' => 'The target number of visits a medical reps should make in a day for Class A clients',
+                'type' => 'number',
+                'key' => 'class-a-daily-target',
+                'value' => 10,
+            ],
+            [
+                'order' => 8,
+                'name' => 'Class B Daily Target',
+                'description' => 'The target number of visits a medical reps should make in a day for Class B clients',
+                'type' => 'number',
+                'key' => 'class-b-daily-target',
+                'value' => 8,
+            ],
+            [
+                'order' => 9,
+                'name' => 'Class C Daily Target',
+                'description' => 'The target number of visits a medical reps should make in a day for Class C clients',
+                'type' => 'number',
+                'key' => 'class-c-daily-target',
+                'value' => 6,
+            ],
+            [
+                'order' => 10,
+                'name' => 'Class N Daily Target',
+                'description' => 'The target number of visits a medical reps should make in a day for Class N clients',
+                'type' => 'number',
+                'key' => 'class-n-daily-target',
+                'value' => 4,
+            ],
+            [
+                'order' => 11,
+                'name' => 'Class PH Daily Target',
+                'description' => 'The target number of visits a medical reps should make in a day for Class PH clients',
+                'type' => 'number',
+                'key' => 'class-ph-daily-target',
+                'value' => 2,
+            ],
         ];
 
         foreach ($settings as $setting) {
@@ -72,5 +113,7 @@ class SettingsSeeder extends Seeder
         }
 
         Setting::whereNotIn('key', array_column($settings, 'key'))->delete();
+        // clear cached settings key is settings
+        Cache::forget('settings');
     }
 }

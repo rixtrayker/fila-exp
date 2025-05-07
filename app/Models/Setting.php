@@ -39,6 +39,22 @@ class Setting extends Model
         $settings = self::getSettings();
         return $settings->where('key', $key)->first();
     }
+    public static function getClientClassDailyTargetsFromCache()
+    {
+        $keys = ['class-a-daily-target', 'class-b-daily-target', 'class-c-daily-target', 'class-n-daily-target', 'class-ph-daily-target'];
+        $targets = [];
+        foreach ($keys as $key) {
+            $targets[$key] = self::getSetting($key)->value ?? 1;
+        }
+        return $targets;
+    }
+
+    public static function getClientClassDailyTarget($grade)
+    {
+        $grade = strtolower($grade);
+        $targets = self::getClientClassDailyTargetsFromCache();
+        return $targets['class-' . $grade . '-daily-target'];
+    }
 
     public static function boot()
     {

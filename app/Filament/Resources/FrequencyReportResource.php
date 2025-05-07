@@ -135,6 +135,12 @@ class FrequencyReportResource extends Resource
             ->when($clientType, function ($query, $clientType) {
                 return $query->whereIn('clients.client_type_id', $clientType);
             })
+            ->when($fromDate, function ($query, $fromDate) {
+                return $query->where('visits.visit_date', '>=', $fromDate);
+            })
+            ->when($toDate, function ($query, $toDate) {
+                return $query->where('visits.visit_date', '<=', $toDate);
+            })
             ->when($brick, function ($query, $brick) {
                 return $query->whereIn('clients.brick_id', $brick);
             })
@@ -168,14 +174,6 @@ class FrequencyReportResource extends Resource
         return self::$medicalReps;
     }
 
-
-
-    // public static function resolveRecordRouteBinding(int | string $key): ?Model
-    // {
-    //     return app(static::getModel())
-    //         ->resolveRouteBindingQuery(static::getEloquentQuery(), $key, static::getRecordRouteKeyName())
-    //         ->first();
-    // }
 
     private static function getBricks(): array
     {
