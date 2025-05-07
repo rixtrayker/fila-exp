@@ -37,6 +37,7 @@ class VisitForm
 
     public static function schema(): array
     {
+        // dd the uri
         self::boot();
         $isMedicalRep = auth()->user()?->hasRole('medical-rep');
         $isDailyVisits = str_contains(Route::current()->uri(), 'daily-visits');
@@ -140,7 +141,8 @@ class VisitForm
     {
         return Select::make('call_type_id')
             ->label('Call Type')
-            ->options(CallType::all()->pluck('name', 'id'))
+            ->options(CallType::all()->pluck('name', 'id')->toArray())
+            ->default(1)
             ->preload()
             ->required();
     }
@@ -161,43 +163,65 @@ class VisitForm
         ];
     }
 
-    /**
-     * Get the products section.
-     */
+    private static function isViewPage(): bool
+    {
+        $url = request()->url();
+        $uri = Route::current()->uri();
+        $referer = request()->headers->get('referer');
+        $isLivewireUpdate = str_contains($url, 'livewire/update');
+
+        if ($isLivewireUpdate) {
+            if (str_contains($referer, 'admin/visits/create') ||
+                str_contains($referer, 'admin/visits/edit')) {
+                return false;
+            }
+        }
+
+        return ! (
+            str_contains($uri, 'create') ||
+            str_contains($uri, 'edit')
+        );
+    }
+
     private static function getProductsSection(): Section
     {
-        $isCreateOrEdit = str_contains(Route::current()->uri(), 'create') ||
-                         str_contains(Route::current()->uri(), 'edit');
+        $repeater = self::getProductsRepeater();
+        if (self::isViewPage()) {
+            $repeater->relationship('products');
+        }
 
         return Section::make('products')
             ->hiddenLabel()
-            ->schema([
-                TableRepeater::make('products')
-                    ->createItemButtonLabel('Add product')
-                    ->relationship(function() use ($isCreateOrEdit) {
-                        return $isCreateOrEdit ? 'nullRelation' : 'products';
-                    })
-                    ->hiddenLabel()
-                    ->emptyLabel('There is no product added.')
-                    ->columnWidths([
-                        'count' => '40px',
-                        'product_id' => '180px',
-                        'row_actions' => '20px',
-                    ])
-                    ->schema([
-                        Select::make('product_id')
-                            ->label('Product')
-                            ->placeholder('select a product')
-                            ->options(Product::pluck('name', 'id')),
-                        TextInput::make('count')
-                            ->numeric()
-                            ->label('Sample count')
-                            ->minValue(0),
-                    ])
-                    ->disableItemMovement()
-                    ->defaultItems(1),
-            ])
+            ->schema([$repeater])
             ->compact();
+    }
+
+    /**
+     * Get the products section.
+     */
+    private static function getProductsRepeater(): TableRepeater
+    {
+        return  TableRepeater::make('products')
+            ->addActionLabel('Add product')
+            ->hiddenLabel()
+            ->emptyLabel('There is no product added.')
+            ->columnWidths([
+                'count' => '40px',
+                'product_id' => '180px',
+                'row_actions' => '20px',
+            ])
+            ->schema([
+                Select::make('product_id')
+                    ->label('Product')
+                    ->placeholder('select a product')
+                    ->options(Product::pluck('name', 'id')),
+                TextInput::make('count')
+                    ->numeric()
+                    ->label('Sample count')
+                    ->minValue(0),
+            ])
+            ->reorderable(false)
+            ->defaultItems(1);
     }
 
     /**

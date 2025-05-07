@@ -14,7 +14,7 @@ class VisitService
             return null;
         }
 
-        if (!isset($data['user_id']) || !isset($data['visit_date']) || !isset($data['call_type_id'])) {
+        if (!isset($data['user_id']) || !isset($data['visit_date'])) {
             return null;
         }
 
@@ -22,7 +22,6 @@ class VisitService
             ->where('user_id', $data['user_id'])
             ->where('client_id', $data['client_id'])
             ->where('visit_date', $data['visit_date'])
-            ->where('call_type_id', $data['call_type_id'])
             ->first();
     }
 

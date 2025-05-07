@@ -13,143 +13,84 @@ use Filament\Support\Exceptions\Halt;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Role;
+use App\Filament\Resources\VisitResource\Pages\Traits\ServiceInitializer;
+use App\Filament\Resources\VisitResource\Pages\Traits\LocationValidator;
+use App\Filament\Resources\VisitResource\Pages\Traits\UserDataHandler;
+use App\Filament\Resources\VisitResource\Pages\Traits\VisitHandler;
+use Livewire\Attributes\On;
 
 class CreateVisit extends CreateRecord
 {
+    use ServiceInitializer, LocationValidator, UserDataHandler, VisitHandler;
     protected static string $view = 'vendor.filament.pages.create-visit';
     protected static string $resource = VisitResource::class;
-
-    protected LocationService $locationService;
-    protected VisitService $visitService;
-
-    public function __construct()
-    {
-        $this->locationService = app(LocationService::class);
-        $this->visitService = app(VisitService::class);
-    }
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $this->validateLocation($data);
         $this->setUserData($data);
-
         return $data;
     }
-
-    protected function validateLocation(array &$data): void
+    public function beforeCreate(): void
     {
-        $featureEnabled = Feature::isEnabled('location');
+        $data = $this->form->getRawState();
+        $visit = $this->visitService->findExistingVisit($data);
 
-        if (!$featureEnabled) {
-            return;
+        if ($visit) {
+            $this->respondToExistingVisit($visit);
         }
-
-        $location = $this->locationService->getLocation($this->getId());
-
-        if (!$location) {
-            $this->sendLocationError('Location service is not enabled');
-        }
-
-        if (!$this->locationService->validateVisitLocation($data['client_id'], $location)) {
-            $this->sendLocationError('Location is too far from the client');
-        }
-
-        $data['lat'] = $location->get('latitude');
-        $data['lng'] = $location->get('longitude');
     }
-
-    protected function setUserData(array &$data): void
+    public function afterCreate(): void
     {
-        $isMedicalRep = $this->isMedicalRep();
+        $products = $this->getProducts();
+        $existingProductIds = $this->record->products->pluck('product_id')->toArray();
 
-        if ($isMedicalRep) {
-            $data['user_id'] = Auth::id();
-            $data['visit_date'] = today();
-        }
-
-        $data['status'] = 'visited';
-    }
-
-    protected function isMedicalRep(): bool
-    {
-        return auth()->user()?->hasRole('medical-rep');
-    }
-
-    protected function sendLocationError(string $message): void
-    {
-        Notification::make()
-            ->title('Error')
-            ->body($message)
-            ->danger()
-            ->send();
-        throw new Halt();
-    }
-
-    public function create(bool $another = false): void
-    {
-        $this->authorizeAccess();
-
-        try {
-            $this->callHook('beforeValidate');
-            $data = $this->form->getState();
-            $this->callHook('afterValidate');
-            $data = $this->mutateFormDataBeforeCreate($data);
-
-            $visit = $this->visitService->findExistingVisit($data);
-
-            if ($visit) {
-                $this->handleExistingVisit($visit, $data);
-                return;
+        // Update or insert products
+        foreach ($products as $product) {
+            if (in_array($product['product_id'], $existingProductIds)) {
+                // Update existing product
+                $this->record->products()->updateExistingPivot($product['product_id'], [
+                    'count' => $product['count'],
+                    'updated_at' => $product['updated_at'],
+                ]);
+            } else {
+                // Attach new product
+                $this->record->products()->attach($product['product_id'], [
+                    'count' => $product['count'],
+                    'created_at' => $product['created_at'],
+                    'updated_at' => $product['updated_at'],
+                ]);
             }
-
-            $this->createNewVisit($data);
-        } catch (Halt $exception) {
-            return;
         }
 
-        $this->getCreatedNotification()?->send();
-
-        if ($another) {
-            $this->resetForm();
-            return;
+        // Detach products that are no longer associated
+        $newProductIds = array_column($products, 'product_id');
+        $productsToDetach = array_diff($existingProductIds, $newProductIds);
+        if (!empty($productsToDetach)) {
+            $this->record->products()->detach($productsToDetach);
         }
-
-        $this->redirect($this->getRedirectUrl());
     }
 
-    protected function handleExistingVisit(Visit $visit, array $data): void
-    {
-        $this->record = $visit;
-        $this->visitService->updateExistingVisit($visit, $data);
-
-        if ($visit->status === 'visited') {
-            $this->getCreatedNotification()?->send();
-            $this->redirect($this->getRedirectUrl());
-            return;
+    public function getProducts(): array{
+        $products = [];
+        $now = now();
+        foreach ($this->form->getRawState()['products'] as $product) {
+            $products[] = [
+                'product_id' => $product['product_id'],
+                'count' => $product['count'],
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
         }
-
-        $this->visitService->saveProducts($visit, $this->form->getRawState());
-        $this->getCreatedNotification()?->send();
-        $this->redirect($this->getRedirectUrl());
+        return $products;
     }
 
-    protected function createNewVisit(array $data): void
+    public function afterCreateAndEdit(): void
     {
-        $this->callHook('beforeCreate');
-        $data['status'] = 'visited';
-        $this->record = $this->handleRecordCreation($data);
-        $this->callHook('afterCreate');
+        $this->redirect(VisitResource::getUrl('index'));
     }
 
-    protected function resetForm(): void
-    {
-        $this->form->model($this->record::class);
-        $this->record = null;
-        $this->fillForm();
-    }
-
-    protected $listeners = ['location-fetched' => 'updateLocation'];
-
+    #[On('location-fetched')]
     public function updateLocation($data): void
     {
         $data = collect($data);
