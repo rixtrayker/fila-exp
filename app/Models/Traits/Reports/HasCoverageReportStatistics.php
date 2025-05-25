@@ -36,7 +36,8 @@ trait HasCoverageReportStatistics
     public function getActualWorkingDaysAttribute()
     {
         [$fromDate, $toDate] = DateRangeHelper::getDateRange();
-        return DateHelper::countWorkingDays($fromDate, $toDate) - $this->vacations_count;
+        $visitDays = app(VacationCalculator::class)->visitDatesInRangeSet($this, $fromDate, $toDate);
+        return $visitDays->count();
     }
 
     public function getMonthlyVisitTargetAttribute()

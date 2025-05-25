@@ -28,8 +28,10 @@ class SortedStringSet
         }
     }
 
-    public static function fromArray(array $elements): self
+    public static function fromArray(?array $elements): self
     {
+        $elements = is_array($elements) && !empty($elements) ? $elements : [];
+        $elements = array_unique($elements);
         return new self($elements);
     }
 
@@ -319,5 +321,11 @@ class SortedStringSet
     public function __toString(): string
     {
         return '[' . implode(', ', $this->toArray()) . ']';
+    }
+
+    public function subset(?Carbon $from = null, ?Carbon $to = null): SortedStringSet
+    {
+        $dates = $this->getElementsSorted($from, $to);
+        return new self($dates);
     }
 }

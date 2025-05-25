@@ -3,6 +3,7 @@
 namespace App\Helpers;
 
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 class DateHelper{
     public static function getFirstOfWeek($nextWeek = false) : Carbon
     {
@@ -65,7 +66,6 @@ class DateHelper{
         return $today;
     }
 
-    // working days in a date range
     public static function countWorkingDays($startDate, $endDate): float
     {
        // friday is off and half of thursday it counts  0.5
@@ -85,5 +85,56 @@ class DateHelper{
        }
 
        return $days;
+    }
+    private static function weekendsInRange($startDate, $endDate): array
+    {
+        $startDate = Carbon::parse($startDate);
+        $endDate = Carbon::parse($endDate);
+
+        $weekends = [];
+        for($date = $startDate; $date->lte($endDate); $date->addDay()){
+            if(self::isWeekend($date)){
+                $weekends[] = $date->format('Y-m-d');
+            }
+        }
+        return $weekends;
+    }
+
+    public static function cacheWeekends(Carbon $from, Carbon $to): void
+    {
+        $from = $from ?? Carbon::now()->startOfYear();
+        $to = $to ?? Carbon::now()->endOfYear();
+
+        if($from->isBefore(Cache::get('start_of_weekends')) && $to->isAfter(Cache::get('end_of_weekends'))){
+            $from = Cache::get('start_of_weekends');
+            $to = Cache::get('end_of_weekends');
+            return;
+        }
+
+        $weekends = self::weekendsInRange($from, $to);
+
+        $weekends = SortedStringSet::fromArray($weekends);
+        Cache::put('year_of_weekends', $weekends);
+        Cache::put('start_of_weekends', $weekends->getMin());
+        Cache::put('end_of_weekends', $weekends->getMax());
+    }
+
+    public static function getWeekendInRange($startDate, $endDate): array
+    {
+        $startDate = Carbon::parse($startDate);
+        $endDate = Carbon::parse($endDate);
+
+        $weekends = Cache::get('year_of_weekends');
+        if(!$weekends){
+            self::cacheWeekends($startDate, $endDate);
+            $weekends = Cache::get('year_of_weekends');
+        }
+
+        return $weekends->getElementsSorted($startDate, $endDate);
+    }
+
+    private static function isWeekend(Carbon $date): bool
+    {
+        return $date->isSaturday() || $date->isSunday();
     }
 }

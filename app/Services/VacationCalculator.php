@@ -5,6 +5,11 @@ namespace App\Services;
 use App\Models\User;
 use Carbon\Carbon;
 use DateTime;
+use App\Helpers\DateHelper;
+use App\Models\Activity;
+use App\Models\OfficeWork;
+use App\Models\OfficialHoliday;
+use App\Helpers\SortedStringSet;
 
 class VacationCalculator
 {
@@ -167,5 +172,84 @@ class VacationCalculator
     {
         $diffInDays = $this->calculateDaysDifference($start, $end);
         return $diffInDays + $this->calculateShiftAdjustment($startShift, $endShift);
+    }
+
+    public function vacationDatesInRange(User $user, Carbon $startDate, Carbon $endDate): array
+    {
+        $vacationRequests = $user->vacationRequests()
+            ->approved()
+            ->whereHas('vacationDurations', function($query) use ($startDate, $endDate) {
+                $query->whereBetween('start', [$startDate, $endDate])
+                      ->orWhereBetween('end', [$startDate, $endDate]);
+            })
+            ->with('vacationDurations')
+            ->get();
+
+        $vacationDates = [];
+
+        foreach ($vacationRequests as $request) {
+            foreach ($request->vacationDurations as $duration) {
+                $start = Carbon::parse($duration->start);
+                $end = Carbon::parse($duration->end);
+                $allDatesinRange = Carbon::parse($start)->daysUntil($end);
+                foreach ($allDatesinRange as $date) {
+                    $vacationDates[] = $date;
+                }
+            }
+        }
+
+        return $vacationDates;
+    }
+
+    public function actualWorkingDaysSet(User $user, Carbon $startDate, Carbon $endDate): SortedStringSet
+    {
+        $startDate = Carbon::parse($startDate);
+        $endDate = Carbon::parse($endDate);
+
+        $datesInRange = Carbon::parse($startDate)->daysUntil($endDate);
+        $datesSet = SortedStringSet::fromArray($datesInRange->toArray());
+
+        $weekends = DateHelper::getWeekendInRange($startDate, $endDate);
+        $weekendsSet = SortedStringSet::fromArray($weekends);
+
+        $vacationDates = $this->vacationDatesInRange($user, $startDate, $endDate);
+        $vacationSet = SortedStringSet::fromArray($vacationDates);
+        $officialHolidaysSet = OfficialHoliday::getSetOfOfficialHolidaysInRange($startDate, $endDate);
+
+        $offDays = $officialHolidaysSet->union($weekendsSet)->union($vacationSet);
+
+
+        return $datesSet->difference($offDays);
+    }
+
+    public function visitDatesInRangeSet(User $user, Carbon $startDate, Carbon $endDate): SortedStringSet
+    {
+        $workingDays = $this->actualWorkingDaysSet($user, $startDate, $endDate);
+        $activitiesDates = SortedStringSet::fromArray($this->activitiesDatesInRange($user, $startDate, $endDate));
+        $officeworkDates = SortedStringSet::fromArray($this->officeworkDatesInRange($user, $startDate, $endDate));
+
+        return $workingDays->difference($activitiesDates)->difference($officeworkDates);
+    }
+
+    public function officeworkDatesInRange(User $user, Carbon $startDate, Carbon $endDate): array
+    {
+        return OfficeWork::query()
+            ->where('user_id', $user->id)
+            ->whereBetween('time_from', [$startDate->startOfDay(), $endDate->endOfDay()])
+            ->selectRaw('date_format(time_from, "%Y-%m-%d") as date')
+            ->get()
+            ->pluck('date')
+            ->toArray();
+    }
+
+    public function activitiesDatesInRange(User $user, Carbon $startDate, Carbon $endDate): array
+    {
+        return Activity::query()
+            ->where('user_id', $user->id)
+            ->whereBetween('date', [$startDate->startOfDay(), $endDate->endOfDay()])
+            ->selectRaw('date_format(date, "%Y-%m-%d") as date')
+            ->get()
+            ->pluck('date')
+            ->toArray();
     }
 }
