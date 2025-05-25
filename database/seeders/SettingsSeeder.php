@@ -20,6 +20,7 @@ class SettingsSeeder extends Seeder
                 'name' => 'Medical Rep KM Price',
                 'description' => 'The price of a KM for a medical rep',
                 'key' => 'medical-rep-km-price',
+                'is_presistent' => true,
                 'type' => 'number',
                 'value' => 1.5,
             ],
@@ -28,6 +29,7 @@ class SettingsSeeder extends Seeder
                 'name' => 'District Manager KM Price',
                 'description' => 'The price of a KM for a district manager',
                 'key' => 'district-manager-km-price',
+                'is_presistent' => true,
                 'type' => 'number',
                 'value' => 2.5,
             ],
@@ -36,6 +38,7 @@ class SettingsSeeder extends Seeder
                 'name' => 'Medical Rep Daily Allowance',
                 'description' => 'The daily allowance for a medical rep',
                 'key' => 'medical-rep-daily-allowance',
+                'is_presistent' => true,
                 'type' => 'number',
                 'value' => 90,
             ],
@@ -44,6 +47,7 @@ class SettingsSeeder extends Seeder
                 'name' => 'District Manager Daily Allowance',
                 'description' => 'The daily allowance for a district manager',
                 'key' => 'district-manager-daily-allowance',
+                'is_presistent' => true,
                 'type' => 'number',
                 'value' => 150,
             ],
@@ -60,6 +64,7 @@ class SettingsSeeder extends Seeder
                 'name' => 'Visits Target',
                 'description' => 'The target number of visits a medical rep can make in a day',
                 'type' => 'number',
+                'is_presistent' => true,
                 'key' => 'visits-target',
                 'value' => 8,
             ],
@@ -68,6 +73,7 @@ class SettingsSeeder extends Seeder
                 'name' => 'Class A Daily Target',
                 'description' => 'The target number of visits a medical reps should make in a day for Class A clients',
                 'type' => 'number',
+                'is_presistent' => true,
                 'key' => 'class-a-daily-target',
                 'value' => 10,
             ],
@@ -76,6 +82,7 @@ class SettingsSeeder extends Seeder
                 'name' => 'Class B Daily Target',
                 'description' => 'The target number of visits a medical reps should make in a day for Class B clients',
                 'type' => 'number',
+                'is_presistent' => true,
                 'key' => 'class-b-daily-target',
                 'value' => 8,
             ],
@@ -84,6 +91,7 @@ class SettingsSeeder extends Seeder
                 'name' => 'Class C Daily Target',
                 'description' => 'The target number of visits a medical reps should make in a day for Class C clients',
                 'type' => 'number',
+                'is_presistent' => true,
                 'key' => 'class-c-daily-target',
                 'value' => 6,
             ],
@@ -92,6 +100,7 @@ class SettingsSeeder extends Seeder
                 'name' => 'Class N Daily Target',
                 'description' => 'The target number of visits a medical reps should make in a day for Class N clients',
                 'type' => 'number',
+                'is_presistent' => true,
                 'key' => 'class-n-daily-target',
                 'value' => 4,
             ],
@@ -100,20 +109,62 @@ class SettingsSeeder extends Seeder
                 'name' => 'Class PH Daily Target',
                 'description' => 'The target number of visits a medical reps should make in a day for Class PH clients',
                 'type' => 'number',
+                'is_presistent' => true,
                 'key' => 'class-ph-daily-target',
                 'value' => 2,
+            ],
+            [
+                'order' => 12,
+                'name' => 'Report Sync Enabled',
+                'key' => 'report_sync_enabled',
+                'description' => 'Enable/disable automatic report synchronization',
+                'type' => 'boolean',
+                'value' => true,
+                'is_presistent' => true,
+            ],
+            [
+                'order' => 13,
+                'name' => 'Frequency Report Sync Cursor Index',
+                'key' => 'frequency_report_sync_cursor_index',
+                'description' => 'Last processed cursor index for frequency report sync (hidden)',
+                'type' => 'number',
+                'is_presistent' => true,
+                'hidden' => true,
+            ],
+            [
+                'order' => 14,
+                'name' => 'Coverage Report Sync Cursor Index',
+                'key' => 'coverage_report_sync_cursor_index',
+                'description' => 'Last processed cursor index for coverage report sync (hidden)',
+                'type' => 'number',
+                'is_presistent' => true,
+                'hidden' => true,
             ],
         ];
 
         foreach ($settings as $setting) {
-            Setting::updateOrCreate(
-                ['key' => $setting['key']],
-                $setting
-            );
+            if (isset($setting['is_presistent']) && $setting['is_presistent']) {
+                // just update these order, name,type, hidden and description
+                unset($setting['value']);
+                unset($setting['is_presistent']);
+                unset($setting['hidden']);
+
+                Setting::updateOrCreate(
+                    ['key' => $setting['key']],
+                    $setting
+                );
+
+            } else {
+                Setting::updateOrCreate(
+                    ['key' => $setting['key']],
+                    $setting
+                );
+            }
         }
 
         Setting::whereNotIn('key', array_column($settings, 'key'))->delete();
         // clear cached settings key is settings
-        Cache::forget('settings');
+        Setting::clearAllSettingsCache();
+        Setting::cacheAllSettings();
     }
 }

@@ -56,7 +56,7 @@ trait HasCoverageReportStatistics
         return $this->officeWorks()->count();
     }
 
-    public function getSopsAttribute()
+    public function getSopsAttribute(): float
     {
         $dailyTarget = Setting::getSetting('medical_rep_visit_target')->value ?? 8;
         return round($this->actual_visits / ($this->actual_working_days * $dailyTarget) * 100, 2);

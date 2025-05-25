@@ -23,10 +23,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Models\Traits\Reports\HasCoverageReportStatistics;
 
-class User extends Authenticatable  implements FilamentUser
+class User extends Authenticatable implements FilamentUser
 {
     use NodeTrait;
-
     use \Staudenmeir\EloquentHasManyDeep\HasRelationships;
     use HasApiTokens;
     use HasFactory;
@@ -84,27 +83,31 @@ class User extends Authenticatable  implements FilamentUser
         'profile_photo_url',
     ];
 
-
     public function canAccessPanel(Panel $panel): bool
     {
         return true;
     }
+
     public function bricks()
     {
         return $this->belongsToMany(Brick::class);
     }
+
     public function areas()
     {
         return $this->belongsToMany(Area::class);
     }
+
     public function clientRequests()
     {
         return $this->hasMany(ClientRequest::class);
     }
+
     public function plans()
     {
         return $this->hasMany(Plan::class);
     }
+
     public function expenses()
     {
         return $this->hasMany(Expenses::class);
@@ -114,6 +117,7 @@ class User extends Authenticatable  implements FilamentUser
     {
         return $this->belongsToMany(Message::class);
     }
+
     public function roleMassges()
     {
         return $this->hasManyDeepFromRelations([$this, 'roles'], [new Role(), 'messages']);
@@ -123,6 +127,7 @@ class User extends Authenticatable  implements FilamentUser
     {
         return $this->mergedRelation('all_messages');
     }
+
     public function scopeSelectedVisible($query, $msg)
     {
         $pivot = $this->userMessages()->getTable();
@@ -131,30 +136,37 @@ class User extends Authenticatable  implements FilamentUser
             $q->where("{$pivot}.hidden", 0)->where("{$pivot}.message_id", $msg->id);
         });
     }
+
     public function sentMessages()
     {
         return $this->hasMany(Message::class);
     }
+
     public function manager()
     {
         return $this->belongsTo(User::class,'parent_id');
     }
+
     public function managedUsers()
     {
         return $this->hasMany(User::class, 'parent_id');
     }
+
     public function visits()
     {
         return $this->hasMany(Visit::class);
     }
+
     public function activities()
     {
         return $this->hasMany(Activity::class);
     }
+
     public function officeWorks()
     {
         return $this->hasMany(OfficeWork::class);
     }
+
     public function vacationRequests()
     {
         return $this->hasMany(VacationRequest::class);
@@ -165,25 +177,13 @@ class User extends Authenticatable  implements FilamentUser
         return $this->hasManyDeepFromRelations([$this, 'vacationRequests'], [new VacationRequest(), 'vacationDurations']);
     }
 
-    // clients within the same area and some range of distance
-    // public function firstRole()
-    // {
-    //     return $this->morphToMany(
-    //         config('permission.models.role'),
-    //         'model',
-    //         config('permission.table_names.model_has_roles'),
-    //         config('permission.column_names.model_morph_key'),
-    //         PermissionRegistrar::$pivotRole
-    //     )->limit(1);
-    // }
-
     public function scopeGetMine($builder)
     {
-        if(auth()->user() && auth()->user()->hasRole(['medical-rep'])){
+        if(auth()->user() && auth()->user()->roles->contains('name', 'medical-rep')){
             return $builder->where('id', '=', auth()->id());
         }
 
-        if(auth()->user() && auth()->user()->hasRole(['country-manager','area-manager','district-manager'])) {
+        if(auth()->user() && auth()->user()->roles->whereIn('name', ['country-manager','area-manager','district-manager'])->isNotEmpty()) {
             $ids = User::descendantsAndSelf(auth()->user())->pluck('id')->toArray();
             return $builder->whereIn('id', $ids);
         }
@@ -214,27 +214,6 @@ class User extends Authenticatable  implements FilamentUser
     {
         return $builder->withoutGlobalScopes()->role($roles);
     }
-
-    // public function roles(): BelongsToMany
-    // {
-    //     $relation = $this->morphToMany(
-    //         Role::class,
-    //         'model',
-    //         config('permission.table_names.model_has_roles'),
-    //         config('permission.column_names.model_morph_key'),
-    //         PermissionRegistrar::$pivotRole
-    //     );
-
-    //     if (! PermissionRegistrar::$teams) {
-    //         return $relation;
-    //     }
-
-    //     return $relation->wherePivot(PermissionRegistrar::$teamsKey, getPermissionsTeamId())
-    //         ->where(function ($q) {
-    //             $teamField = config('permission.table_names.roles').'.'.PermissionRegistrar::$teamsKey;
-    //             $q->whereNull($teamField)->orWhere($teamField, getPermissionsTeamId());
-    //         });
-    // }
 
     protected static function boot()
     {

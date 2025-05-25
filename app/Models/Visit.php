@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use App\Events\VisitsEvents\VisitUpdated;
+use App\Events\VisitsEvents\VisitCreated;
 
 class Visit extends Model
 {
@@ -147,5 +149,15 @@ class Visit extends Model
         });
 
         return $visits;
+    }
+
+    protected static function booted()
+    {
+        static::updated(function ($visit) {
+            event(new VisitUpdated($visit));
+        });
+        static::created(function ($visit) {
+            event(new VisitCreated($visit));
+        });
     }
 }

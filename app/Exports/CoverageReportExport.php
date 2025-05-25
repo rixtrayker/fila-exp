@@ -2,7 +2,7 @@
 
 namespace App\Exports;
 
-use App\Models\User;
+use App\Models\Reports\CoverageReportData;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\Exportable;
@@ -27,21 +27,21 @@ class CoverageReportExport implements FromCollection, WithHeadings, WithStyles
 
     public function collection()
     {
-        return $this->query->get()->map(function ($user) {
+        return $this->query->get()->map(function ($record) {
             return [
-                $user->id,
-                $user->name,
-                $user->area_name,
-                $user->working_days,
-                $user->daily_visit_target,
-                $user->office_work_count,
-                $user->activities_count,
-                $user->actual_working_days,
-                $user->monthly_visit_target,
-                $user->sops,
-                $user->actual_visits,
-                $user->call_rate,
-                $user->total_visits,
+                $record->user->id,
+                $record->user->name,
+                $record->area_name,
+                $record->working_days,
+                $record->daily_visit_target,
+                $record->office_work_count,
+                $record->activities_count,
+                $record->actual_working_days,
+                $record->monthly_visit_target,
+                $record->sops,
+                $record->actual_visits,
+                $record->call_rate,
+                $record->total_visits,
             ];
         });
     }

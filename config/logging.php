@@ -138,6 +138,21 @@ return [
             'path' => storage_path('logs/debugging/debugging.log'),
             'level' => 'debug',
         ],
+        'coverage_report' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/reports/coverage-report.log'),
+            'level' => 'debug',
+            'permission' => 0775,
+            'days' => 14,
+        ],
+
+        'frequency_report' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/reports/frequency-report.log'),
+            'level' => 'debug',
+            'permission' => 0775,
+            'days' => 14,
+        ],
     ],
 
 ];
