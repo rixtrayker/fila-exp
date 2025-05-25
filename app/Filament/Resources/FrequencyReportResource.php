@@ -15,6 +15,7 @@ use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use App\Models\ClientType;
+use Filament\Tables\Enums\FiltersLayout;
 
 class FrequencyReportResource extends Resource
 {
@@ -97,6 +98,7 @@ class FrequencyReportResource extends Resource
                     ->preload()
                     ->multiple(),
             ])
+            ->filtersLayout(FiltersLayout::AboveContent) // or FiltersLayout::Modal
             ->paginated([10, 25, 50, 100, 1000, 'all'])
             ->actions([
                 Tables\Actions\ViewAction::make(),
