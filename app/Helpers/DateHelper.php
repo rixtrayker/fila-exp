@@ -2,6 +2,8 @@
 
 namespace App\Helpers;
 
+use App\Models\OfficialHoliday;
+use App\Models\VacationDuration;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 class DateHelper{
@@ -64,6 +66,30 @@ class DateHelper{
             return $today + 1;
 
         return $today;
+    }
+
+    public static function isWorkingDay(Carbon $date): bool
+    {
+        return !$date->isWeekend() && !OfficialHoliday::where('date', $date->format('Y-m-d'))->exists();
+    }
+
+    public static function isVacationDay(Carbon $date): bool
+    {
+        $exists = VacationDuration::with('vacationRequest')
+            ->whereHas('vacationRequest', function ($query) {
+                $query->where('user_id', auth()->user()->id);
+                $query->where('approved', '>', 0);
+            })
+            ->where('start', '<=', $date->format('Y-m-d'))
+            ->where('end', '>=', $date->format('Y-m-d'))
+            ->exists();
+
+        return $exists;
+    }
+
+    public static function isOffDay(Carbon $date): bool
+    {
+        return self::isWorkingDay($date) && !self::isVacationDay($date);
     }
 
     public static function countWorkingDays($startDate, $endDate): float
