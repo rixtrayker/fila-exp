@@ -23,8 +23,6 @@ class CoverageReportProcess implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public $tries = 3;
-    public $queue = 'reports';
-
     protected $userId;
     protected $date;
     protected $finalize;
@@ -37,6 +35,7 @@ class CoverageReportProcess implements ShouldQueue
         $this->userId = $userId;
         $this->date = $date;
         $this->finalize = $finalize;
+        $this->onQueue('reports');
     }
 
     /**
@@ -53,7 +52,7 @@ class CoverageReportProcess implements ShouldQueue
         try {
             $user = User::withTrashed()->findOrFail($this->userId);
             $date = Carbon::parse($this->date);
-
+            $now = now();
             // Calculate new data
             $reportData = $this->calculateCoverageDataForUserAndDate($user, $date);
 
@@ -64,6 +63,7 @@ class CoverageReportProcess implements ShouldQueue
                     $date->toDateString(),
                     $reportData
                 );
+                $this->updateSyncTimestamp($now);
             }
 
             $logger->info('Coverage report data updated successfully');
@@ -106,54 +106,45 @@ class CoverageReportProcess implements ShouldQueue
         // Calculate metrics
         $actualVisits = $visits->where('status', 'visited')->count();
         $totalVisits = $visits->count();
-        $callRate = $totalVisits > 0 ? ($actualVisits / $totalVisits) * 100 : 0;
 
-        // Get daily targets of medical rep or district manager or its role
         $dailyVisitTarget = $user->dailyVisitTarget;
-        $monthlyVisitTarget = $dailyVisitTarget * 22; // Assuming 22 working days
+        $callRate = $totalVisits > 0 ? round(($actualVisits / $totalVisits) * $dailyVisitTarget, 2) : 0;
 
         // Calculate SOPs percentage
         $sops = $actualVisits > 0 ? min(($actualVisits / $dailyVisitTarget) * 100, 100) : 0;
 
-        $vacationDuration = VacationDuration::with('vacationRequest')
-            ->whereHas('vacationRequest', function ($query) use ($user) {
-                $query->where('user_id', $user->id);
-                $query->where('approved', '>', 0);
-            })
-            ->where('start', '<=', $date->format('Y-m-d'))
-            ->where('end', '>=', $date->format('Y-m-d'))
+        $vacationDuration = VacationDuration::select('start_shift','end_shift','start','end')
+            ->join('vacation_requests', 'vacation_durations.vacation_request_id', '=', 'vacation_requests.id')
+            ->where('vacation_requests.user_id', $user->id)
+            ->where('vacation_requests.approved', '>', 0)
+            ->where('vacation_durations.start', '<=', $date->format('Y-m-d'))
+            ->where('vacation_durations.end', '>=', $date->format('Y-m-d'))
             ->first();
 
-        // Calculate vacation days
-        $vacationDays = 0;
-        if ($vacationDuration) {
-            if ($vacationDuration->start_shift == 'PM' && $vacationDuration->start == $date->format('Y-m-d')) {
-                $vacationDays = 0.5;
-            } else if ($vacationDuration->end_shift == 'AM' && $vacationDuration->end == $date->format('Y-m-d')) {
-                $vacationDays = 0.5;
-            } else {
-                $vacationDays = 1;
-            }
-            // If he has done visits on this date then it's 0.5
-            if ($vacationDays === 0 && $actualVisits > 0) {
-                $vacationDays = 0.5;
-            }
+        $vacationDays = DateHelper::calculateVacationDays($vacationDuration, $date, $actualVisits);
+
+        $isOffDay = DateHelper::isOffDay($date);
+
+        $worked = $activitiesCount > 0 || $officeWorkCount > 0 || $actualVisits > 0;
+        $isWorkingDay = DateHelper::isWorkingDay($date) || $worked;
+
+        $actualWorkingDays = match(true) {
+            $isWorkingDay => 1,
+            $isOffDay => 0,
+            default => 1
+        };
+
+        $actualWorkingDays = $actualWorkingDays - $vacationDays;
+
+        if($actualWorkingDays < 0){
+            $actualWorkingDays = 0;
         }
 
-        $isWorkingDay = DateHelper::isWorkingDay($date) && $actualVisits > 0;
-        $hasActivity = $activitiesCount > 0;
-        $hasOfficeWork = $officeWorkCount > 0;
-
-        $workingDays = $isWorkingDay ? 1 : 0;
-        $actualWorkingDays = $workingDays - $vacationDays;
-
         return [
-            'working_days' => $workingDays,
+            'working_days' => $actualWorkingDays,
             'daily_visit_target' => $dailyVisitTarget,
             'office_work_count' => $officeWorkCount,
             'activities_count' => $activitiesCount,
-            'actual_working_days' => $actualWorkingDays,
-            'monthly_visit_target' => $monthlyVisitTarget,
             'sops' => round($sops, 2),
             'actual_visits' => $actualVisits,
             'call_rate' => round($callRate, 2),
@@ -169,5 +160,9 @@ class CoverageReportProcess implements ShouldQueue
                 ]
             ]
         ];
+    }
+    private function updateSyncTimestamp(Carbon $now)
+    {
+        Setting::updateCoverageReportSyncTimestamp($now->timestamp);
     }
 }

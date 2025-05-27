@@ -47,11 +47,9 @@ class SyncCoverageReportData implements ShouldQueue
 
         try {
             // Get last sync timestamp
-            $lastSyncTimestamp = Setting::getCoverageReportSyncTimestamp();
-            $lastSyncDate = Carbon::createFromTimestamp($lastSyncTimestamp);
-
+            $defaultFromDate = Carbon::parse('2022-01-01');
             // Determine date range
-            $fromDate = $this->fromDate ? Carbon::parse($this->fromDate) : $lastSyncDate;
+            $fromDate = $this->fromDate ? Carbon::parse($this->fromDate) : $defaultFromDate;
             $toDate = $this->toDate ? Carbon::parse($this->toDate) : Carbon::now();
 
             // if toDate is in the future, set it to today
@@ -62,7 +60,6 @@ class SyncCoverageReportData implements ShouldQueue
             $logger->info('Processing date range', [
                 'from_date' => $fromDate->toDateString(),
                 'to_date' => $toDate->toDateString(),
-                'last_sync_timestamp' => $lastSyncTimestamp
             ]);
 
             // Get medical reps and district managers

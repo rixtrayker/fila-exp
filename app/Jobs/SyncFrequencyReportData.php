@@ -46,7 +46,8 @@ class SyncFrequencyReportData implements ShouldQueue
 
         try {
             // Determine date range
-            $fromDate = $this->fromDate ? Carbon::parse($this->fromDate) : $lastSyncDate;
+            $defaultFromDate = Carbon::parse('2022-01-01');
+            $fromDate = $this->fromDate ? Carbon::parse($this->fromDate) : $defaultFromDate;
             $toDate = $this->toDate ? Carbon::parse($this->toDate) : Carbon::now();
 
             if ($toDate->isFuture()) {
@@ -56,7 +57,6 @@ class SyncFrequencyReportData implements ShouldQueue
             $logger->info('Processing date range', [
                 'from_date' => $fromDate->toDateString(),
                 'to_date' => $toDate->toDateString(),
-                'last_sync_timestamp' => $lastSyncTimestamp
             ]);
 
             // Get all clients

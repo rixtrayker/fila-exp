@@ -18,8 +18,6 @@ class FrequencyReportProcess implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public $tries = 3;
-    public $queue = 'reports';
-
     protected $clientId;
     protected $date;
     protected $finalize;
@@ -32,6 +30,7 @@ class FrequencyReportProcess implements ShouldQueue
         $this->clientId = $clientId;
         $this->date = $date;
         $this->finalize = $finalize;
+        $this->onQueue('reports');
     }
 
     /**
@@ -46,7 +45,25 @@ class FrequencyReportProcess implements ShouldQueue
         ]);
 
         try {
-            $client = Client::with(['clientType', 'brick.area'])->findOrFail($this->clientId);
+            $client = Client::with(['clientType', 'brick.area'])->find($this->clientId);
+
+            if (!$client) {
+                $logger->error('Client not found', [
+                    'client_id' => $this->clientId
+                ]);
+                return;
+            }
+
+            $visits = $client->visits()->whereDate('visit_date', $this->date)->get();
+
+            if ($visits->isEmpty()) {
+                $logger->info('No visits found for client', [
+                    'client_id' => $this->clientId,
+                    'date' => $this->date
+                ]);
+                return;
+            }
+
             $date = Carbon::parse($this->date);
 
             // Calculate new data
@@ -60,9 +77,8 @@ class FrequencyReportProcess implements ShouldQueue
                     $date->toDateString(),
                     $reportData
                 );
+                $this->updateSyncTimestamp($now);
             }
-
-            $this->updateSyncTimestamp($now);
 
             $logger->info('Frequency report data updated successfully');
 
@@ -99,12 +115,6 @@ class FrequencyReportProcess implements ShouldQueue
         $achievementPercentage = $totalVisits > 0 ? ($doneVisits / $totalVisits) * 100 : 0.0;
 
         return [
-            'client_name_en' => $client->name_en,
-            'client_type_name' => $client->clientType?->name ?? null,
-            'grade' => $client->grade,
-            'brick_id' => $client->brick_id,
-            'brick_name' => $client->brick?->name ?? null,
-            'area_name' => $client->brick?->area?->name ?? null,
             'done_visits_count' => $doneVisits,
             'pending_visits_count' => $pendingVisits,
             'missed_visits_count' => $missedVisits,
@@ -123,7 +133,6 @@ class FrequencyReportProcess implements ShouldQueue
         ];
     }
 
-    // update sync timestamp
     private function updateSyncTimestamp(Carbon $now)
     {
         Setting::updateFrequencyReportSyncTimestamp($now->timestamp);
