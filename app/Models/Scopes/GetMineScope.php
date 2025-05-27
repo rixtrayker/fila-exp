@@ -20,15 +20,14 @@ class GetMineScope implements Scope
      */
     public function apply(Builder $builder, Model $model)
     {
-        if(auth()->user() && auth()->user()->hasRole('medical-rep')){
-            $builder->where('user_id', '=', auth()->id());
-            return;
-        }
+        $builder->whereIn('user_id', self::getUserIds());
+    }
 
-        if(auth()->user() && auth()->user()->hasRole(['country-manager','area-manager','district-manager'])) {
-            $ids = User::descendantsAndSelf(auth()->user())->pluck('id')->toArray();
-            $builder->whereIn('user_id', $ids);
+    public static function getUserIds(): array
+    {
+        if(auth()->user() && auth()->user()->hasRole('medical-rep')){
+            return [auth()->id()];
         }
-        return;
+        return User::descendantsAndSelf(auth()->user())->pluck('id')->toArray();
     }
 }
