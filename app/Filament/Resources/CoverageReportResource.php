@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Exports\CoverageReportExport;
 use Illuminate\Contracts\View\View;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Model;
 
 class CoverageReportResource extends Resource
 {
@@ -35,7 +36,7 @@ class CoverageReportResource extends Resource
         return $table
             ->defaultPaginationPageOption(10)
             ->columns([
-                TextColumn::make('id')
+                TextColumn::make('user_id')
                     ->label('ID'),
                 TextColumn::make('name')
                     ->searchable()
@@ -97,15 +98,14 @@ class CoverageReportResource extends Resource
                 Tables\Actions\Action::make('visit_breakdown')
                     ->label('Visit Breakdown')
                     ->icon('heroicon-o-clipboard-document-list')
-                    ->modalContent(function (User $record, Table $table): View {
+                    ->modalContent(function (Model $record, Table $table): View {
                         $dateFilter = $table->getFilter('date_range')?->getState() ?? [];
                         $fromDate = $dateFilter['from_date'] ?? now()->startOfMonth();
                         $toDate = $dateFilter['to_date'] ?? now()->endOfMonth();
 
-                        $visitData = CoverageReportData::getUserData($record->id, $fromDate, $toDate);
-
+                        $visitData = CoverageReportData::getUserData($record->user_id, $fromDate, $toDate);
+                        dd(1);
                         return view('filament.resources.coverage-report-resource.pages.components.visit-breakdown-modal', [
-                            'user' => $record,
                             'fromDate' => Carbon::parse($fromDate)->format('M j, Y'),
                             'toDate' => Carbon::parse($toDate)->format('M j, Y'),
                             'visitData' => $visitData,

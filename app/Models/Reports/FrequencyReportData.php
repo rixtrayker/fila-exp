@@ -61,11 +61,11 @@ class FrequencyReportData extends Model
         $query = static::query()
             ->select([
                 'client_id',
-                DB::raw('clients.name as client_name_en'),
-                DB::raw('client_types.name as client_type_name'),
-                DB::raw('clients.grade as grade'),
-                DB::raw('bricks.name as brick_name'),
-                // DB::raw('clients.area_name as area_name'),
+                DB::raw('GROUP_CONCAT(DISTINCT clients.name_en) as client_name'),
+                DB::raw('GROUP_CONCAT(DISTINCT client_types.name) as client_type_name'),
+                DB::raw('GROUP_CONCAT(DISTINCT clients.grade) as grade'),
+                DB::raw('GROUP_CONCAT(DISTINCT bricks.name) as brick_name'),
+                // DB::raw('GROUP_CONCAT(DISTINCT bricks.area_id) as area_id'),
                 DB::raw('SUM(done_visits_count) as done_visits_count'),
                 DB::raw('SUM(pending_visits_count) as pending_visits_count'),
                 DB::raw('SUM(missed_visits_count) as missed_visits_count'),
@@ -79,7 +79,6 @@ class FrequencyReportData extends Model
             ->join('clients', 'frequency_report_data.client_id', '=', 'clients.id')
             ->join('client_types', 'clients.client_type_id', '=', 'client_types.id')
             ->join('bricks', 'clients.brick_id', '=', 'bricks.id')
-            // ->join('areas', 'bricks.area_id', '=', 'areas.id')
             ->when($grade, function ($query) use ($grade) {
                 $query->where('clients.grade', $grade);
             })
@@ -90,7 +89,7 @@ class FrequencyReportData extends Model
                 $query->whereIn('clients.brick_id', $brickIds);
             })
             ->whereBetween('report_date', [$fromDate, $toDate])
-            ->groupBy('client_id', 'bricks.id')
+            ->groupBy('client_id')
             ->with('client');
 
         return $query;
@@ -141,8 +140,7 @@ class FrequencyReportData extends Model
     public static function getGradeStatistics($fromDate, $toDate)
     {
         return static::select([
-                'grade',
-                DB::raw('SUM(done_visits_count) as done_visits'),
+                'clients.grade',
                 DB::raw('SUM(missed_visits_count) as missed_visits'),
                 DB::raw('SUM(total_visits_count) as total_visits'),
                 DB::raw('CASE
@@ -151,6 +149,7 @@ class FrequencyReportData extends Model
                     ELSE 0
                 END as achievement_percentage'),
             ])
+            ->join('clients', 'frequency_report_data.client_id', '=', 'clients.id')
             ->whereBetween('report_date', [$fromDate, $toDate])
             ->groupBy('grade')
             ->get()

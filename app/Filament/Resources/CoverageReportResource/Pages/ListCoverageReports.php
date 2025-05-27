@@ -10,6 +10,7 @@ use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\On;
+use Illuminate\Database\Eloquent\Model;
 
 class ListCoverageReports extends ListRecords
 {
@@ -25,6 +26,11 @@ class ListCoverageReports extends ListRecords
         return [
             // OverallChart::class,
         ];
+    }
+
+    public function getTableRecordKey(Model $record): string
+    {
+        return $record->id;
     }
 
     // public function infolist(Infolist $infolist): Infolist

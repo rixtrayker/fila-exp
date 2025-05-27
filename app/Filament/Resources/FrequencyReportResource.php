@@ -72,7 +72,7 @@ class FrequencyReportResource extends Resource
                     ]),
                 Tables\Filters\SelectFilter::make('brick_id')
                     ->label('Brick')
-                    ->relationship('brick', 'name')
+                    ->options(Brick::all()->pluck('name', 'id'))
                     ->searchable()
                     ->preload()
                     ->multiple(),
@@ -80,7 +80,7 @@ class FrequencyReportResource extends Resource
                     ->options(['A' => 'A', 'B' => 'B', 'C' => 'C', 'N' => 'N', 'PH' => 'PH']),
                 Tables\Filters\SelectFilter::make('client_type_id')
                     ->label('Client Type')
-                    ->relationship('clientType', 'name')
+                    ->options(ClientType::all()->pluck('name', 'id'))
                     ->searchable()
                     ->preload()
                     ->multiple(),
