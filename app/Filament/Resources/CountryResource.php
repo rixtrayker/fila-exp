@@ -32,8 +32,10 @@ class CountryResource extends Resource
         return $form
             ->schema([
                 TextInput::make('name')
+                ->label('Name')
                     ->unique()
-                    ->required()
+                    ->length(2)
+                    ->required(),
             ]);
     }
 
@@ -42,7 +44,7 @@ class CountryResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')
-                ->label('Name'),
+                    ->label('Name'),
             ])
             ->filters([
                 //
