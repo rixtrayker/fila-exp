@@ -8,8 +8,6 @@ use Illuminate\Support\Facades\Cache;
 
 trait ReportSyncTimestamp
 {
-    protected static $CACHE_TAG = 'settings';
-
     private static function updateTimestamp($key, $value, ?callable $validator = null)
     {
         if ($validator) {
@@ -19,9 +17,9 @@ trait ReportSyncTimestamp
         DB::table('settings')->where('key', $key)->update(['value' => $value]);
 
         // Invalidate only the specific key
-        Cache::tags(self::$CACHE_TAG)->forget("setting.{$key}");
+        Cache::forget("setting.{$key}");
         // Also invalidate the all settings cache since it contains this key
-        Cache::tags(self::$CACHE_TAG)->forget('all_settings');
+        Cache::forget('all_settings');
     }
 
     private static function validateTimestamp($value, $oldTimestamp)

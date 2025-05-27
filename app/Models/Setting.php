@@ -28,14 +28,14 @@ class Setting extends Model
 
     public static function getSettings()
     {
-        return Cache::tags(self::$CACHE_TAG)->remember('all_settings', self::CACHE_TTL, function () {
+        return Cache::remember('all_settings', self::CACHE_TTL, function () {
             return self::withoutGlobalScopes()->get();
         });
     }
 
     public static function getSetting($key)
     {
-        return Cache::tags(self::$CACHE_TAG)->remember("setting.{$key}", self::CACHE_TTL, function () use ($key) {
+        return Cache::remember("setting.{$key}", self::CACHE_TTL, function () use ($key) {
             return self::withoutGlobalScopes()->where('key', $key)->first();
         });
     }
@@ -97,23 +97,23 @@ class Setting extends Model
 
         static::deleted(function ($setting) {
             // Invalidate only the specific key
-            Cache::tags(self::$CACHE_TAG)->forget("setting.{$setting->key}");
+            Cache::forget("setting.{$setting->key}");
             // Also invalidate the all settings cache
-            Cache::tags(self::$CACHE_TAG)->forget('all_settings');
+            Cache::forget('all_settings');
         });
 
         static::updated(function ($setting) {
             // Invalidate only the specific key
-            Cache::tags(self::$CACHE_TAG)->forget("setting.{$setting->key}");
+            Cache::forget("setting.{$setting->key}");
             // Also invalidate the all settings cache
-            Cache::tags(self::$CACHE_TAG)->forget('all_settings');
+            Cache::forget('all_settings');
         });
 
         static::created(function ($setting) {
             // Invalidate only the specific key
-            Cache::tags(self::$CACHE_TAG)->forget("setting.{$setting->key}");
+            Cache::forget("setting.{$setting->key}");
             // Also invalidate the all settings cache
-            Cache::tags(self::$CACHE_TAG)->forget('all_settings');
+            Cache::forget('all_settings');
         });
     }
 
@@ -142,7 +142,12 @@ class Setting extends Model
      */
     public static function clearAllSettingsCache()
     {
-        Cache::tags(self::$CACHE_TAG)->flush();
+        Cache::forget('all_settings');
+        // Clear all individual setting caches
+        $settings = self::withoutGlobalScopes()->get();
+        foreach ($settings as $setting) {
+            Cache::forget("setting.{$setting->key}");
+        }
     }
 
     /**
@@ -153,8 +158,8 @@ class Setting extends Model
     {
         $settings = self::withoutGlobalScopes()->get();
         foreach ($settings as $setting) {
-            Cache::tags(self::$CACHE_TAG)->put("setting.{$setting->key}", $setting, self::CACHE_TTL);
+            Cache::put("setting.{$setting->key}", $setting, self::CACHE_TTL);
         }
-        Cache::tags(self::$CACHE_TAG)->put('all_settings', $settings, self::CACHE_TTL);
+        Cache::put('all_settings', $settings, self::CACHE_TTL);
     }
 }
