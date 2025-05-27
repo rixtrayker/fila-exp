@@ -75,16 +75,13 @@ class DateHelper{
 
     public static function isVacationDay(Carbon $date): bool
     {
-        $exists = VacationDuration::with('vacationRequest')
-            ->whereHas('vacationRequest', function ($query) {
-                $query->where('user_id', auth()->user()->id);
-                $query->where('approved', '>', 0);
-            })
+        return VacationDuration::query()
+            ->join('vacation_requests', 'vacation_durations.vacation_request_id', '=', 'vacation_requests.id')
+            ->where('vacation_requests.user_id', auth()->user()->id)
+            ->where('vacation_requests.approved', '>', 0)
             ->where('start', '<=', $date->format('Y-m-d'))
             ->where('end', '>=', $date->format('Y-m-d'))
             ->exists();
-
-        return $exists;
     }
 
     public static function isOffDay(Carbon $date): bool
@@ -162,5 +159,28 @@ class DateHelper{
     private static function isWeekend(Carbon $date): bool
     {
         return $date->isSaturday() || $date->isSunday();
+    }
+
+    public static function calculateVacationDays(VacationDuration $vacationDuration, Carbon $date, int $actualVisits = 0): float
+    {
+        if (!$vacationDuration) {
+            return 0;
+        }
+
+        $vacationDays = 0;
+        if ($vacationDuration->start_shift == 'PM' && $vacationDuration->start == $date->format('Y-m-d')) {
+            $vacationDays = 0.5;
+        } else if ($vacationDuration->end_shift == 'AM' && $vacationDuration->end == $date->format('Y-m-d')) {
+            $vacationDays = 0.5;
+        } else {
+            $vacationDays = 1;
+        }
+
+        // If he has done visits on this date then it's 0.5
+        if ($vacationDays === 0 && $actualVisits > 0) {
+            $vacationDays = 0.5;
+        }
+
+        return $vacationDays;
     }
 }

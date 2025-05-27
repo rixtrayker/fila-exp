@@ -40,11 +40,11 @@ trait HasCoverageReportStatistics
         return $visitDays->count();
     }
 
-    public function getMonthlyVisitTargetAttribute()
+    public function getDailyVisitTargetAttribute(): int
     {
-        $target = Setting::getSetting('medical_rep_visit_target')->value ?? 8;
-        return $this->actual_working_days * $target;
+        return Setting::getSetting('medical_rep_visit_target')->value ?? 8;
     }
+
 
     public function getActivitiesCountAttribute()
     {
