@@ -70,7 +70,7 @@ class DateHelper{
 
     public static function isWorkingDay(Carbon $date): bool
     {
-        return !$date->isWeekend() && !OfficialHoliday::where('date', $date->format('Y-m-d'))->exists();
+        return !$date->isWeekend() && !OfficialHoliday::isOfficialHoliday($date);
     }
 
     public static function isVacationDay(Carbon $date): bool

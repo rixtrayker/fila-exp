@@ -65,6 +65,23 @@ class OfficialHoliday extends Model
         Cache::put($cacheKey, $officialHolidaysSet);
     }
 
+    public static function getCachedOfficialHolidays(): SortedStringSet
+    {
+        $cacheKey = 'official_holidays';
+        $officialHolidays = Cache::get($cacheKey);
+        if(!$officialHolidays){
+            self::cacheOfficialHolidays();
+            $officialHolidays = Cache::get($cacheKey);
+        }
+        return $officialHolidays;
+    }
+
+    public static function isOfficialHoliday(Carbon $date): bool
+    {
+        $cachedOfficialHolidays = self::getCachedOfficialHolidays();
+        return $cachedOfficialHolidays->contains($date->format('Y-m-d'));
+    }
+
     public static function getOfficialHolidaysInRange(Carbon $from, Carbon $to): array
     {
         $officialHolidaysSet = Cache::get('official_holidays');
