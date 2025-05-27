@@ -3,7 +3,6 @@
 namespace App\Jobs;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -19,15 +18,18 @@ class FetchOfficialHolidays implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public string $countryCode;
+    public ?int $year;
 
     /**
      * Create a new job instance.
      *
      * @param string $countryCode The ISO 3166-1 alpha-2 country code (default: 'EG')
+     * @param string|null $year The year to fetch holidays for (default: null, will use current year)
      */
-    public function __construct(string $countryCode = 'EG')
+    public function __construct(string $countryCode = 'EG', ?int $year = null)
     {
         $this->countryCode = $countryCode;
+        $this->year = $year;
     }
 
     /**
@@ -37,11 +39,15 @@ class FetchOfficialHolidays implements ShouldQueue
     {
         Log::channel('fetch-holidays')->info("Starting FetchOfficialHolidays job for country code: {$this->countryCode}");
         try {
-            $nextMonth = Carbon::now()->addMonth();
-            $year = $nextMonth->year;
-            $month = $nextMonth->month;
+            $year = $this->year ? $this->year : Carbon::now()->year;
+
+            if ($year < 2020 || $year > 2040 || !is_int($year)) {
+                Log::channel('fetch-holidays')->error("Invalid year: {$year}");
+                return;
+            }
 
             // Fetch country model using the provided name
+            // The country code is the name of the country in the database
             $country = Country::where('name', $this->countryCode)->first();
 
             if (!$country) {
@@ -49,7 +55,6 @@ class FetchOfficialHolidays implements ShouldQueue
                 return;
             }
 
-            Log::channel('fetch-holidays')->info("Found country: ID={$country->id}, Name={$country->name}");
 
             // Fetch holidays from Nager.Date API for the specific year and country
             $apiUrl = "https://date.nager.at/api/v3/PublicHolidays/{$year}/{$this->countryCode}";
@@ -73,37 +78,29 @@ class FetchOfficialHolidays implements ShouldQueue
             foreach ($holidays as $holiday) {
                 $holidayDate = Carbon::parse($holiday['date']);
                 Log::channel('fetch-holidays')->debug("Processing holiday from API: ", $holiday);
+                $savedHoliday = OfficialHoliday::updateOrCreate(
+                    [
+                        'country_id' => $country->id,
+                        'date' => $holidayDate->toDateString(),
+                    ],
+                    [
+                        'name' => $holiday['name'], // Use English name
+                        'description' => $holiday['localName'], // Use local name as description
+                        'online' => true,
+                    ]
+                );
 
-                // Only process holidays for the next month
-                if ($holidayDate->year == $year && $holidayDate->month == $month) {
-                    Log::channel('fetch-holidays')->info("Attempting to save holiday: {$holiday['name']} ({$holidayDate->toDateString()}) for country ID: {$country->id}");
-                    $savedHoliday = OfficialHoliday::updateOrCreate(
-                        [
-                            'country_id' => $country->id,
-                            'date' => $holidayDate->toDateString(),
-                        ],
-                        [
-                            'name' => $holiday['name'], // Use English name
-                            'description' => $holiday['localName'], // Use local name as description
-                            'date' => $holidayDate->toDateString(),
-                            'online' => true,
-                            'country_id' => $country->id,
-                        ]
-                    );
-                    if ($savedHoliday->wasRecentlyCreated) {
-                        Log::channel('fetch-holidays')->info("Created new holiday record with ID: {$savedHoliday->id}");
-                    } elseif ($savedHoliday->wasChanged()) {
-                        Log::channel('fetch-holidays')->info("Updated existing holiday record with ID: {$savedHoliday->id}");
-                    } else {
-                         Log::channel('fetch-holidays')->info("Holiday record already exists and is unchanged: ID: {$savedHoliday->id}");
-                    }
-                    $savedCount++;
+                if ($savedHoliday->wasRecentlyCreated) {
+                    Log::channel('fetch-holidays')->info("Created new holiday record with ID: {$savedHoliday->id}");
+                } elseif ($savedHoliday->wasChanged()) {
+                    Log::channel('fetch-holidays')->info("Updated existing holiday record with ID: {$savedHoliday->id}");
                 } else {
-                     Log::channel('fetch-holidays')->debug("Skipping holiday: Date {$holidayDate->toDateString()} is not in the target month {$year}-{$month}.");
+                    Log::channel('fetch-holidays')->info("Holiday record already exists and is unchanged: ID: {$savedHoliday->id}");
                 }
+                $savedCount++;
             }
 
-            Log::channel('fetch-holidays')->info("Successfully processed {$savedCount} holidays for {$this->countryCode} for {$nextMonth->format('Y-m')}.");
+            Log::channel('fetch-holidays')->info("Successfully processed {$savedCount} holidays for {$this->countryCode} for year {$year}.");
 
         } catch (\Exception $e) {
             Log::channel('fetch-holidays')->error("Error fetching holidays for {$this->countryCode}: " . $e->getMessage(), ['exception' => $e]);

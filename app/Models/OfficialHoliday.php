@@ -18,6 +18,7 @@ class OfficialHoliday extends Model
         'date',
         'description',
         'country_id',
+        'online',
     ];
 
     /**
