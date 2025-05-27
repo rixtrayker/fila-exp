@@ -19,6 +19,16 @@ class ClientFactory extends Factory
      */
     public function definition()
     {
+        // Ensure we have at least one client type
+        if (ClientType::count() === 0) {
+            ClientType::factory()->count(3)->create();
+        }
+
+        // Ensure we have at least one specialty
+        if (Speciality::count() === 0) {
+            Speciality::factory()->count(5)->create();
+        }
+
         $arr =  [
             'name_en' => $this->faker->name(),
         ];
@@ -31,8 +41,8 @@ class ClientFactory extends Factory
             'email' => $this->faker->unique()->safeEmail(),
             'phone' => $this->faker->unique()->phoneNumber(),
             'address' => $this->faker->streetAddress(),
-            'client_type_id' => $this->faker->randomElement(ClientType::pluck('id')),
-            'speciality_id' => $this->faker->randomElement(Speciality::pluck('id')),
+            'client_type_id' => ClientType::inRandomOrder()->first()->id,
+            'speciality_id' => Speciality::inRandomOrder()->first()->id,
             'shift' => $this->faker->randomElement(['AM','PM']),
             'grade' => $this->faker->randomElement(['A','B','C','N','PH']),
         ];
