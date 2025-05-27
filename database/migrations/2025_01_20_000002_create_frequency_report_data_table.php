@@ -20,15 +20,13 @@ return new class extends Migration
             $table->integer('missed_visits_count')->default(0);
             $table->integer('total_visits_count')->default(0);
             $table->decimal('achievement_percentage', 5, 2)->default(0);
-            $table->json('metadata')->nullable(); // For additional data
+            $table->json('metadata')->nullable();
             $table->boolean('is_final')->default(false);
             $table->timestamps();
 
-            $table->foreign('client_id')->references('id')->on('clients')->onDelete('cascade');
             $table->unique(['client_id', 'report_date']);
-            $table->index(['report_date', 'client_id']);
-            $table->index(['brick_id', 'report_date']);
-            $table->index(['grade', 'report_date']);
+            $table->index(['report_date']);
+            $table->index(['client_id']);
         });
     }
 

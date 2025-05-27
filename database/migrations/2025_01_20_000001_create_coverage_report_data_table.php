@@ -21,7 +21,6 @@ return new class extends Migration
             $table->integer('office_work_count')->default(0);
             $table->integer('activities_count')->default(0);
             $table->integer('actual_working_days')->default(0);
-            $table->integer('monthly_visit_target')->default(0);
             $table->decimal('sops', 5, 2)->default(0);
             $table->integer('actual_visits')->default(0);
             $table->decimal('call_rate', 5, 2)->default(0);
@@ -30,9 +29,9 @@ return new class extends Migration
             $table->boolean('is_final')->default(false);
             $table->timestamps();
 
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->unique(['user_id', 'report_date']);
-            $table->index(['report_date', 'user_id']);
+            $table->index(['report_date']);
+            $table->index(['user_id']);
         });
     }
 
