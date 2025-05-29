@@ -17,7 +17,6 @@ class SyncCoverageReportData implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public $tries = 3;
-    public $queue = 'reports';
 
     protected $fromDate;
     protected $toDate;
@@ -31,6 +30,7 @@ class SyncCoverageReportData implements ShouldQueue
         $this->fromDate = $fromDate;
         $this->toDate = $toDate;
         $this->forceSync = $forceSync;
+        $this->onQueue('reports');
     }
 
     /**
