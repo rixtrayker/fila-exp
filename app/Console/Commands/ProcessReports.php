@@ -6,6 +6,7 @@ use App\Jobs\CoverageReportProcess;
 use App\Jobs\FrequencyReportProcess;
 use App\Models\Client;
 use App\Models\User;
+use App\Models\Visit;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 
@@ -76,6 +77,8 @@ class ProcessReports extends Command
             ];
         }
 
+        $firstVisitDate = Visit::withoutGlobalScopes()->first()?->created_at ?? Carbon::parse('2023-01-01');
+
         return match ($duration) {
             'today' => [
                 'from' => now()->startOfDay(),
@@ -98,7 +101,7 @@ class ProcessReports extends Command
                 'to' => now()->subYear()->endOfYear()
             ],
             'all-time' => [
-                'from' => now()->subYears(10),
+                'from' => $firstVisitDate,
                 'to' => now()
             ],
             default => [

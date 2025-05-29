@@ -120,6 +120,13 @@ class FrequencyReportData extends Model
             ->get();
     }
 
+    public static function createEmptyRecord($clientId, $date)
+    {
+        return static::create([
+            'client_id' => $clientId,
+            'report_date' => $date,
+        ]);
+    }
     /**
      * Create or update report data for a specific date
      */

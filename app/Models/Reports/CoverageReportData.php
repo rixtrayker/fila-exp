@@ -85,6 +85,13 @@ class CoverageReportData extends Model
             // ->join('areas', 'area_user.area_id', '=', 'areas.id')
             ->whereIn('coverage_report_data.user_id', $userIds)
             ->whereBetween('coverage_report_data.report_date', [$fromDate, $toDate])
+            // where not all zeros
+            ->where(function ($query) {
+                $query->where('coverage_report_data.actual_working_days', '>', 0)
+                    ->orWhere('coverage_report_data.actual_visits', '>', 0);
+            })
+            // ->having('SUM(coverage_report_data.actual_working_days)'), '>', 0)
+            ->having(DB::raw('SUM(coverage_report_data.actual_visits)'), '>', 0)
             ->groupBy(
                 'coverage_report_data.user_id',
                 // 'areas.id',

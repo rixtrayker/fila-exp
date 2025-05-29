@@ -41,10 +41,12 @@ class OfficialHoliday extends Model
         parent::boot();
 
         self::updated(function ($model) {
+            self::forgetCache();
             self::cacheOfficialHolidays();
         });
 
         self::created(function ($model) {
+            self::forgetCache();
             self::cacheOfficialHolidays();
         });
     }
@@ -63,6 +65,12 @@ class OfficialHoliday extends Model
         $officialHolidaysSet = SortedStringSet::fromArray($officialHolidays);
 
         Cache::put($cacheKey, $officialHolidaysSet);
+    }
+
+    // force clear cache
+    public static function forgetCache()
+    {
+        Cache::forget('official_holidays');
     }
 
     public static function getCachedOfficialHolidays(): SortedStringSet

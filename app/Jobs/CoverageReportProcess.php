@@ -83,13 +83,14 @@ class CoverageReportProcess implements ShouldQueue
     private function calculateCoverageDataForUserAndDate(User $user, Carbon $date): ?array
     {
         // Get visits for the date
-        $visits = Visit::where('user_id', $user->id)
+        $visits = Visit::withoutGlobalScopes()
+            ->where('user_id', $user->id)
             ->whereDate('visit_date', $date)
             ->get();
 
         // If no visits for this date, return null to skip
         if ($visits->isEmpty()) {
-            return null;
+            return [];
         }
 
         // Get activities for the date
@@ -113,20 +114,19 @@ class CoverageReportProcess implements ShouldQueue
         // Calculate SOPs percentage
         $sops = $actualVisits > 0 ? min(($actualVisits / $dailyVisitTarget) * 100, 100) : 0;
 
-        $vacationDuration = VacationDuration::select('start_shift','end_shift','start','end')
-            ->join('vacation_requests', 'vacation_durations.vacation_request_id', '=', 'vacation_requests.id')
-            ->where('vacation_requests.user_id', $user->id)
-            ->where('vacation_requests.approved', '>', 0)
-            ->where('vacation_durations.start', '<=', $date->format('Y-m-d'))
-            ->where('vacation_durations.end', '>=', $date->format('Y-m-d'))
+        $vacationDuration = VacationDuration::select('start_shift', 'end_shift', 'start', 'end')
+            ->whereHas('vacationRequest', function ($query) use ($user) {
+                $query->where('user_id', $user->id)
+                    ->where('approved', '>', 0);
+            })
+            ->where('start', '<=', $date->format('Y-m-d'))
+            ->where('end', '>=', $date->format('Y-m-d'))
             ->first();
 
         $vacationDays = DateHelper::calculateVacationDays($vacationDuration, $date, $actualVisits);
+        $isWorkingDay = DateHelper::isWorkingDay($date) || $activitiesCount > 0 || $officeWorkCount > 0 || $actualVisits > 0;
 
-        $isOffDay = DateHelper::isOffDay($date);
-
-        $worked = $activitiesCount > 0 || $officeWorkCount > 0 || $actualVisits > 0;
-        $isWorkingDay = DateHelper::isWorkingDay($date) || $worked;
+        $isOffDay = $vacationDays !== 0 || !$isWorkingDay;
 
         $actualWorkingDays = match(true) {
             $isWorkingDay => 1,

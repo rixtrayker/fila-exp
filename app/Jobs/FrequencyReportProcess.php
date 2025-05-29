@@ -54,13 +54,14 @@ class FrequencyReportProcess implements ShouldQueue
                 return;
             }
 
-            $visits = $client->visits()->whereDate('visit_date', $this->date)->get();
+            $visits = $client->visits()->withoutGlobalScopes()->whereDate('visit_date', $this->date)->get();
 
             if ($visits->isEmpty()) {
                 $logger->info('No visits found for client', [
                     'client_id' => $this->clientId,
                     'date' => $this->date
                 ]);
+                FrequencyReportData::createEmptyRecord($client->id, $this->date);
                 return;
             }
 

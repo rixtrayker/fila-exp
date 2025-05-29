@@ -73,21 +73,22 @@ class DateHelper{
         return !$date->isWeekend() && !OfficialHoliday::isOfficialHoliday($date);
     }
 
-    public static function isVacationDay(Carbon $date): bool
+    public static function isVacationDay(Carbon $date, int $userId): bool
     {
         return VacationDuration::query()
-            ->join('vacation_requests', 'vacation_durations.vacation_request_id', '=', 'vacation_requests.id')
-            ->where('vacation_requests.user_id', auth()->user()->id)
-            ->where('vacation_requests.approved', '>', 0)
+            ->whereHas('vacationRequest', function ($query) use ($userId) {
+                $query->where('user_id', $userId)
+                    ->where('approved', '>', 0);
+            })
             ->where('start', '<=', $date->format('Y-m-d'))
             ->where('end', '>=', $date->format('Y-m-d'))
             ->exists();
     }
 
-    public static function isOffDay(Carbon $date): bool
-    {
-        return self::isWorkingDay($date) && !self::isVacationDay($date);
-    }
+    // public static function isOffDay(Carbon $date): bool
+    // {
+    //     return self::isWorkingDay($date) && !self::isVacationDay($date);
+    // }
 
     public static function countWorkingDays($startDate, $endDate): float
     {
@@ -161,7 +162,7 @@ class DateHelper{
         return $date->isSaturday() || $date->isSunday();
     }
 
-    public static function calculateVacationDays(VacationDuration $vacationDuration, Carbon $date, int $actualVisits = 0): float
+    public static function calculateVacationDays(?VacationDuration $vacationDuration, Carbon $date, int $actualVisits = 0): float
     {
         if (!$vacationDuration) {
             return 0;
