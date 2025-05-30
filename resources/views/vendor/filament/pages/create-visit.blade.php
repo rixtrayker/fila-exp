@@ -21,46 +21,61 @@
 <script>
 document.addEventListener('livewire:initialized', () => {
     console.log('livewire:initialized');
-        if (!navigator.geolocation) {
-            alert('Your browser does not support location services. Please enable location services to continue.');
-            return;
+    if (!navigator.geolocation) {
+        alert('Your browser does not support location services. Please enable location services to continue.');
+        return;
+    }
+
+    navigator.permissions.query({ name: 'geolocation' }).then(function(permissionStatus) {
+        if (permissionStatus.state === 'denied') {
+            alert('Please enable location services in your browser settings to continue.');
+        } else if (permissionStatus.state === 'granted') {
+            sendLocation();
+        } else if (permissionStatus.state === 'prompt') {
+            // Will prompt the user for permission
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    sendLocation();
+                },
+                (error) => {
+                    console.error('Error getting location:', error);
+                    alert('Unable to get your location. Please ensure location services are enabled.');
+                }
+            );
         }
 
-        navigator.permissions.query({ name: 'geolocation' }).then(function(permissionStatus) {
-            if (permissionStatus.state === 'denied') {
-                alert('Please enable location services in your browser settings to continue.');
-            } else if (permissionStatus.state === 'granted') {
-                 navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const latitude = position.coords.latitude;
-                        const longitude = position.coords.longitude;
-
-                        // Set the values in the hidden fields
-                        Livewire.dispatch('location-fetched', { data: {
-                            latitude: latitude,
-                            longitude: longitude,
-                        }});
-                    },
-                    (error) => {
-                        console.error('Error fetching location:', error);
-                    }
-                );
-            } else if (permissionStatus.state === 'prompt') {
-                // Will prompt the user for permission
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const latitude = position.coords.latitude;
-                        const longitude = position.coords.longitude;
-
-                        document.querySelector('input[name="latitude"]').value = latitude;
-                        document.querySelector('input[name="longitude"]').value = longitude;
-                    },
-                    (error) => {
-                        console.error('Error getting location:', error);
-                        alert('Unable to get your location. Please ensure location services are enabled.');
-                    }
-                );
+        // Listen for permission changes
+        permissionStatus.addEventListener('change', function() {
+            if (permissionStatus.state === 'granted') {
+                sendLocation();
             }
+        });
     });
 });
+
+function sendLocation() {
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+
+            // Dispatch Livewire event with location data
+            Livewire.dispatch('location-fetched', {
+                data: {
+                    latitude: latitude,
+                    longitude: longitude,
+                }
+            });
+        },
+        (error) => {
+            console.error('Error fetching location:', error);
+            alert('Error getting your location. Please try again.');
+        },
+        {
+            enableHighAccuracy: true,
+            timeout: 5000,
+            maximumAge: 0
+        }
+    );
+}
 </script>
