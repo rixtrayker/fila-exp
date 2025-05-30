@@ -44,10 +44,12 @@ class OfficeWorkResource extends Resource
                 TimePicker::make('time_from')
                     ->label('Time from')
                     ->native(false)
+                    ->seconds(false)
                     ->nullable(),
                 TimePicker::make('time_to')
                     ->label('Time to')
                     ->native(false)
+                    ->seconds(false)
                     ->nullable(),
                 // Select::make('status')
                 //     ->options([
