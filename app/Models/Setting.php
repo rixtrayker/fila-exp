@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 
 class Setting extends Model
 {
@@ -28,9 +27,7 @@ class Setting extends Model
 
     public static function getSettings()
     {
-        return Cache::remember('all_settings', self::CACHE_TTL, function () {
-            return self::withoutGlobalScopes()->get();
-        });
+        return self::withoutGlobalScopes()->get();
     }
 
     public static function getSetting($key)
@@ -98,22 +95,16 @@ class Setting extends Model
         static::deleted(function ($setting) {
             // Invalidate only the specific key
             Cache::forget("setting.{$setting->key}");
-            // Also invalidate the all settings cache
-            Cache::forget('all_settings');
         });
 
         static::updated(function ($setting) {
             // Invalidate only the specific key
             Cache::forget("setting.{$setting->key}");
-            // Also invalidate the all settings cache
-            Cache::forget('all_settings');
         });
 
         static::created(function ($setting) {
             // Invalidate only the specific key
             Cache::forget("setting.{$setting->key}");
-            // Also invalidate the all settings cache
-            Cache::forget('all_settings');
         });
     }
 
@@ -137,12 +128,11 @@ class Setting extends Model
     }
 
     /**
-     * Clear all settings cache
+     * Clear all individual setting caches
      * Use this in your seeder after seeding all settings
      */
     public static function clearAllSettingsCache()
     {
-        Cache::forget('all_settings');
         // Clear all individual setting caches
         $settings = self::withoutGlobalScopes()->get();
         foreach ($settings as $setting) {
@@ -151,7 +141,7 @@ class Setting extends Model
     }
 
     /**
-     * Cache all settings
+     * Cache all settings individually
      * Use this in your seeder after seeding all settings
      */
     public static function cacheAllSettings()
@@ -160,6 +150,5 @@ class Setting extends Model
         foreach ($settings as $setting) {
             Cache::put("setting.{$setting->key}", $setting, self::CACHE_TTL);
         }
-        Cache::put('all_settings', $settings, self::CACHE_TTL);
     }
 }

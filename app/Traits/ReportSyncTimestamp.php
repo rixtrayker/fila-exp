@@ -18,8 +18,6 @@ trait ReportSyncTimestamp
 
         // Invalidate only the specific key
         Cache::forget("setting.{$key}");
-        // Also invalidate the all settings cache since it contains this key
-        Cache::forget('all_settings');
     }
 
     private static function validateTimestamp($value, $oldTimestamp)
