@@ -2,9 +2,6 @@
 
 namespace App\Services\Stats;
 
-use App\Helpers\DateHelper;
-use App\Models\Client;
-use App\Models\Visit;
 use App\Traits\StatsHelperTrait;
 
 class ClientStatsService
@@ -20,20 +17,15 @@ class ClientStatsService
 
     public function getCoveredClientsStats(): array
     {
-        $doneVisitsClients = $this->visitStatsService->getVisits()
-            ->where('status', 'visited')
-            ->where('visit_date', DateHelper::today())
-            ->count();
+        $coveredClients = $this->visitStatsService->getDailyPlanCoveredClients();
+        $totalClients = $this->visitStatsService->getClientsCount();
 
-        $dailyTargetRatio = 0.8;
-        $totalClients = Client::count();
-        $dailyTarget = $totalClients * $dailyTargetRatio;
-        $percentage = $this->calculatePercentage($doneVisitsClients, $dailyTarget);
+        $percentage = round($this->calculatePercentage($coveredClients, $totalClients), 2);
 
         return [
-            'count' => $doneVisitsClients,
+            'coveredClients' => $coveredClients,
+            'totalClients' => $totalClients,
             'percentage' => $percentage,
-            'dailyTarget' => $dailyTarget
         ];
     }
 }

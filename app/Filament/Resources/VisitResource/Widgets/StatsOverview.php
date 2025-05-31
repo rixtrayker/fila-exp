@@ -59,10 +59,18 @@ class StatsOverview extends BaseWidget
     {
         $stats = $this->clientStatsService->getCoveredClientsStats();
 
-        return Stat::make('Covered clients', $stats['count'])
-            ->description("{$stats['count']} / {$stats['dailyTarget']} ({$stats['percentage']}%)")
+        $coveredClients = $stats['coveredClients'] ?? 0;
+        $totalClients = $stats['totalClients'] ?? 0;
+        $percentage = $stats['percentage'] ?? 0;
+        $uncoveredClients = $totalClients - $coveredClients;
+
+        $message = "{$coveredClients} covered  - {$uncoveredClients} uncovered ({$percentage}%)";
+
+        return Stat::make('Accounts', $totalClients)
+            ->description($message)
+            ->color('primary');
             // ->descriptionIcon('heroicon-m-arrow-trending-up')
-            ->color('success');
+            // ->color('success');
     }
 
     private function directOrdersStats(): Stat

@@ -11,11 +11,8 @@ class OfficeWorkStatsService
         $officeWork = OfficeWork::count();
         $activities = Activity::count();
         $totalActivities = $activities + $officeWork;
-        $color = 'success';
+        $color = 'primary';
 
-        if ($totalActivities === 0) {
-            $color = 'secondary';
-        }
 
         return [
             'officeWork' => $officeWork,

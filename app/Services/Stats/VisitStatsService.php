@@ -6,32 +6,43 @@ use App\Helpers\DateHelper;
 use App\Models\Visit;
 use Illuminate\Support\Collection;
 use App\Traits\StatsHelperTrait;
+use Illuminate\Database\Eloquent\Builder;
+use App\Models\Client;
 
 class VisitStatsService
 {
     use StatsHelperTrait;
 
-    private static ?Collection $visits = null;
-
-    public function getVisits(): Collection
+    public function getVisitsQuery(): Builder
     {
-        if (self::$visits) {
-            return self::$visits;
-        }
-
         $startOfPlan = DateHelper::getFirstOfWeek();
         $endOfPlan = (clone $startOfPlan)->addDays(7);
 
-        self::$visits = Visit::query()
+        return Visit::query()
             ->select(['visit_date', 'status', 'plan_id'])
             ->whereIn('status', ['visited', 'pending'])
             ->whereDate('visit_date', '>=', $startOfPlan)
-            ->whereDate('visit_date', '<=', $endOfPlan)
-            ->get();
-
-        return self::$visits;
+            ->whereDate('visit_date', '<=', $endOfPlan);
     }
 
+    public function getVisits(): Collection
+    {
+        return $this->getVisitsQuery()->get();
+    }
+
+    public function getDailyPlanCoveredClients(): int
+    {
+        return $this->getVisitsQuery()
+            ->whereNotNull('plan_id')
+            ->select('client_id')
+            ->distinct()
+            ->count();
+    }
+
+    public function getClientsCount(): int
+    {
+        return Client::count();
+    }
     public function getAchievedVisits(): string
     {
         $totalVisits = $this->getVisits()

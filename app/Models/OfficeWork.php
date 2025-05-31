@@ -19,10 +19,6 @@ class OfficeWork extends Model
         'user_id',
     ];
 
-    // protected $casts = [
-    //     'time_from' => 'datetime',
-    //     'time_to' => 'datetime',
-    // ];
 
     public function user()
     {
