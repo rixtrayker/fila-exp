@@ -3,10 +3,11 @@
 namespace App\Helpers;
 
 use App\Models\Setting;
+use Illuminate\Support\Facades\Log;
 
 class LocationHelpers
 {
-    public static function calculateDistance($latitude1, $longitude1, $latitude2, $longitude2)
+    public static function calculateDistance(float $latitude1, float $longitude1, float $latitude2, float $longitude2): float
     {
         // accurate distance in km
         $earthRadius = 6371; // Radius of the earth in km
@@ -33,9 +34,12 @@ class LocationHelpers
         return $distance * 1000;
     }
 
-    public static function isValidDistance($lat1, $lng1, $lat2, $lng2)
+    public static function isValidDistance(float $lat1, float $lng1, float $lat2, float $lng2): bool
     {
+        $allowedDistance = Setting::getSetting('visit-distance')->value+1;
         $distance = self::getDistanceInMeters($lat1, $lng1, $lat2, $lng2);
-        return $distance <= Setting::getSetting('visit-distance')->value;
+        $result = $distance <= $allowedDistance;
+        Log::info('distance', ['distance' => $distance, 'allowedDistance' => $allowedDistance, 'result' => $result]);
+        return $result;
     }
 }

@@ -6,6 +6,7 @@ use App\Helpers\LocationHelpers;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Session;
 use App\Models\Client;
+use Illuminate\Support\Facades\Log;
 
 class LocationService
 {
@@ -23,8 +24,14 @@ class LocationService
 
         $lat = $location->get('latitude');
         $lng = $location->get('longitude');
+        $result = LocationHelpers::isValidDistance($lat, $lng, $client->lat, $client->lng);
 
-        return LocationHelpers::isValidDistance($lat, $lng, $client->latitude, $client->longitude);
+        if (!$result) {
+            $user = auth()->id();
+            Log::info('location is not valid', ['userId' => $user, 'user_location' => ['lat' => $lat, 'lng' => $lng], 'client_location' => ['lat' => $client->lat, 'lng' => $client->lng]]);
+        }
+
+        return $result;
     }
 
     public function setLocation(string $sessionId, Collection $data): void
