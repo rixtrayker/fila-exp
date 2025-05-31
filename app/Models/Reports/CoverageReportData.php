@@ -67,7 +67,7 @@ class CoverageReportData extends Model
             ->select([
                 'coverage_report_data.user_id as user_id',
                 'users.id as id',
-                'users.name as user_name',
+                DB::raw('GROUP_CONCAT(DISTINCT users.name) as name'),
                 // DB::raw('GROUP_CONCAT(DISTINCT areas.name) as area_name'),
                 DB::raw('SUM(coverage_report_data.working_days) as working_days'),
                 DB::raw('ROUND(AVG(coverage_report_data.daily_visit_target), 2) as daily_visit_target'),
