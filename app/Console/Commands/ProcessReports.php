@@ -3,8 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Jobs\CoverageReportProcess;
-use App\Jobs\FrequencyReportProcess;
-use App\Models\Client;
+use App\Jobs\SyncFrequencyReportData;
 use App\Models\User;
 use App\Models\Visit;
 use Carbon\Carbon;
@@ -134,32 +133,14 @@ class ProcessReports extends Command
 
     private function processFrequencyReports(array $dateRange, bool $force): void
     {
-        $clients = Client::all();
-        // $clients = Client::query()
-        //     ->with(['visits' => function ($query) use ($dateFrom, $dateTo) {
-        //         $query->when($dateFrom, function ($query) use ($dateFrom) {
-        //             $query->where('visit_date', '>=', $dateFrom);
-        //         })->when($dateTo, function ($query) use ($dateTo) {
-        //             $query->where('visit_date', '<=', $dateTo);
-        //         });
-        //     }])
-        //     ->get();
+        $this->info('Dispatching job to sync frequency report data.');
 
-        $this->info("Found {$clients->count()} clients for frequency reports");
+        SyncFrequencyReportData::dispatch(
+            $dateRange['from']->format('Y-m-d'),
+            $dateRange['to']->format('Y-m-d'),
+            $force
+        );
 
-        $bar = $this->output->createProgressBar($clients->count());
-        $bar->start();
-
-        foreach ($clients as $client) {
-            $currentDate = clone $dateRange['from'];
-            while ($currentDate <= $dateRange['to']) {
-                FrequencyReportProcess::dispatch($client->id, $currentDate->format('Y-m-d'), $force);
-                $currentDate->addDay();
-            }
-            $bar->advance();
-        }
-
-        $bar->finish();
-        $this->newLine();
+        $this->info('Frequency report sync job dispatched successfully.');
     }
 }
