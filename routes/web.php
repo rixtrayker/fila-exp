@@ -12,6 +12,7 @@ use Laravel\Octane\Swoole\SwooleExtension;
 use App\Jobs\FixOrdersWith0Total;
 use Symfony\Component\Process\Process;
 use App\Http\Controllers\ReportSyncController;
+use App\Http\Controllers\TemplateFileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -120,3 +121,9 @@ Route::get('/admin/ops/fix-orders-with-0-total', function () {
 
 Route::get('/admin/ops/run-report-sync', [ReportSyncController::class, 'sync'])
     ->name('admin.ops.report-sync');
+
+// Template file download route
+Route::get('/template-files/{templateFile}/download', [TemplateFileController::class, 'download'])
+    ->name('template-files.download')
+    ->middleware('auth');
+

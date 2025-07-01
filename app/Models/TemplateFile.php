@@ -31,17 +31,17 @@ class TemplateFile extends Model
 
         static::updating(function ($model) {
             if ($model->isDirty('path')) {
-                Storage::delete($model->getOriginal('path'));
+                Storage::disk('public')->delete($model->getOriginal('path'));
             }
         });
 
         static::deleting(function ($model) {
-            Storage::delete($model->path);
+            Storage::disk('public')->delete($model->path);
         });
     }
 
     public function getDownloadUrlAttribute()
     {
-        return Storage::url($this->path);
+        return Storage::disk('public')->url($this->path);
     }
 }

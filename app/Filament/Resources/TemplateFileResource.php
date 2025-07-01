@@ -22,6 +22,10 @@ class TemplateFileResource extends Resource
     protected static ?string $modelLabel = 'Template File';
     protected static ?string $pluralModelLabel = 'Template Files';
     protected static ?string $slug = 'template-files';
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check();
+    }
 
     public static function form(Form $form): Form
     {
@@ -63,7 +67,9 @@ class TemplateFileResource extends Resource
             ->actions([
                 Tables\Actions\Action::make('download')
                     ->icon('heroicon-o-arrow-down-tray')
-                    ->url(fn (TemplateFile $record) => Storage::url($record->path))
+                    ->url(fn (TemplateFile $record) => route('template-files.download', $record->id))
+                    ->color('primary')
+                    ->label('Download')
                     ->openUrlInNewTab(),
                 // Tables\Actions\EditAction::make()
                 //     ->visible(auth()->user()->can('view template-file')),
@@ -87,5 +93,14 @@ class TemplateFileResource extends Resource
             'create' => Pages\CreateTemplateFile::route('/create'),
             // 'edit' => Pages\EditTemplateFile::route('/{record}/edit'),
         ];
+    }
+    public static function canViewAny(): bool
+    {
+        return auth()->check();
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->check();
     }
 }
