@@ -6,17 +6,13 @@ use App\Filament\Resources\FrequencyReportResource;
 use App\Models\Reports\ReportSummary;
 use App\Models\Visit;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Components\View;
 use Filament\Infolists\Concerns\InteractsWithInfolists;
 use Filament\Infolists\Contracts\HasInfolists;
 use Filament\Infolists\Infolist;
-use Filament\Pages\Actions;
 use Filament\Resources\Pages\ListRecords;
-use Filament\Support\Enums\FontWeight;
 use Filament\Support\Enums\IconPosition;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
 class ListFrequencyReports extends ListRecords implements HasInfolists
 {
     use InteractsWithInfolists;

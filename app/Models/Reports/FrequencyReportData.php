@@ -61,19 +61,19 @@ class FrequencyReportData extends Model
         $query = static::query()
             ->select([
                 'client_id',
-                DB::raw('GROUP_CONCAT(DISTINCT clients.name_en) as client_name'),
-                DB::raw('GROUP_CONCAT(DISTINCT client_types.name) as client_type_name'),
-                DB::raw('GROUP_CONCAT(DISTINCT clients.grade) as grade'),
-                DB::raw('GROUP_CONCAT(DISTINCT bricks.name) as brick_name'),
+                DB::raw('COALESCE(GROUP_CONCAT(DISTINCT clients.name_en), "") as client_name'),
+                DB::raw('COALESCE(GROUP_CONCAT(DISTINCT client_types.name), "") as client_type_name'),
+                DB::raw('COALESCE(GROUP_CONCAT(DISTINCT clients.grade), "") as grade'),
+                DB::raw('COALESCE(GROUP_CONCAT(DISTINCT bricks.name), "") as brick_name'),
                 // DB::raw('GROUP_CONCAT(DISTINCT bricks.area_id) as area_id'),
-                DB::raw('SUM(done_visits_count) as done_visits_count'),
-                DB::raw('SUM(pending_visits_count) as pending_visits_count'),
-                DB::raw('SUM(missed_visits_count) as missed_visits_count'),
-                DB::raw('SUM(total_visits_count) as total_visits_count'),
+                DB::raw('COALESCE(SUM(done_visits_count), 0) as done_visits_count'),
+                DB::raw('COALESCE(SUM(pending_visits_count), 0) as pending_visits_count'),
+                DB::raw('COALESCE(SUM(missed_visits_count), 0) as missed_visits_count'),
+                DB::raw('COALESCE(SUM(total_visits_count), 0) as total_visits_count'),
                 DB::raw('CASE
-                    WHEN SUM(total_visits_count) > 0
-                    THEN ROUND((SUM(done_visits_count) / SUM(total_visits_count)) * 100, 2)
-                    ELSE 0
+                    WHEN COALESCE(SUM(total_visits_count), 0) > 0
+                    THEN ROUND((COALESCE(SUM(done_visits_count), 0) / COALESCE(SUM(total_visits_count), 0)) * 100, 2)
+                    ELSE 0.00
                 END as achievement_percentage'),
             ])
             ->join('clients', 'frequency_report_data.client_id', '=', 'clients.id')
@@ -122,9 +122,15 @@ class FrequencyReportData extends Model
 
     public static function createEmptyRecord($clientId, $date)
     {
-        return static::create([
+        return static::updateOrCreate([
             'client_id' => $clientId,
             'report_date' => $date,
+        ], [
+            'done_visits_count' => 0,
+            'pending_visits_count' => 0,
+            'missed_visits_count' => 0,
+            'total_visits_count' => 0,
+            'achievement_percentage' => 0.00,
         ]);
     }
     /**

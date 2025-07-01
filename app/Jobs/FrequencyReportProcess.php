@@ -18,6 +18,8 @@ class FrequencyReportProcess implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public $tries = 3;
+    public $timeout = 300; // 5 minutes timeout
+    public $memory = 256;
     protected $clientId;
     protected $date;
     protected $finalize;

@@ -16,6 +16,8 @@ class SyncFrequencyReportData implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public $tries = 3;
+    public $timeout = 600; // 10 minutes timeout
+    public $memory = 512;
 
     protected $fromDate;
     protected $toDate;
@@ -59,18 +61,25 @@ class SyncFrequencyReportData implements ShouldQueue
                 'to_date' => $toDate->toDateString(),
             ]);
 
-            // Get all clients
-            $clients = Client::with(['clientType', 'brick.area'])->get();
+            // Get all clients in chunks to avoid memory issues
+            $clientIds = Client::pluck('id')->toArray();
             $processedRecords = 0;
+            $chunkSize = 50; // Process 50 clients at a time
 
-            foreach ($clients as $client) {
-                $currentDate = $fromDate->copy();
-                while ($currentDate <= $toDate) {
-                    FrequencyReportProcess::dispatch($client->id, $currentDate->toDateString(), $this->forceSync);
-                    $processedRecords++;
+            $logger->info('Processing clients in chunks', [
+                'total_clients' => count($clientIds),
+                'chunk_size' => $chunkSize
+            ]);
 
-                    $currentDate->addDay();
-                }
+            // Process clients in batches to avoid dispatching too many jobs
+            foreach (array_chunk($clientIds, $chunkSize) as $clientChunk) {
+                FrequencyReportBatchProcess::dispatch($clientChunk, $fromDate->toDateString(), $toDate->toDateString(), $this->forceSync);
+                $processedRecords += count($clientChunk);
+                
+                $logger->info('Dispatched batch job', [
+                    'clients_in_batch' => count($clientChunk),
+                    'total_processed' => $processedRecords
+                ]);
             }
         } catch (\Exception $e) {
             $logger->error('Frequency report sync failed', [
