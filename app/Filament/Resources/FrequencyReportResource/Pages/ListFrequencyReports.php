@@ -36,7 +36,7 @@ class ListFrequencyReports extends ListRecords implements HasInfolists
 
     public function getTableRecordKey(Model $model):string
     {
-        return 'id';
+        return 'client_id';
     }
 
     public function summaryInfolist(Infolist $infolist): Infolist
@@ -103,29 +103,91 @@ class ListFrequencyReports extends ListRecords implements HasInfolists
             ]);
     }
 
-    private function getSummary(): Model{
-        $query = self::$resource::getEloquentQuery();
-        $records = $this->applyFiltersToTableQuery($query)->get();
-        $summary['doctors_count'] = $records->count();
-        $summary['grade'] = implode(', ', array_unique($records->pluck('grade')->toArray()));
-        $summary['bricks_count'] = count(array_unique($records->pluck('brick_id')->toArray()));
-        $summary['from_date'] = $this->table->getFilter('date_range')->getState()['from_date'];
-        $summary['to_date'] = $this->table->getFilter('date_range')->getState()['to_date'];
-        $summary['done_visits_count'] = $records->sum('done_visits_count');
-        $summary['missed_visits_count'] = $records->sum('missed_visits_count');
-        $summary['pending_visits_count'] = $records->sum('pending_visits_count');
-        $summary['total_visits_count'] = $records->sum('total_visits_count');
-        $visitQuery = Visit::whereIn('client_id', $records->pluck('id'))
-            ->whereDate('visit_date', '>=', $summary['from_date'])
-            ->whereDate('visit_date', '<=', $summary['to_date']);
+    private function getSummary(): Model
+    {
+        $dateRange = $this->extractDateRange();
+        $filters = $this->extractTableFilters();
+        
+        $records = $this->getFrequencyReportData($dateRange, $filters);
+        $summaryData = $this->buildSummaryData($records, $dateRange);
+        
+        return $this->createSummaryModel($summaryData);
+    }
 
+    private function extractDateRange(): array
+    {
+        $tableFilters = request()->get('tableFilters', []);
+        $dateFilter = $tableFilters['date_range'] ?? [];
+        
+        return [
+            'from_date' => $dateFilter['from_date'] ?? today()->subDays(7)->toDateString(),
+            'to_date' => $dateFilter['to_date'] ?? today()->toDateString(),
+        ];
+    }
 
-        $summary['medical_reps_count'] = $visitQuery
+    private function extractTableFilters(): array
+    {
+        $tableFilters = request()->get('tableFilters', []);
+        
+        return [
+            'brick_id' => $tableFilters['brick_id'] ?? null,
+            'grade' => $tableFilters['grade'] ?? null,
+            'client_type_id' => $tableFilters['client_type_id'] ?? null,
+        ];
+    }
+
+    private function getFrequencyReportData(array $dateRange, array $filters): Collection
+    {
+        return \App\Models\Reports\FrequencyReportData::getAggregatedData(
+            $dateRange['from_date'],
+            $dateRange['to_date'],
+            $filters
+        );
+    }
+
+    private function buildSummaryData(Collection $records, array $dateRange): array
+    {
+        $summary = [
+            'from_date' => $dateRange['from_date'],
+            'to_date' => $dateRange['to_date'],
+            'doctors_count' => $records->count(),
+            'grade' => $this->formatGrades($records),
+            'bricks_count' => $this->countUniqueBricks($records),
+            'done_visits_count' => $records->sum('done_visits_count'),
+            'missed_visits_count' => $records->sum('missed_visits_count'),
+            'pending_visits_count' => $records->sum('pending_visits_count'),
+            'total_visits_count' => $records->sum('total_visits_count'),
+        ];
+
+        $summary['medical_reps_count'] = $this->getMedicalRepsCount($records, $dateRange);
+
+        return $summary;
+    }
+
+    private function formatGrades(Collection $records): string
+    {
+        return implode(', ', array_unique($records->pluck('grade')->filter()->toArray()));
+    }
+
+    private function countUniqueBricks(Collection $records): int
+    {
+        return count(array_unique($records->pluck('brick_name')->filter()->toArray()));
+    }
+
+    private function getMedicalRepsCount(Collection $records, array $dateRange): int
+    {
+        return Visit::whereIn('client_id', $records->pluck('client_id'))
+            ->whereDate('visit_date', '>=', $dateRange['from_date'])
+            ->whereDate('visit_date', '<=', $dateRange['to_date'])
             ->distinct('user_id')
             ->count('user_id');
+    }
 
+    private function createSummaryModel(array $summaryData): Model
+    {
         $model = new ReportSummary();
-        $model->fill($summary);
+        $model->fill($summaryData);
+        
         return $model;
     }
 }
