@@ -98,23 +98,38 @@ class CoverageReportResource extends Resource
                 Tables\Actions\Action::make('visit_breakdown')
                     ->label('Visit Breakdown')
                     ->icon('heroicon-o-clipboard-document-list')
-                    ->modalContent(function (Model $record, Table $table): View {
+                    ->color('primary')
+                    ->url(function (Model $record, Table $table): string {
+                        // Get all current table filters
                         $dateFilter = $table->getFilter('date_range')?->getState() ?? [];
+                        $areaFilter = $table->getFilter('area')?->getState() ?? null;
+                        $gradeFilter = $table->getFilter('grade')?->getState() ?? null;
+                        $clientTypeFilter = $table->getFilter('client_type_id')?->getState() ?? null;
+                        
                         $fromDate = $dateFilter['from_date'] ?? now()->startOfMonth();
                         $toDate = $dateFilter['to_date'] ?? now()->endOfMonth();
 
-                        $visitData = CoverageReportData::getUserData($record->user_id, $fromDate, $toDate);
-                        dd(1);
-                        return view('filament.resources.coverage-report-resource.pages.components.visit-breakdown-modal', [
-                            'fromDate' => Carbon::parse($fromDate)->format('M j, Y'),
-                            'toDate' => Carbon::parse($toDate)->format('M j, Y'),
-                            'visitData' => $visitData,
-                        ]);
+                        $params = [
+                            'user_id' => $record->user_id,
+                            'from_date' => Carbon::parse($fromDate)->format('Y-m-d'),
+                            'to_date' => Carbon::parse($toDate)->format('Y-m-d'),
+                            'strategy' => 'coverage',
+                        ];
+
+                        // Add additional filters if they exist
+                        if ($areaFilter) {
+                            $params['area'] = is_array($areaFilter) ? implode(',', $areaFilter) : $areaFilter;
+                        }
+                        if ($gradeFilter) {
+                            $params['grade'] = is_array($gradeFilter) ? implode(',', $gradeFilter) : $gradeFilter;
+                        }
+                        if ($clientTypeFilter) {
+                            $params['client_type_id'] = is_array($clientTypeFilter) ? implode(',', $clientTypeFilter) : $clientTypeFilter;
+                        }
+
+                        return route('filament.admin.pages.visit-breakdown', $params);
                     })
-                    ->modalSubmitAction(false)
-                    ->modalWidth('4xl')
-                    ->modalHeading(fn (User $record) => "Visit Breakdown - {$record->name}")
-                    ->slideOver(),
+                    ->openUrlInNewTab(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkAction::make('export')
