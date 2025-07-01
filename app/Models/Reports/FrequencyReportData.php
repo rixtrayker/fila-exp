@@ -120,6 +120,7 @@ class FrequencyReportData extends Model
             ->get();
     }
 
+    // DEPRECATED: WE ARE NOT GOING TO USE IT.
     public static function createEmptyRecord($clientId, $date)
     {
         return static::updateOrCreate([
@@ -133,6 +134,7 @@ class FrequencyReportData extends Model
             'achievement_percentage' => 0.00,
         ]);
     }
+
     /**
      * Create or update report data for a specific date
      */

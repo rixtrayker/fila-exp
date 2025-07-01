@@ -63,7 +63,6 @@ class FrequencyReportProcess implements ShouldQueue
                     'client_id' => $this->clientId,
                     'date' => $this->date
                 ]);
-                FrequencyReportData::createEmptyRecord($client->id, $this->date);
                 return;
             }
 
