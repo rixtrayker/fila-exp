@@ -118,7 +118,7 @@ class DailyVisitResource extends Resource
                     })
                     ->action(fn($record, $data) => $record->changeDate($data['visit_date'])),
                 Tables\Actions\EditAction::make()
-                    ->visible(fn($record) => self::isTodayVisit($record) ),
+                    ->visible(fn($record) => self::canEdit($record) ),
                 ])
             ->bulkActions([
                 Tables\Actions\BulkAction::make('swap')
@@ -171,6 +171,7 @@ class DailyVisitResource extends Resource
     public static function canEdit(Model $visit): bool
     {
         return self::isTodayVisit($visit);
+        //  && $visit->status == 'pending';
     }
 
     public static function minDate($planStart): Carbon

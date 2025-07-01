@@ -172,14 +172,14 @@ class VisitForm
 
         if ($isLivewireUpdate) {
             if (str_contains($referer, 'admin/visits/create') ||
-                str_contains($referer, 'admin/visits/edit')) {
+                str_contains($referer, 'admin/visits/edit') ||
+                str_contains($referer, 'admin/daily-visits/edit')) {
                 return false;
             }
         }
-
         return ! (
             str_contains($uri, 'create') ||
-            str_contains($uri, 'edit')
+            str_contains($uri, 'edit') && !str_contains($uri, 'daily-visits')
         );
     }
 
@@ -217,7 +217,7 @@ class VisitForm
                     ->options(Product::pluck('name', 'id')),
                 TextInput::make('count')
                     ->numeric()
-                    ->label('Sample count')
+                    ->label('Samples')
                     ->minValue(0),
             ])
             ->reorderable(false)

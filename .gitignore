@@ -18,3 +18,4 @@ yarn-error.log
 /.idea
 /.vscode
 .phpunit.cache/test-results
+.claude

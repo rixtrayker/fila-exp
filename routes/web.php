@@ -127,3 +127,8 @@ Route::get('/template-files/{templateFile}/download', [TemplateFileController::c
     ->name('template-files.download')
     ->middleware('auth');
 
+// link the storage
+Route::get('/admin/ops/link-storage', function () {
+    Artisan::call('storage:link');
+    return Artisan::output();
+});
