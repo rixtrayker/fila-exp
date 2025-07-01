@@ -28,7 +28,7 @@ class FrequencyFilterFormWidget extends Widget implements HasForms
     private static $avgGrade;
 
     protected $listeners = ['refreshData'];
-
+    // TODO: Add btn for refreshing data, removen the listener if not needed
 
     public function refreshData(){
         $this->dispatch('updateReportData', [

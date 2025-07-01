@@ -14,12 +14,14 @@ use Filament\Tables\Table;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Filament\Tables\Enums\FiltersLayout;
 
 class FrequencyReportResource extends Resource
 {
     use ResourceHasPermission;
-    protected static ?string $model = Client::class;
+    protected static ?string $model = FrequencyReportData::class;
     protected static ?string $label = 'Frequency report';
     protected static ?string $navigationLabel = 'Frequency report';
     protected static ?string $navigationGroup = 'Reports';
@@ -31,16 +33,16 @@ class FrequencyReportResource extends Resource
         return $table
             ->defaultPaginationPageOption(10)
             ->columns([
-                TextColumn::make('id')
+                TextColumn::make('client_id')
                     ->label('ID'),
-                TextColumn::make('name_en')
+                TextColumn::make('client_name')
                     ->searchable()
                     ->label('Name'),
                 TextColumn::make('client_type_name')
                     ->label('Client Type'),
                 TextColumn::make('grade')
                     ->label('Grade'),
-                TextColumn::make('brick.name')
+                TextColumn::make('brick_name')
                     ->label('Brick'),
                 // TextColumn::make('brick.area.name')
                     // ->label('Area'),
@@ -88,28 +90,69 @@ class FrequencyReportResource extends Resource
             ->filtersLayout(FiltersLayout::AboveContent)
             ->paginated([10, 25, 50, 100, 1000, 'all'])
             ->actions([
-                Tables\Actions\ViewAction::make(),
+                Tables\Actions\Action::make('visit_breakdown')
+                    ->label('Visit Breakdown')
+                    ->icon('heroicon-o-clipboard-document-list')
+                    ->color('primary')
+                    ->url(function (Model $record, Table $table): string {
+                        // Get all current table filters
+                        $dateFilter = $table->getFilter('date_range')?->getState() ?? [];
+                        $brickFilter = $table->getFilter('brick_id')?->getState() ?? null;
+                        $gradeFilter = $table->getFilter('grade')?->getState() ?? null;
+                        $clientTypeFilter = $table->getFilter('client_type_id')?->getState() ?? null;
+                        
+                        $fromDate = $dateFilter['from_date'] ?? now()->startOfMonth();
+                        $toDate = $dateFilter['to_date'] ?? now()->endOfMonth();
+
+                        $params = [
+                            'client_id' => $record->id,
+                            'from_date' => Carbon::parse($fromDate)->format('Y-m-d'),
+                            'to_date' => Carbon::parse($toDate)->format('Y-m-d'),
+                            'strategy' => 'frequency',
+                        ];
+
+                        // Add additional filters if they exist
+                        if ($brickFilter) {
+                            $params['brick_id'] = is_array($brickFilter) ? implode(',', $brickFilter) : $brickFilter;
+                        }
+                        if ($gradeFilter) {
+                            $params['grade'] = is_array($gradeFilter) ? implode(',', $gradeFilter) : $gradeFilter;
+                        }
+                        if ($clientTypeFilter) {
+                            $params['client_type_id'] = is_array($clientTypeFilter) ? implode(',', $clientTypeFilter) : $clientTypeFilter;
+                        }
+
+                        return route('filament.admin.pages.visit-breakdown', $params);
+                    })
+                    ->openUrlInNewTab(),
             ])
             ->bulkActions([]);
     }
 
     public static function getEloquentQuery(): Builder
     {
-        $dateRange = request()->get('tableFilters')['date_range'] ?? [];
-        $fromDate = $dateRange['from_date'] ?? today()->startOfMonth();
-        $toDate = $dateRange['to_date'] ?? today()->endOfMonth();
+        $tableFilters = request()->get('tableFilters', []);
+        $dateRange = $tableFilters['date_range'] ?? [];
+        
+        $fromDate = isset($dateRange['from_date']) && !empty($dateRange['from_date']) 
+            ? $dateRange['from_date'] 
+            : today()->subDays(7)->toDateString();
+            
+        $toDate = isset($dateRange['to_date']) && !empty($dateRange['to_date']) 
+            ? $dateRange['to_date'] 
+            : today()->toDateString();
 
         $filters = [
-            'brick_id' => request()->get('tableFilters')['brick_id'] ?? null,
-            'grade' => request()->get('tableFilters')['grade'] ?? null,
-            'client_type_id' => request()->get('tableFilters')['client_type_id'] ?? null,
+            'brick_id' => $tableFilters['brick_id'] ?? null,
+            'grade' => $tableFilters['grade'] ?? null,
+            'client_type_id' => $tableFilters['client_type_id'] ?? null,
         ];
 
         return FrequencyReportData::getAggregatedQuery($fromDate, $toDate, $filters);
     }
 
     public static function getRecordRouteKeyName(): string|null {
-        return 'clients.id';
+        return 'client_id';
     }
 
     public static function getPages(): array
