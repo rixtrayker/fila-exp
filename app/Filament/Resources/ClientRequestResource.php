@@ -29,6 +29,7 @@ class ClientRequestResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-receipt-percent';
     protected static ?int $navigationSort = 1;
     protected static ?string $navigationGroup = 'Requests';
+    protected static bool $canCreateAnother = false;
 
     public static function form(Form $form): Form
     {
