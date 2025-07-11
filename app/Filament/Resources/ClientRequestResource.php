@@ -9,6 +9,7 @@ use App\Models\ClientRequestType;
 use App\Models\User;
 use App\Traits\ResourceHasPermission;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -18,6 +19,7 @@ use Filament\Tables\Table;
 use Filament\Tables;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Actions\Action;
 
 class ClientRequestResource extends Resource
 {
@@ -77,27 +79,61 @@ class ClientRequestResource extends Resource
                     ->options(['yes'=>'Yes','no'=>'No'])
                     ->preload()
                     ->required(),
-                Select::make('rx_rate')
-                    ->label('Previous rate of RX')
-                    ->options(['yes'=>'Yes','no'=>'No'])
-                    ->preload()
-                    ->required(),
-                DatePicker::make('response_date')
-                    ->label('Max approval date')
-                    ->closeOnDateSelection()
-                    ->required(),
+                // Select::make('rx_rate')
+                //     ->label('Previous rate of RX')
+                //     ->options(['yes'=>'Yes','no'=>'No'])
+                //     ->preload()
+                //     ->required(),
+                // DatePicker::make('response_date')
+                //     ->label('Max approval date')
+                //     ->closeOnDateSelection()
+                //     ->required(),
                 DatePicker::make('from_date')
-                    ->label('Expected from')
+                    ->label('Due date')
                     ->closeOnDateSelection()
                     ->required(),
                 DatePicker::make('to_date')
-                    ->label('Expected to')
+                    ->label('Due paid')
                     ->closeOnDateSelection()
                     ->required(),
                 Textarea::make('description')
                     ->label('Description')
                     ->columnSpan('full')
                     ->required(),
+                FileUpload::make('attachments')
+                    ->label('Attachments')
+                    ->multiple()
+                    ->directory('client-requests')
+                    ->disk('private')
+                    ->visibility('private')
+                    ->maxFiles(10)
+                    ->maxSize(10240) // 10MB per file
+                    ->acceptedFileTypes([
+                        'application/pdf',
+                        'application/msword',
+                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                        'application/vnd.ms-excel',
+                        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                        'image/jpeg',
+                        'image/png',
+                        'image/gif'
+                    ])
+                    ->downloadable()
+                    ->openable()
+                    ->preserveFilenames()
+                    ->getDownloadUrlUsing(function ($record, $filename) {
+                        if ($record && $filename) {
+                            return route('client-requests.attachments.download', ['clientRequest' => $record->id, 'filename' => $filename]);
+                        }
+                        return null;
+                    })
+                    ->getUploadedFileUrlUsing(function ($record, $filename) {
+                        if ($record && $filename) {
+                            return route('client-requests.attachments.stream', ['clientRequest' => $record->id, 'filename' => $filename]);
+                        }
+                        return null;
+                    })
+                    ->columnSpan('full'),
             ]);
     }
 
@@ -120,8 +156,8 @@ class ClientRequestResource extends Resource
                     ->label('Request Type'),
                 TextColumn::make('request_cost')
                     ->label('Expected Cost'),
-                TextColumn::make('expected_revenue')
-                    ->label('Expected Revenue'),
+                // TextColumn::make('expected_revenue')
+                //     ->label('Expected Revenue'),
                 TextColumn::make('response_date')
                     ->label('Expected response time')
                     ->dateTime('d-M-Y')
@@ -147,12 +183,32 @@ class ClientRequestResource extends Resource
                 TextColumn::make('description')
                     ->label('Description')
                     ->limit(60),
+                TextColumn::make('attachments_count')
+                    ->label('Attachments')
+                    ->getStateUsing(fn ($record) => $record->attachments_count)
+                    ->badge()
+                    ->color(fn ($state) => $state > 0 ? 'success' : 'gray')
+                    ->formatStateUsing(fn ($state) => $state > 0 ? "{$state} file(s)" : 'No files'),
             ])
             ->filters([
                 //
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Action::make('attachments')
+                    ->label('Attachments')
+                    ->icon('heroicon-o-document-duplicate')
+                    ->color('info')
+                    ->visible(fn($record) => !empty($record->attachments))
+                    ->dropdown()
+                    ->items(fn($record) => collect($record->attachments ?? [])->map(function($filename) use ($record) {
+                        return [
+                            'label' => $filename,
+                            'url' => route('client-requests.attachments.download', ['clientRequest' => $record->id, 'filename' => $filename]),
+                            'icon' => 'heroicon-o-document-arrow-down',
+                            'openUrlInNewTab' => true,
+                        ];
+                    })->toArray()),
                 Tables\Actions\Action::make('approve')
                     ->label('Approve')
                     ->color('success')

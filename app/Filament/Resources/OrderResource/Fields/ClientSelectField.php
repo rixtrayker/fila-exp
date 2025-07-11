@@ -26,8 +26,8 @@ class ClientSelectField
                     ->limit(50)
                     ->pluck('name_en', 'id');
             })
-            ->options(Client::pluck('name_en', 'id'))
-            ->getOptionLabelUsing(fn ($value): ?string => Client::find($value)?->name)
+            ->options(Client::pharmacy()->pluck('name_en', 'id'))
+            ->getOptionLabelUsing(fn ($value): ?string => Client::pharmacy()->find($value)?->name)
             ->preload()
             ->required();
     }

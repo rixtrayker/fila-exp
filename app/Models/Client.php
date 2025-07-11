@@ -117,6 +117,12 @@ class Client extends Model
         return $this->hasMany(ClientRequest::class);
     }
 
+    // pharmacy filter
+    public function scopePharmacy($query)
+    {
+        return $query->where('client_type_id', ClientType::PHARMACY);
+    }
+
     public function scopeInMyAreas($builder)
     {
         if (!$this->isAuthenticated()) {
