@@ -28,6 +28,12 @@ class StatsOverview extends BaseWidget
 
     protected function getCards(): array
     {
+        if (auth()->user()->hasRole('medical-rep')) {
+            return [
+                    $this->visitsStats(),
+                    $this->workStats(),
+                ];
+        }
         return [
             $this->visitsStats(),
             $this->workStats(),
