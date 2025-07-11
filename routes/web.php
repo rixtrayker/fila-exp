@@ -13,6 +13,7 @@ use App\Jobs\FixOrdersWith0Total;
 use Symfony\Component\Process\Process;
 use App\Http\Controllers\ReportSyncController;
 use App\Http\Controllers\TemplateFileController;
+use App\Http\Controllers\ClientRequestAttachmentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -125,6 +126,15 @@ Route::get('/admin/ops/run-report-sync', [ReportSyncController::class, 'sync'])
 // Template file download route
 Route::get('/template-files/{templateFile}/download', [TemplateFileController::class, 'download'])
     ->name('template-files.download')
+    ->middleware('auth');
+
+// Client request attachment routes
+Route::get('/client-requests/{clientRequest}/attachments/{filename}/download', [ClientRequestAttachmentController::class, 'download'])
+    ->name('client-requests.attachments.download')
+    ->middleware('auth');
+
+Route::get('/client-requests/{clientRequest}/attachments/{filename}/stream', [ClientRequestAttachmentController::class, 'stream'])
+    ->name('client-requests.attachments.stream')
     ->middleware('auth');
 
 // link the storage
