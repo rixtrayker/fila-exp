@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 class DailyPlanSummaryWidget extends Widget
 {
     protected static string $view = 'filament.widgets.daily-plan-summary';
+    protected static ?string $minHeight = '306.5px';
 
     public function getColumnSpan(): int|string|array
     {
@@ -122,5 +123,10 @@ class DailyPlanSummaryWidget extends Widget
     public function getTotalBricks(): int
     {
         return count($this->getDailyPlan());
+    }
+
+    public function getMinHeight(): ?string
+    {
+        return static::$minHeight;
     }
 }

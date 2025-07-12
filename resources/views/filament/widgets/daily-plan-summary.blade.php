@@ -1,6 +1,6 @@
 <x-filament-widgets::widget>
     <x-filament::section>
-        <div class="space-y-6">
+        <div class="space-y-6" style="min-height: {{ $this->getMinHeight() ?? '250px' }};">
             <!-- Header -->
             <div class="flex items-center justify-between">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
