@@ -29,7 +29,7 @@
                 $chartData = $this->getChartData();
             @endphp
 
-            {{-- @if(count($chartData) === 0)
+            @if(count($chartData) === 0)
                 <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
                     <div class="text-sm text-yellow-800 dark:text-yellow-200">
                         <strong>No chart data available for {{ $selectedType }} visits.</strong><br>
@@ -40,7 +40,7 @@
                         </span>
                     </div>
                 </div>
-            @endif --}}
+            @endif
 
             <!-- Stats Cards - Modern Responsive Layout -->
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
@@ -85,7 +85,7 @@
 
         <!-- Include Chart.js if not already loaded -->
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+        
         <script>
             document.addEventListener('livewire:init', function () {
                 let chart = null;

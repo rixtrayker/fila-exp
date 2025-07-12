@@ -10,7 +10,6 @@ use Illuminate\Support\Carbon;
 class CoverageReportWidget extends Widget
 {
     protected static string $view = 'filament.widgets.coverage-report-widget';
-    // protected int | string | array $columnSpan = 'full';
     public ?string $selectedType = 'AM';
 
     public function mount(): void
@@ -55,7 +54,6 @@ class CoverageReportWidget extends Widget
         $currentDate = $startDate->copy();
 
         while ($currentDate <= $endDate) {
-            // Call getVisitData directly instead of going through getCoverageData
             $visitData = CoverageStatsService::getVisitData($currentDate, $type);
             $data[] = [
                 'date' => $currentDate->format('M d'),
@@ -92,10 +90,8 @@ class CoverageReportWidget extends Widget
 
     public function updatedSelectedType(): void
     {
-        // Clear cache for the new type
         $userId = auth()->id();
         $date = now()->format('Y-m-d');
-        $type = strtolower($this->selectedType);
         app(VisitCacheService::class)->clearCacheForUserAndDate($userId, $date);
     }
 }

@@ -24,8 +24,7 @@ class VisitStatsService
         $endOfPlan = (clone $startOfPlan)->addDays(7);
 
         return Visit::query()
-            ->select(['visit_date', 'status', 'plan_id'])
-            ->whereIn('status', ['visited', 'pending'])
+            ->select(['visit_date', 'status', 'plan_id', 'client_id'])
             ->whereDate('visit_date', '>=', $startOfPlan)
             ->whereDate('visit_date', '<=', $endOfPlan);
     }

@@ -66,9 +66,17 @@ class StatsOverview extends BaseWidget
     private function visitsStats(): Stat
     {
         $stats = $this->visitStatsService->getVisitStats();
+        $achievedPercentage = $this->visitStatsService->getAchievedVisits();
 
-        return Stat::make('Done visits', $this->visitStatsService->getAchievedVisits())
-            ->description($stats['descriptionMessage'])
+        // Show actual visits count if there are visits, otherwise show percentage
+        $value = $stats['actualVisits'] > 0 ? $stats['actualVisits'] : $achievedPercentage;
+        
+        $description = $stats['actualVisits'] > 0 
+            ? "Completed {$stats['actualVisits']} visits today"
+            : $stats['descriptionMessage'];
+        
+        return Stat::make('Done visits', $value)
+            ->description($description)
             ->descriptionIcon('heroicon-s-document-text')
             ->color($stats['color']);
     }
