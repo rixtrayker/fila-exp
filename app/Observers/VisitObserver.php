@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Models\Visit;
 use App\Services\CoverageReportCacheService;
+use App\Services\VisitStatsCacheService;
 
 class VisitObserver
 {
@@ -13,6 +14,7 @@ class VisitObserver
     public function created(Visit $visit): void
     {
         CoverageReportCacheService::clearCacheForVisit($visit);
+        VisitStatsCacheService::clearCacheForVisit($visit);
     }
 
     /**
@@ -21,6 +23,7 @@ class VisitObserver
     public function updated(Visit $visit): void
     {
         CoverageReportCacheService::clearCacheForVisit($visit);
+        VisitStatsCacheService::clearCacheForVisit($visit);
     }
 
     /**
@@ -29,6 +32,7 @@ class VisitObserver
     public function deleted(Visit $visit): void
     {
         CoverageReportCacheService::clearCacheForVisit($visit);
+        VisitStatsCacheService::clearCacheForVisit($visit);
     }
 
     /**
@@ -37,6 +41,7 @@ class VisitObserver
     public function restored(Visit $visit): void
     {
         CoverageReportCacheService::clearCacheForVisit($visit);
+        VisitStatsCacheService::clearCacheForVisit($visit);
     }
 
     /**
@@ -45,5 +50,6 @@ class VisitObserver
     public function forceDeleted(Visit $visit): void
     {
         CoverageReportCacheService::clearCacheForVisit($visit);
+        VisitStatsCacheService::clearCacheForVisit($visit);
     }
 }

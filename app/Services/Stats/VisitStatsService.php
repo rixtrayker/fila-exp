@@ -8,11 +8,16 @@ use Illuminate\Support\Collection;
 use App\Traits\StatsHelperTrait;
 use Illuminate\Database\Eloquent\Builder;
 use App\Models\Client;
+use App\Services\VisitStatsCacheService;
+use Illuminate\Support\Facades\Auth;
 
 class VisitStatsService
 {
     use StatsHelperTrait;
 
+    /**
+     * Get visits query for the current week
+     */
     public function getVisitsQuery(): Builder
     {
         $startOfPlan = DateHelper::getFirstOfWeek();
@@ -25,105 +30,162 @@ class VisitStatsService
             ->whereDate('visit_date', '<=', $endOfPlan);
     }
 
+    /**
+     * Get visits with caching
+     */
     public function getVisits(): Collection
     {
-        return $this->getVisitsQuery()->get();
+        $userId = Auth::id();
+        $date = DateHelper::today()->format('Y-m-d');
+
+        return VisitStatsCacheService::getCachedVisitStats($userId, $date, function () {
+            return $this->getVisitsQuery()->get();
+        });
     }
 
+    /**
+     * Get daily plan covered clients
+     */
     public function getDailyPlanCoveredClients(): int
     {
-        return $this->getVisitsQuery()
-            ->whereNotNull('plan_id')
-            ->select('client_id')
-            ->distinct()
-            ->count();
+        $userId = Auth::id();
+        $date = DateHelper::today()->format('Y-m-d');
+
+        return VisitStatsCacheService::getCachedVisitStats($userId, $date, function () {
+            return $this->getVisitsQuery()
+                ->whereNotNull('plan_id')
+                ->select('client_id')
+                ->distinct()
+                ->count();
+        });
     }
 
+    /**
+     * Get clients count
+     */
     public function getClientsCount(): int
     {
-        return Client::count();
+        $userId = Auth::id();
+        $date = DateHelper::today()->format('Y-m-d');
+
+        return VisitStatsCacheService::getCachedVisitStats($userId, $date, function () {
+            return Client::count();
+        });
     }
+
+    /**
+     * Get achieved visits percentage
+     */
     public function getAchievedVisits(): string
     {
-        $totalVisits = $this->getVisits()
-            ->whereNotNull('plan_id')
-            ->where('visit_date', DateHelper::today())
-            ->count();
+        $userId = Auth::id();
+        $date = DateHelper::today()->format('Y-m-d');
 
-        $planDoneVisits = $this->getVisits()
-            ->whereNotNull('plan_id')
-            ->where('visit_date', DateHelper::today())
-            ->where('status', 'visited')
-            ->count();
+        return VisitStatsCacheService::getCachedVisitStats($userId, $date, function () {
+            $totalVisits = $this->getVisitsQuery()
+                ->whereNotNull('plan_id')
+                ->where('visit_date', DateHelper::today())
+                ->count();
 
-        if ($planDoneVisits === 0) {
-            return '0 %';
-        }
+            $planDoneVisits = $this->getVisitsQuery()
+                ->whereNotNull('plan_id')
+                ->where('visit_date', DateHelper::today())
+                ->where('status', 'visited')
+                ->count();
 
-        $percentage = $this->calculatePercentage($planDoneVisits, $totalVisits);
-        return "$percentage %";
+            if ($planDoneVisits === 0) {
+                return '0 %';
+            }
+
+            $percentage = $this->calculatePercentage($planDoneVisits, $totalVisits);
+            return "$percentage %";
+        });
     }
 
+    /**
+     * Get planned vs actual visits
+     */
     public function getPlannedVsActualVisits(): array
     {
-        $plannedVisits = $this->getVisits()
-            ->where('status', 'pending')
-            ->whereNotNull('plan_id')
-            ->where('visit_date', DateHelper::today())
-            ->count();
+        $userId = Auth::id();
+        $date = DateHelper::today()->format('Y-m-d');
 
-        $actualVisits = $this->getVisits()
-            ->where('status', 'visited')
-            ->where('visit_date', DateHelper::today())
-            ->count();
+        return VisitStatsCacheService::getCachedVisitStats($userId, $date, function () {
+            $plannedVisits = $this->getVisitsQuery()
+                ->where('status', 'pending')
+                ->whereNotNull('plan_id')
+                ->where('visit_date', DateHelper::today())
+                ->count();
 
-        $percentage = $this->calculatePercentage($actualVisits, $plannedVisits);
+            $actualVisits = $this->getVisitsQuery()
+                ->where('status', 'visited')
+                ->where('visit_date', DateHelper::today())
+                ->count();
 
-        return [
-            'plannedVisits' => $plannedVisits,
-            'actualVisits' => $actualVisits,
-            'percentage' => $percentage
-        ];
+            $percentage = $this->calculatePercentage($actualVisits, $plannedVisits);
+
+            return [
+                'plannedVisits' => $plannedVisits,
+                'actualVisits' => $actualVisits,
+                'percentage' => $percentage
+            ];
+        });
     }
 
+    /**
+     * Get done plan visits
+     */
     public function getDonePlanVisits(): int
     {
-        return $this->getVisits()
-            ->where('status', 'visited')
-            ->count();
+        $userId = Auth::id();
+        $date = DateHelper::today()->format('Y-m-d');
+
+        return VisitStatsCacheService::getCachedVisitStats($userId, $date, function () {
+            return $this->getVisitsQuery()
+                ->where('status', 'visited')
+                ->count();
+        });
     }
 
+    /**
+     * Get visit stats
+     */
     public function getVisitStats(): array
     {
-        $actualVisits = $this->getVisits()
-            ->where('status', 'visited')
-            ->where('visit_date', DateHelper::today())
-            ->count();
+        $userId = Auth::id();
+        $date = DateHelper::today()->format('Y-m-d');
 
-        $plannedVisits = $this->getVisits()
-            ->where('status', 'pending')
-            ->whereNotNull('plan_id')
-            ->where('visit_date', DateHelper::today())
-            ->count();
+        return VisitStatsCacheService::getCachedVisitStats($userId, $date, function () {
+            $actualVisits = $this->getVisitsQuery()
+                ->where('status', 'visited')
+                ->where('visit_date', DateHelper::today())
+                ->count();
 
-        if ($plannedVisits === 0) {
+            $plannedVisits = $this->getVisitsQuery()
+                ->where('status', 'pending')
+                ->whereNotNull('plan_id')
+                ->where('visit_date', DateHelper::today())
+                ->count();
+
+            if ($plannedVisits === 0) {
+                return [
+                    'achievedRatio' => 0,
+                    'descriptionMessage' => "No planned visits",
+                    'color' => 'info',
+                    'actualVisits' => 0,
+                    'plannedVisits' => 0
+                ];
+            }
+
+            $achievedRatio = $this->calculatePercentage($actualVisits, $plannedVisits);
+
             return [
-                'achievedRatio' => 0,
-                'descriptionMessage' => "No planned visits",
-                'color' => 'info',
-                'actualVisits' => 0,
-                'plannedVisits' => 0
+                'achievedRatio' => $achievedRatio,
+                'descriptionMessage' => "$actualVisits / $plannedVisits Done ($achievedRatio % of planned visits done)",
+                'color' => $this->getStatsColor($achievedRatio),
+                'actualVisits' => $actualVisits,
+                'plannedVisits' => $plannedVisits
             ];
-        }
-
-        $achievedRatio = $this->calculatePercentage($actualVisits, $plannedVisits);
-
-        return [
-            'achievedRatio' => $achievedRatio,
-            'descriptionMessage' => "$actualVisits / $plannedVisits Done ($achievedRatio % of planned visits done)",
-            'color' => $this->getStatsColor($achievedRatio),
-            'actualVisits' => $actualVisits,
-            'plannedVisits' => $plannedVisits
-        ];
+        });
     }
 }
