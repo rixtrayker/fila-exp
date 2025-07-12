@@ -3,7 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Services\Stats\CoverageStatsService;
-use App\Services\CoverageReportCacheService;
+use App\Services\VisitCacheService;
 use Filament\Widgets\Widget;
 use Illuminate\Support\Carbon;
 
@@ -33,7 +33,14 @@ class CoverageReportWidget extends Widget
         $date = now()->format('Y-m-d');
         $type = strtolower($this->selectedType);
 
-        return CoverageReportCacheService::getCachedData($userId, $date, $type, function () {
+        $cacheType = match($type) {
+            'am' => VisitCacheService::TYPE_COVERAGE_AM,
+            'pm' => VisitCacheService::TYPE_COVERAGE_PM,
+            'pharmacy' => VisitCacheService::TYPE_COVERAGE_PHARMACY,
+            default => VisitCacheService::TYPE_COVERAGE_AM,
+        };
+
+        return VisitCacheService::getCachedCoverageData($userId, $date, $cacheType, function () {
             return $this->generateChartData();
         });
     }
@@ -88,6 +95,6 @@ class CoverageReportWidget extends Widget
         $userId = auth()->id();
         $date = now()->format('Y-m-d');
         $type = strtolower($this->selectedType);
-        CoverageReportCacheService::forgetCachedData($userId, $date, $type);
+        app(VisitCacheService::class)->clearCacheForUserAndDate($userId, $date);
     }
 }

@@ -48,7 +48,7 @@ class OverallChart extends ChartWidget
         'rgb(255, 99, 132)',
     ];
 
-        public function getHeading(): string
+    public function getHeading(): string
     {
         return CoverageStatsService::getCoverageHeading($this->selectedType);
     }

@@ -5,7 +5,7 @@ namespace App\Services\Stats;
 use App\Models\Visit;
 use App\Models\ClientType;
 use App\Helpers\DateHelper;
-use App\Services\CoverageReportCacheService;
+use App\Services\VisitCacheService;
 use Illuminate\Support\Facades\Auth;
 
 class CoverageStatsService
@@ -19,7 +19,14 @@ class CoverageStatsService
         $userId = Auth::id();
         $date = $today->format('Y-m-d');
 
-        return CoverageReportCacheService::getCachedData($userId, $date, $type, function () use ($today, $type) {
+        $cacheType = match($type) {
+            'am' => VisitCacheService::TYPE_COVERAGE_AM,
+            'pm' => VisitCacheService::TYPE_COVERAGE_PM,
+            'pharmacy' => VisitCacheService::TYPE_COVERAGE_PHARMACY,
+            default => VisitCacheService::TYPE_COVERAGE_AM,
+        };
+
+        return VisitCacheService::getCachedCoverageData($userId, $date, $cacheType, function () use ($today, $type) {
             return self::getVisitData($today, $type);
         });
     }

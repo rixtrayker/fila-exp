@@ -8,7 +8,7 @@ use Illuminate\Support\Collection;
 use App\Traits\StatsHelperTrait;
 use Illuminate\Database\Eloquent\Builder;
 use App\Models\Client;
-use App\Services\VisitStatsCacheService;
+use App\Services\VisitCacheService;
 use Illuminate\Support\Facades\Auth;
 
 class VisitStatsService
@@ -38,7 +38,7 @@ class VisitStatsService
         $userId = Auth::id();
         $date = DateHelper::today()->format('Y-m-d');
 
-        return VisitStatsCacheService::getCachedVisitStats($userId, $date, function () {
+        return VisitCacheService::getCachedVisitStats($userId, $date, function () {
             return $this->getVisitsQuery()->get();
         });
     }
@@ -51,7 +51,7 @@ class VisitStatsService
         $userId = Auth::id();
         $date = DateHelper::today()->format('Y-m-d');
 
-        return VisitStatsCacheService::getCachedVisitStats($userId, $date, function () {
+        return VisitCacheService::getCachedVisitStats($userId, $date, function () {
             return $this->getVisitsQuery()
                 ->whereNotNull('plan_id')
                 ->select('client_id')
@@ -68,7 +68,7 @@ class VisitStatsService
         $userId = Auth::id();
         $date = DateHelper::today()->format('Y-m-d');
 
-        return VisitStatsCacheService::getCachedVisitStats($userId, $date, function () {
+        return VisitCacheService::getCachedVisitStats($userId, $date, function () {
             return Client::count();
         });
     }
@@ -81,7 +81,7 @@ class VisitStatsService
         $userId = Auth::id();
         $date = DateHelper::today()->format('Y-m-d');
 
-        return VisitStatsCacheService::getCachedVisitStats($userId, $date, function () {
+        return VisitCacheService::getCachedVisitStats($userId, $date, function () {
             $totalVisits = $this->getVisitsQuery()
                 ->whereNotNull('plan_id')
                 ->where('visit_date', DateHelper::today())
@@ -110,7 +110,7 @@ class VisitStatsService
         $userId = Auth::id();
         $date = DateHelper::today()->format('Y-m-d');
 
-        return VisitStatsCacheService::getCachedVisitStats($userId, $date, function () {
+        return VisitCacheService::getCachedVisitStats($userId, $date, function () {
             $plannedVisits = $this->getVisitsQuery()
                 ->where('status', 'pending')
                 ->whereNotNull('plan_id')
@@ -140,7 +140,7 @@ class VisitStatsService
         $userId = Auth::id();
         $date = DateHelper::today()->format('Y-m-d');
 
-        return VisitStatsCacheService::getCachedVisitStats($userId, $date, function () {
+        return VisitCacheService::getCachedVisitStats($userId, $date, function () {
             return $this->getVisitsQuery()
                 ->where('status', 'visited')
                 ->count();
@@ -155,7 +155,7 @@ class VisitStatsService
         $userId = Auth::id();
         $date = DateHelper::today()->format('Y-m-d');
 
-        return VisitStatsCacheService::getCachedVisitStats($userId, $date, function () {
+        return VisitCacheService::getCachedVisitStats($userId, $date, function () {
             $actualVisits = $this->getVisitsQuery()
                 ->where('status', 'visited')
                 ->where('visit_date', DateHelper::today())
