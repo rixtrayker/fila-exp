@@ -7,6 +7,7 @@ use App\Filament\Resources\VisitResource\Widgets\VisitCompletionChart;
 use App\Filament\Resources\VisitResource\Widgets\WeeklyVisitsChart;
 use App\Filament\Resources\VisitResource\Widgets\YearVisitsChart;
 use App\Filament\Widgets\CoverageReportWidget;
+use App\Filament\Widgets\DailyPlanSummaryWidget;
 use App\Filament\Widgets\MonthlySalesChart;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -83,6 +84,7 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 StatsOverview::class,
                 CoverageReportWidget::class,
+                DailyPlanSummaryWidget::class,
                 VisitCompletionChart::class,
                 // MonthlySalesChart::class,
                 // WeeklyVisitsChart::class,

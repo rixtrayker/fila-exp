@@ -53,8 +53,8 @@ class StatsOverview extends BaseWidget
         $message = match (true) {
             $plannedVisits == 0 && $actualVisits == 0 => "No visits today",
             $percentage > 0 && $plannedVisits > 0 && $actualVisits > 0 => $this->calculatePercentage($stats['actualVisits'], $stats['plannedVisits']) . "% ( actual / planned )",
-            $plannedVisits > 0 && $actualVisits == 0 => "0% ( no actual visits )",
-            $plannedVisits == 0 && $actualVisits > 0 => "100% ( only actual visits )",
+            $plannedVisits > 0 && $actualVisits == 0 => "100% (planned)",
+            $plannedVisits == 0 && $actualVisits > 0 => "100% (actual)",
             default => "{$actualVisits} actual / {$plannedVisits} planned"
         };
 
@@ -70,11 +70,11 @@ class StatsOverview extends BaseWidget
 
         // Show actual visits count if there are visits, otherwise show percentage
         $value = $stats['actualVisits'] > 0 ? $stats['actualVisits'] : $achievedPercentage;
-        
-        $description = $stats['actualVisits'] > 0 
+
+        $description = $stats['actualVisits'] > 0
             ? "Completed {$stats['actualVisits']} visits today"
             : $stats['descriptionMessage'];
-        
+
         return Stat::make('Done visits', $value)
             ->description($description)
             ->descriptionIcon('heroicon-s-document-text')
