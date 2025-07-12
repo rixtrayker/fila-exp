@@ -65,7 +65,7 @@ class DailyPlanSummaryWidget extends Widget
 
                 $clientsByType[$clientType][] = [
                     'id' => $client->id,
-                    'name' => $client->name,
+                    'name' => $client->name_en,
                     'visit_id' => $visit->id,
                     'status' => $visit->status
                 ];
