@@ -55,6 +55,7 @@ class CoverageReportWidget extends Widget
         $currentDate = $startDate->copy();
 
         while ($currentDate <= $endDate) {
+            // Call getVisitData directly instead of going through getCoverageData
             $visitData = CoverageStatsService::getVisitData($currentDate, $type);
             $data[] = [
                 'date' => $currentDate->format('M d'),

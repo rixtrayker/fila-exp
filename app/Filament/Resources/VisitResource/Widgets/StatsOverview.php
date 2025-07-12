@@ -51,11 +51,11 @@ class StatsOverview extends BaseWidget
         $percentage = $stats['percentage'];
 
         $message = match (true) {
-            $percentage == 0 => "No data",
+            $plannedVisits == 0 && $actualVisits == 0 => "No visits today",
             $percentage > 0 && $plannedVisits > 0 && $actualVisits > 0 => $this->calculatePercentage($stats['actualVisits'], $stats['plannedVisits']) . "% ( actual / planned )",
-            $plannedVisits > 0 && $actualVisits == 0 => "100% ( planned )",
-            $plannedVisits == 0 && $actualVisits > 0 => "100% ( actual )",
-            default => "{$plannedVisits} - Actual visits: {$actualVisits}"
+            $plannedVisits > 0 && $actualVisits == 0 => "0% ( no actual visits )",
+            $plannedVisits == 0 && $actualVisits > 0 => "100% ( only actual visits )",
+            default => "{$actualVisits} actual / {$plannedVisits} planned"
         };
 
         return Stat::make('Planned vs actual visits', $message)
@@ -107,5 +107,16 @@ class StatsOverview extends BaseWidget
         return Stat::make('Direct orders', $stats['label'])
             ->description($stats['descriptionMessage'])
             ->color($stats['color']);
+    }
+
+    /**
+     * Calculate percentage
+     */
+    private function calculatePercentage(int $part, int $total): int
+    {
+        if ($total === 0) {
+            return 0;
+        }
+        return round(($part / $total) * 100);
     }
 }

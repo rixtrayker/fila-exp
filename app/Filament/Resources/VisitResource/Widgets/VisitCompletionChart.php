@@ -10,7 +10,7 @@ use App\Models\User;
 
 class VisitCompletionChart extends ChartWidget
 {
-    protected static ?string $heading = 'Visit Completion Status Today';
+    protected static ?string $heading = 'Daily Planned Visits Completion';
     protected static ?string $maxHeight = '250px';
 
     protected function getData(): array
@@ -18,26 +18,34 @@ class VisitCompletionChart extends ChartWidget
         $today = DateHelper::today();
         $mineUsers = User::getMine()->pluck('id');
 
-        $plannedVisits = Visit::whereIn('user_id', $mineUsers)
+        // Get all planned visits (including completed ones)
+        $totalPlannedVisits = Visit::whereIn('user_id', $mineUsers)
             ->where('visit_date', $today)
-            ->whereIn('status', ['pending', 'planned'])
+            ->whereNotNull('plan_id') // Only visits that were planned
             ->count();
 
-        $completedVisits = Visit::whereIn('user_id', $mineUsers)
+        // Get completed planned visits
+        $completedPlannedVisits = Visit::whereIn('user_id', $mineUsers)
             ->where('visit_date', $today)
+            ->whereNotNull('plan_id')
             ->where('status', 'visited')
             ->count();
 
-        $totalVisits = $completedVisits + $plannedVisits;
+        // Get pending planned visits
+        $pendingPlannedVisits = Visit::whereIn('user_id', $mineUsers)
+            ->where('visit_date', $today)
+            ->whereNotNull('plan_id')
+            ->whereIn('status', ['pending', 'planned'])
+            ->count();
 
-        if ($totalVisits === 0) {
-            $data = [0];
+        if ($totalPlannedVisits === 0) {
+            $data = [1];
             $colors = ['#FFEB3B'];
-            $labels = ['No Visits Today'];
+            $labels = ['No Planned Visits Today'];
         } else {
-            $data = [$completedVisits, $plannedVisits];
+            $data = [$completedPlannedVisits, $pendingPlannedVisits];
             $colors = ['#90EE90', '#F08080'];
-            $labels = ['Completed', 'Planned/Pending'];
+            $labels = ['Completed', 'Pending'];
         }
 
         return [
