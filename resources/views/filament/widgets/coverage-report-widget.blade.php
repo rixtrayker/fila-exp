@@ -69,7 +69,7 @@
             <!-- Chart -->
             <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow border dark:border-gray-700">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Coverage Report - {{ $selectedType }}</h3>
-                <div class="h-80">
+                <div class="h-96">
                     @php
                         $labels = collect($chartData)->pluck('date')->toArray();
                         $visitsData = collect($chartData)->pluck('visits')->toArray();

@@ -253,6 +253,13 @@ class RolesAndPermissionsSeeder extends Seeder
             'developer'
         );
 
+        // Create medical rep user
+        $this->createUserWithRole(
+            'medical-rep',
+            'medical-rep@admin.com',
+            'medical-rep'
+        );
+
         // Create test users
         for ($i = 0; $i < 50; $i++) {
             $this->createUserWithRole(
