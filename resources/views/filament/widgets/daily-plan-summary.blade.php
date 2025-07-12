@@ -6,7 +6,7 @@
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
                     Today's Daily Plan Summary
                 </h3>
-                <div class="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
+                <div class="flex items-center text-sm text-gray-600 dark:text-gray-400 gap-2">
                     <span>{{ $this->getTotalBricks() }} Bricks</span>
                     <span>•</span>
                     <span>{{ $this->getTotalClients() }} Clients</span>
@@ -60,7 +60,7 @@
                                                     {{ count($brick['clients'][$type]) }}
                                                 </span>
                                             </div>
-                                            
+
                                             <!-- Client Names (collapsible) -->
                                             <div class="ml-2 text-xs text-gray-600 dark:text-gray-400">
                                                 @foreach($brick['clients'][$type] as $index => $client)
