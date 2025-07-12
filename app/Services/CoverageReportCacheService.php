@@ -5,10 +5,28 @@ namespace App\Services;
 use App\Helpers\DateHelper;
 use App\Models\Visit;
 use App\Models\User;
-use Illuminate\Support\Facades\Cache;
+use App\Traits\HasCaching;
 
+/**
+ * Coverage Report Cache Service
+ *
+ * This service handles caching for coverage report data.
+ * It uses the HasCaching trait for common caching operations.
+ *
+ * Alternative approach: Could extend BaseCacheService for more advanced features
+ * class CoverageReportCacheService extends BaseCacheService
+ * {
+ *     public function __construct()
+ *     {
+ *         parent::__construct('coverage_report', 3600);
+ *     }
+ * }
+ */
 class CoverageReportCacheService
 {
+    use HasCaching;
+
+    private const CACHE_PREFIX = 'coverage_report';
     private const CACHE_TTL = 3600; // 1 hour
     private const CACHE_TYPES = ['am', 'pm', 'pharmacy'];
 
@@ -17,17 +35,9 @@ class CoverageReportCacheService
      */
     public static function getCachedData($userId, $date, $type, \Closure $callback)
     {
-        $cacheKey = self::makeCacheKey($userId, $date, $type);
-        return Cache::remember($cacheKey, self::CACHE_TTL, $callback);
-    }
-
-    /**
-     * Set cached data for a user, date, and type
-     */
-    public static function setCachedData($userId, $date, $type, $data): void
-    {
-        $cacheKey = self::makeCacheKey($userId, $date, $type);
-        Cache::put($cacheKey, $data, self::CACHE_TTL);
+        $instance = new static();
+        $cacheKey = $instance->makeCacheKey(self::CACHE_PREFIX, $date, $userId, $type);
+        return $instance->getCached($cacheKey, $callback, self::CACHE_TTL);
     }
 
     /**
@@ -35,8 +45,9 @@ class CoverageReportCacheService
      */
     public static function forgetCachedData($userId, $date, $type): void
     {
-        $cacheKey = self::makeCacheKey($userId, $date, $type);
-        Cache::forget($cacheKey);
+        $instance = new static();
+        $cacheKey = $instance->makeCacheKey(self::CACHE_PREFIX, $date, $userId, $type);
+        $instance->forgetCached($cacheKey);
     }
 
     /**
@@ -44,9 +55,12 @@ class CoverageReportCacheService
      */
     public static function clearCacheForUserAndDate(int $userId, string $date): void
     {
-        foreach (self::CACHE_TYPES as $type) {
-            self::forgetCachedData($userId, $date, $type);
-        }
+        $instance = new static();
+        $keys = array_map(
+            fn($type) => $instance->makeCacheKey(self::CACHE_PREFIX, $date, $userId, $type),
+            self::CACHE_TYPES
+        );
+        $instance->clearMultiple($keys);
     }
 
     /**
@@ -101,13 +115,5 @@ class CoverageReportCacheService
                 $oldDate->addDay();
             }
         }
-    }
-
-    /**
-     * Helper to build cache key
-     */
-    private static function makeCacheKey($userId, $date, $type): string
-    {
-        return "coverage_report_{$date}_{$userId}_{$type}";
     }
 }
