@@ -78,26 +78,26 @@ class CoverageStatsService
     private static function getClientTypeIds(string $type): array
     {
         return match($type) {
-            'am' => ClientType::whereIn('name', [
-                'Hospital',
-                'Resuscitation Centre',
-                'Incubators Centre'
-            ])->pluck('id')->toArray(),
+            'am' => [
+                ClientType::HOSPITAL,
+                ClientType::RESUSCITATION_CENTRE,
+                ClientType::INCUBATORS_CENTRE
+            ],
 
-            'pm' => ClientType::whereIn('name', [
-                'Clinic',
-                'Poly Clinic'
-            ])->pluck('id')->toArray(),
+            'pm' => [
+                ClientType::CLINIC,
+                ClientType::POLY_CLINIC
+            ],
 
-            'pharmacy' => ClientType::whereIn('name', [
-                'Pharmacy'
-            ])->pluck('id')->toArray(),
+            'pharmacy' => [
+                ClientType::PHARMACY
+            ],
 
-            default => ClientType::whereIn('name', [
-                'Hospital',
-                'Resuscitation Centre',
-                'Incubators Centre'
-            ])->pluck('id')->toArray(),
+            default => [
+                ClientType::HOSPITAL,
+                ClientType::RESUSCITATION_CENTRE,
+                ClientType::INCUBATORS_CENTRE
+            ],
         };
     }
 }
