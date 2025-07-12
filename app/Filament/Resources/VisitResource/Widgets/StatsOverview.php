@@ -31,6 +31,7 @@ class StatsOverview extends BaseWidget
         if (auth()->user()->hasRole('medical-rep')) {
             return [
                     $this->visitsStats(),
+                    $this->plannedVsActualVisits(),
                     $this->workStats(),
                 ];
         }
@@ -40,6 +41,26 @@ class StatsOverview extends BaseWidget
             $this->coveredClientsStats(),
             $this->directOrdersStats(),
         ];
+    }
+
+    private function plannedVsActualVisits(): Stat
+    {
+        $stats = $this->visitStatsService->getPlannedVsActualVisits();
+        $plannedVisits = $stats['plannedVisits'];
+        $actualVisits = $stats['actualVisits'];
+        $percentage = $stats['percentage'];
+
+        $message = match (true) {
+            $percentage == 0 => "No data",
+            $percentage > 0 && $plannedVisits > 0 && $actualVisits > 0 => $this->calculatePercentage($stats['actualVisits'], $stats['plannedVisits']) . "% ( actual / planned )",
+            $plannedVisits > 0 && $actualVisits == 0 => "100% ( planned )",
+            $plannedVisits == 0 && $actualVisits > 0 => "100% ( actual )",
+            default => "{$plannedVisits} - Actual visits: {$actualVisits}"
+        };
+
+        return Stat::make('Planned vs actual visits', $message)
+            ->description($message)
+            ->color('primary');
     }
 
     private function visitsStats(): Stat

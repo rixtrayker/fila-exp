@@ -64,6 +64,28 @@ class VisitStatsService
         return "$percentage %";
     }
 
+    public function getPlannedVsActualVisits(): array
+    {
+        $plannedVisits = $this->getVisits()
+            ->where('status', 'pending')
+            ->whereNotNull('plan_id')
+            ->where('visit_date', DateHelper::today())
+            ->count();
+
+        $actualVisits = $this->getVisits()
+            ->where('status', 'visited')
+            ->where('visit_date', DateHelper::today())
+            ->count();
+
+        $percentage = $this->calculatePercentage($actualVisits, $plannedVisits);
+
+        return [
+            'plannedVisits' => $plannedVisits,
+            'actualVisits' => $actualVisits,
+            'percentage' => $percentage
+        ];
+    }
+
     public function getDonePlanVisits(): int
     {
         return $this->getVisits()
