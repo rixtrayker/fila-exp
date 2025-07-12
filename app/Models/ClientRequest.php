@@ -31,6 +31,7 @@ class ClientRequest extends Model
         'ordered_before',
         'description',
         'attachments',
+        'zip_file',
     ];
 
     protected $casts = [
@@ -81,6 +82,98 @@ class ClientRequest extends Model
     public function getAttachmentStreamUrl(string $filename): string
     {
         return route('client-requests.attachments.stream', ['clientRequest' => $this->id, 'filename' => $filename]);
+    }
+
+        /**
+     * Generate zip file for all attachments
+     */
+    public function generateZipFile(): ?string
+    {
+        if (empty($this->attachments)) {
+            return null;
+        }
+
+        try {
+            $zipFileName = 'client-request-' . $this->id . '-attachments-' . now()->format('Y-m-d-H-i-s') . '.zip';
+            $zipPath = 'client-requests-zips/' . $zipFileName;
+
+            $zip = new \ZipArchive();
+            $tempZipPath = storage_path('app/temp/' . $zipFileName);
+
+            // Create temp directory if it doesn't exist
+            $tempDir = dirname($tempZipPath);
+            if (!file_exists($tempDir)) {
+                if (!mkdir($tempDir, 0755, true)) {
+                    return null;
+                }
+            }
+
+            if ($zip->open($tempZipPath, \ZipArchive::CREATE) !== TRUE) {
+                return null;
+            }
+
+            $storage = \Illuminate\Support\Facades\Storage::disk('private');
+            $filesAdded = false;
+
+            foreach ($this->attachments as $filename) {
+                $filePath = 'client-requests/' . $filename;
+                if ($storage->exists($filePath)) {
+                    $fileContent = $storage->get($filePath);
+                    if ($fileContent !== false) {
+                        $zip->addFromString($filename, $fileContent);
+                        $filesAdded = true;
+                    }
+                }
+            }
+
+            $zip->close();
+
+            // If no files were added, return null
+            if (!$filesAdded) {
+                if (file_exists($tempZipPath)) {
+                    unlink($tempZipPath);
+                }
+                return null;
+            }
+
+            // Check if temp file exists before reading it
+            if (!file_exists($tempZipPath)) {
+                return null;
+            }
+
+            // Move zip to storage
+            $zipContent = file_get_contents($tempZipPath);
+            if ($zipContent === false) {
+                return null;
+            }
+
+            $storage->put($zipPath, $zipContent);
+
+            // Clean up temp file
+            if (file_exists($tempZipPath)) {
+                unlink($tempZipPath);
+            }
+
+            return $zipPath;
+        } catch (\Exception $e) {
+            // Clean up temp file if it exists
+            if (isset($tempZipPath) && file_exists($tempZipPath)) {
+                unlink($tempZipPath);
+            }
+            return null;
+        }
+    }
+
+    /**
+     * Get zip file download URL
+     */
+    public function getZipFileDownloadUrl(): ?string
+    {
+        if (!$this->zip_file) {
+            return null;
+        }
+
+        return route('client-requests.zip.download', ['clientRequest' => $this->id]);
     }
     public static function boot()
     {

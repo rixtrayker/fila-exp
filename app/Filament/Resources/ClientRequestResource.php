@@ -122,18 +122,6 @@ class ClientRequestResource extends Resource
                     ->downloadable()
                     ->openable()
                     ->preserveFilenames()
-                    ->getDownloadUrlUsing(function ($record, $filename) {
-                        if ($record && $filename) {
-                            return route('client-requests.attachments.download', ['clientRequest' => $record->id, 'filename' => $filename]);
-                        }
-                        return null;
-                    })
-                    ->getUploadedFileUrlUsing(function ($record, $filename) {
-                        if ($record && $filename) {
-                            return route('client-requests.attachments.stream', ['clientRequest' => $record->id, 'filename' => $filename]);
-                        }
-                        return null;
-                    })
                     ->columnSpan('full'),
             ]);
     }
@@ -190,26 +178,34 @@ class ClientRequestResource extends Resource
                     ->badge()
                     ->color(fn ($state) => $state > 0 ? 'success' : 'gray')
                     ->formatStateUsing(fn ($state) => $state > 0 ? "{$state} file(s)" : 'No files'),
+                TextColumn::make('zip_file')
+                    ->label('Zip File')
+                    ->getStateUsing(fn ($record) => $record->zip_file ? 'Available' : 'Not Generated')
+                    ->badge()
+                    ->color(fn ($state) => $state === 'Available' ? 'success' : 'gray'),
             ])
             ->filters([
                 //
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-                Action::make('attachments')
-                    ->label('Attachments')
-                    ->icon('heroicon-o-document-duplicate')
-                    ->color('info')
+                Tables\Actions\Action::make('download_attachments')
+                    ->label('Download Attachments')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success')
                     ->visible(fn($record) => !empty($record->attachments))
-                    ->dropdown()
-                    ->items(fn($record) => collect($record->attachments ?? [])->map(function($filename) use ($record) {
-                        return [
-                            'label' => $filename,
-                            'url' => route('client-requests.attachments.download', ['clientRequest' => $record->id, 'filename' => $filename]),
-                            'icon' => 'heroicon-o-document-arrow-down',
-                            'openUrlInNewTab' => true,
-                        ];
-                    })->toArray()),
+                    ->action(function($record) {
+                        // Generate zip file if it doesn't exist
+                        if (!$record->zip_file) {
+                            $zipPath = $record->generateZipFile();
+                            if ($zipPath) {
+                                $record->update(['zip_file' => $zipPath]);
+                            }
+                        }
+
+                        // Redirect to download URL
+                        return redirect($record->getZipFileDownloadUrl());
+                    }),
                 Tables\Actions\Action::make('approve')
                     ->label('Approve')
                     ->color('success')

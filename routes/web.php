@@ -137,6 +137,11 @@ Route::get('/client-requests/{clientRequest}/attachments/{filename}/stream', [Cl
     ->name('client-requests.attachments.stream')
     ->middleware('auth');
 
+// Client request zip download route
+Route::get('/client-requests/{clientRequest}/zip/download', [ClientRequestAttachmentController::class, 'downloadZip'])
+    ->name('client-requests.zip.download')
+    ->middleware('auth');
+
 // link the storage
 Route::get('/admin/ops/link-storage', function () {
     Artisan::call('storage:link');
