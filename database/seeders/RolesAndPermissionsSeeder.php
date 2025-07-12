@@ -170,8 +170,9 @@ class RolesAndPermissionsSeeder extends Seeder
             ->syncPermissions([$miscPermission]);
 
         // Super Admin role - all permissions
+        $superAdminPermissions = $allPermissions->merge([$miscPermission]);
         Role::firstOrCreate(['name' => 'super-admin'], ['display_name' => 'Super Admin'])
-            ->syncPermissions($allPermissions->push($miscPermission));
+            ->syncPermissions($superAdminPermissions);
 
         // Moderator role - limited permissions
         $moderatorPermissions = $this->getModeratorPermissions($allPermissions);

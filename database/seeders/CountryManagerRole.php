@@ -15,27 +15,39 @@ class CountryManagerRole extends Seeder
 
     private function createPermissions()
     {
-        // just like district manager
-        $districtManagerPermissions = Permission::where('name', 'district-manager')->get();
-        $permissions = [];
-        foreach ($districtManagerPermissions as $permission) {
-            $permissions[] = $permission->name;
+        $role = Role::where('name', 'country-manager')->first();
+
+        if (!$role) {
+            $this->command->error('Country Manager role not found. Please run RolesAndPermissionsSeeder first.');
+            return;
         }
 
-        $role = Role::where('name', 'country-manager')->first();
-        $role->permissions()->attach($permissions);
+        // Get district manager role and its permissions
+        $districtManagerRole = Role::where('name', 'district-manager')->first();
 
-        $resources = [
+        if (!$districtManagerRole) {
+            $this->command->error('District Manager role not found. Please run DistrictManagerRole seeder first.');
+            return;
+        }
+
+        // Clear existing permissions first
+        $role->permissions()->detach();
+        
+        $permissionsToAttach = $districtManagerRole->permissions->pluck('name')->toArray();
+
+        // Add additional permissions for country manager
+        $additionalResources = [
             'official-holiday' => ['view', 'create', 'update', 'delete'],
         ];
 
-        foreach ($resources as $resource => $permissions) {
-            $permissions = [];
-            foreach ($permissions as $permission) {
-                $permissions[] = $resource . ' ' . $permission;
+        foreach ($additionalResources as $resource => $actions) {
+            foreach ($actions as $action) {
+                $permissionName = $action . ' ' . $resource;
+                Permission::firstOrCreate(['name' => $permissionName]);
+                $permissionsToAttach[] = $permissionName;
             }
-
-            $role->permissions()->attach($permissions);
         }
+
+        $role->syncPermissions(array_unique($permissionsToAttach));
     }
 }

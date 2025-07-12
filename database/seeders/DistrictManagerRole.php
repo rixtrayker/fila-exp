@@ -15,16 +15,28 @@ class DistrictManagerRole extends Seeder
 
     private function createPermissions()
     {
-        // same as medical rep Permissions
-        // in addition to the following resources
-        // get medical rep permissions
-        $medicalRepPermissions = Permission::where('name', 'medical-rep')->get();
-        $permissions = [];
-        foreach ($medicalRepPermissions as $permission) {
-            $permissions[] = $permission->name;
+        $role = Role::where('name', 'district-manager')->first();
+
+        if (!$role) {
+            $this->command->error('District Manager role not found. Please run RolesAndPermissionsSeeder first.');
+            return;
         }
 
-        $resources = [
+        // Get medical rep role and its permissions
+        $medicalRepRole = Role::where('name', 'medical-rep')->first();
+
+        if (!$medicalRepRole) {
+            $this->command->error('Medical Rep role not found. Please run MedicalRepRole seeder first.');
+            return;
+        }
+
+        // Clear existing permissions first
+        $role->permissions()->detach();
+        
+        $permissionsToAttach = $medicalRepRole->permissions->pluck('name')->toArray();
+
+        // Add additional permissions for district manager
+        $additionalResources = [
             'call-type' => ['view', 'create', 'update', 'delete'],
             'city' => ['view', 'create', 'update', 'delete'],
             'client-request-type' => ['view', 'create', 'update', 'delete'],
@@ -39,17 +51,14 @@ class DistrictManagerRole extends Seeder
             'vacation-type' => ['view', 'create', 'update', 'delete'],
         ];
 
-
-        $role = Role::where('name', 'district-manager')->first();
-        $role->permissions()->attach($permissions);
-
-        foreach ($resources as $resource => $permissions) {
-            $permissions = [];
-            foreach ($permissions as $permission) {
-                $permissions[] = $resource . ' ' . $permission;
+        foreach ($additionalResources as $resource => $actions) {
+            foreach ($actions as $action) {
+                $permissionName = $action . ' ' . $resource;
+                Permission::firstOrCreate(['name' => $permissionName]);
+                $permissionsToAttach[] = $permissionName;
             }
-
-            $role->permissions()->attach($permissions);
         }
+
+        $role->syncPermissions(array_unique($permissionsToAttach));
     }
 }

@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
 
 class MedicalRepRole extends Seeder
 {
@@ -40,14 +41,21 @@ class MedicalRepRole extends Seeder
 
         $role = Role::where('name', 'medical-rep')->first();
 
-        foreach ($resources as $resource => $permissions)
-        {
-            $permissions = [];
-            foreach ($permissions as $permission) {
-                $permissions[] = $resource . ' ' . $permission;
-            }
-
-            $role->permissions()->attach($permissions);
+        if (!$role) {
+            $this->command->error('Medical Rep role not found. Please run RolesAndPermissionsSeeder first.');
+            return;
         }
+
+        $permissionsToAttach = [];
+
+        foreach ($resources as $resource => $actions) {
+            foreach ($actions as $action) {
+                $permissionName = $action . ' ' . $resource;
+                $permission = Permission::firstOrCreate(['name' => $permissionName]);
+                $permissionsToAttach[] = $permission;
+            }
+        }
+
+        $role->syncPermissions($permissionsToAttach);
     }
 }

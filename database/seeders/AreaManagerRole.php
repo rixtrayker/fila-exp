@@ -15,14 +15,26 @@ class AreaManagerRole extends Seeder
 
     private function createPermissions()
     {
-        $medicalRepPermissions = Permission::where('name', 'medical-rep')->get();
-        $permissions = [];
-        foreach ($medicalRepPermissions as $permission) {
-            $permissions[] = $permission->name;
+        $role = Role::where('name', 'area-manager')->first();
+
+        if (!$role) {
+            $this->command->error('Area Manager role not found. Please run RolesAndPermissionsSeeder first.');
+            return;
         }
 
-        $role = Role::where('name', 'area-manager')->first();
-        $role->permissions()->attach($permissions);
+        // Get medical rep role and its permissions
+        $medicalRepRole = Role::where('name', 'medical-rep')->first();
+
+        if (!$medicalRepRole) {
+            $this->command->error('Medical Rep role not found. Please run MedicalRepRole seeder first.');
+            return;
+        }
+
+        // Clear existing permissions first
+        $role->permissions()->detach();
+        
+        $medicalRepPermissions = $medicalRepRole->permissions->pluck('name')->toArray();
+        $role->syncPermissions($medicalRepPermissions);
     }
 }
 
