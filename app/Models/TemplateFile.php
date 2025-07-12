@@ -12,6 +12,8 @@ class TemplateFile extends Model
     protected $fillable = [
         'name',
         'path',
+        'size',
+        'mime_type',
         'uploaded_by',
         'country_id',
     ];
@@ -31,17 +33,17 @@ class TemplateFile extends Model
 
         static::updating(function ($model) {
             if ($model->isDirty('path')) {
-                Storage::disk('public')->delete($model->getOriginal('path'));
+                Storage::disk('private')->delete($model->getOriginal('path'));
             }
         });
 
         static::deleting(function ($model) {
-            Storage::disk('public')->delete($model->path);
+            Storage::disk('private')->delete($model->path);
         });
     }
 
     public function getDownloadUrlAttribute()
     {
-        return Storage::disk('public')->url($this->path);
+        return route('template-files.download', $this->id);
     }
 }

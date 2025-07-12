@@ -14,14 +14,14 @@ class TemplateFileController extends Controller
      */
     public function download(TemplateFile $templateFile): StreamedResponse
     {
-        // Check if file exists in public storage
-        if (!Storage::disk('public')->exists($templateFile->path)) {
+        // Check if file exists in private storage
+        if (!Storage::disk('private')->exists($templateFile->path)) {
             abort(404, 'File not found');
         }
 
         // Get file content and info
-        $fileContent = Storage::disk('public')->get($templateFile->path);
-        $mimeType = Storage::disk('public')->mimeType($templateFile->path) ?: 'application/octet-stream';
+        $fileContent = Storage::disk('private')->get($templateFile->path);
+        $mimeType = Storage::disk('private')->mimeType($templateFile->path) ?: 'application/octet-stream';
         
         // Create streamed response for file download
         return response()->streamDownload(

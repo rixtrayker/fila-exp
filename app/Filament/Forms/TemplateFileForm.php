@@ -19,7 +19,7 @@ class TemplateFileForm
         return [
             FileUpload::make('path')
                 ->label('File')
-                ->disk('public')
+                ->disk('private')
                 ->directory('template-files')
                 ->maxSize(10240) // 10MB
                 ->acceptedFileTypes(['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'])
