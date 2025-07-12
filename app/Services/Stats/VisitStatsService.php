@@ -37,10 +37,13 @@ class VisitStatsService
     {
         $userId = Auth::id();
         $date = DateHelper::today()->format('Y-m-d');
+        $cacheKey = "visits_{$userId}_{$date}";
 
-        return VisitCacheService::getCachedVisitStats($userId, $date, function () {
+        $visitCacheService = app(VisitCacheService::class);
+        $fullCacheKey = $visitCacheService->makePublicCacheKey('visit_stats_visits', $userId, $date);
+        return $visitCacheService->getPublicCached($fullCacheKey, function () {
             return $this->getVisitsQuery()->get();
-        });
+        }, 1800);
     }
 
     /**
@@ -51,13 +54,15 @@ class VisitStatsService
         $userId = Auth::id();
         $date = DateHelper::today()->format('Y-m-d');
 
-        return VisitCacheService::getCachedVisitStats($userId, $date, function () {
+        $visitCacheService = app(VisitCacheService::class);
+        $fullCacheKey = $visitCacheService->makePublicCacheKey('visit_stats_daily_plan', $userId, $date);
+        return $visitCacheService->getPublicCached($fullCacheKey, function () {
             return $this->getVisitsQuery()
                 ->whereNotNull('plan_id')
                 ->select('client_id')
                 ->distinct()
                 ->count();
-        });
+        }, 1800);
     }
 
     /**
@@ -68,9 +73,11 @@ class VisitStatsService
         $userId = Auth::id();
         $date = DateHelper::today()->format('Y-m-d');
 
-        return VisitCacheService::getCachedVisitStats($userId, $date, function () {
+        $visitCacheService = app(VisitCacheService::class);
+        $fullCacheKey = $visitCacheService->makePublicCacheKey('visit_stats_clients_count', $userId, $date);
+        return $visitCacheService->getPublicCached($fullCacheKey, function () {
             return Client::count();
-        });
+        }, 1800);
     }
 
     /**
@@ -81,7 +88,9 @@ class VisitStatsService
         $userId = Auth::id();
         $date = DateHelper::today()->format('Y-m-d');
 
-        return VisitCacheService::getCachedVisitStats($userId, $date, function () {
+        $visitCacheService = app(VisitCacheService::class);
+        $fullCacheKey = $visitCacheService->makePublicCacheKey('visit_stats_achieved', $userId, $date);
+        return $visitCacheService->getPublicCached($fullCacheKey, function () {
             $totalVisits = $this->getVisitsQuery()
                 ->whereNotNull('plan_id')
                 ->where('visit_date', DateHelper::today())
@@ -99,7 +108,7 @@ class VisitStatsService
 
             $percentage = $this->calculatePercentage($planDoneVisits, $totalVisits);
             return "$percentage %";
-        });
+        }, 1800);
     }
 
     /**
@@ -110,7 +119,9 @@ class VisitStatsService
         $userId = Auth::id();
         $date = DateHelper::today()->format('Y-m-d');
 
-        return VisitCacheService::getCachedVisitStats($userId, $date, function () {
+        $visitCacheService = app(VisitCacheService::class);
+        $fullCacheKey = $visitCacheService->makePublicCacheKey('visit_stats_planned_vs_actual', $userId, $date);
+        return $visitCacheService->getPublicCached($fullCacheKey, function () {
             $plannedVisits = $this->getVisitsQuery()
                 ->where('status', 'pending')
                 ->whereNotNull('plan_id')
@@ -129,7 +140,7 @@ class VisitStatsService
                 'actualVisits' => $actualVisits,
                 'percentage' => $percentage
             ];
-        });
+        }, 1800);
     }
 
     /**
@@ -140,11 +151,13 @@ class VisitStatsService
         $userId = Auth::id();
         $date = DateHelper::today()->format('Y-m-d');
 
-        return VisitCacheService::getCachedVisitStats($userId, $date, function () {
+        $visitCacheService = app(VisitCacheService::class);
+        $fullCacheKey = $visitCacheService->makePublicCacheKey('visit_stats_done_plan', $userId, $date);
+        return $visitCacheService->getPublicCached($fullCacheKey, function () {
             return $this->getVisitsQuery()
                 ->where('status', 'visited')
                 ->count();
-        });
+        }, 1800);
     }
 
     /**
@@ -155,7 +168,9 @@ class VisitStatsService
         $userId = Auth::id();
         $date = DateHelper::today()->format('Y-m-d');
 
-        return VisitCacheService::getCachedVisitStats($userId, $date, function () {
+        $visitCacheService = app(VisitCacheService::class);
+        $fullCacheKey = $visitCacheService->makePublicCacheKey('visit_stats_overview', $userId, $date);
+        return $visitCacheService->getPublicCached($fullCacheKey, function () {
             $actualVisits = $this->getVisitsQuery()
                 ->where('status', 'visited')
                 ->where('visit_date', DateHelper::today())
@@ -186,6 +201,6 @@ class VisitStatsService
                 'actualVisits' => $actualVisits,
                 'plannedVisits' => $plannedVisits
             ];
-        });
+        }, 1800);
     }
 }

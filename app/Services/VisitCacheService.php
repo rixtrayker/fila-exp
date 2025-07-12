@@ -64,15 +64,31 @@ class VisitCacheService extends BaseCacheService
      */
     public function clearCacheForUserAndDate(int $userId, string $date): void
     {
-        $types = [
-            self::TYPE_VISIT_STATS,
+        // Clear coverage cache types
+        $coverageTypes = [
             self::TYPE_COVERAGE_AM,
             self::TYPE_COVERAGE_PM,
             self::TYPE_COVERAGE_PHARMACY,
         ];
 
-        foreach ($types as $type) {
+        foreach ($coverageTypes as $type) {
             $cacheKey = $this->buildCacheKey($type, $date, $userId);
+            $this->forgetCached($cacheKey);
+        }
+
+        // Clear visit stats cache keys
+        $visitStatsKeys = [
+            'visit_stats_visits',
+            'visit_stats_daily_plan',
+            'visit_stats_clients_count',
+            'visit_stats_achieved',
+            'visit_stats_planned_vs_actual',
+            'visit_stats_done_plan',
+            'visit_stats_overview',
+        ];
+
+        foreach ($visitStatsKeys as $keyType) {
+            $cacheKey = $this->makePublicCacheKey($keyType, $userId, $date);
             $this->forgetCached($cacheKey);
         }
     }
@@ -130,6 +146,22 @@ class VisitCacheService extends BaseCacheService
     private function buildCacheKey(string $type, string $date, int $userId): string
     {
         return $this->makeCacheKey($this->cachePrefix, $type, $date, $userId);
+    }
+
+    /**
+     * Public method to make cache keys
+     */
+    public function makePublicCacheKey(...$parts): string
+    {
+        return $this->makeCacheKey('visit_cache', ...$parts);
+    }
+
+    /**
+     * Public method to get cached data
+     */
+    public function getPublicCached(string $key, \Closure $callback, int $ttl = 1800)
+    {
+        return $this->getCached($key, $callback, $ttl);
     }
 
     /**
