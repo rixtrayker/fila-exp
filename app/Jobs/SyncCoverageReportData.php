@@ -7,7 +7,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use App\Models\Setting;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -17,6 +16,8 @@ class SyncCoverageReportData implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public $tries = 3;
+    public $timeout = 600; // 10 minutes timeout
+    public $memory = 512;
 
     protected $fromDate;
     protected $toDate;
@@ -46,13 +47,11 @@ class SyncCoverageReportData implements ShouldQueue
         ]);
 
         try {
-            // Get last sync timestamp
-            $defaultFromDate = Carbon::parse('2022-01-01');
             // Determine date range
+            $defaultFromDate = Carbon::parse('2022-01-01');
             $fromDate = $this->fromDate ? Carbon::parse($this->fromDate) : $defaultFromDate;
             $toDate = $this->toDate ? Carbon::parse($this->toDate) : Carbon::now();
 
-            // if toDate is in the future, set it to today
             if ($toDate->isFuture()) {
                 $toDate = Carbon::today();
             }
@@ -62,30 +61,26 @@ class SyncCoverageReportData implements ShouldQueue
                 'to_date' => $toDate->toDateString(),
             ]);
 
-            // Get medical reps and district managers
-            $users = User::role(['medical-rep', 'district-manager'])->get();
+            // Get all users in chunks to avoid memory issues
+            $userIds = User::pluck('id')->toArray();
             $processedRecords = 0;
+            $chunkSize = 50; // Process 50 users at a time
 
-            foreach ($users as $user) {
-                // Process each day in the range
-                $currentDate = $fromDate->copy();
-                while ($currentDate <= $toDate) {
-                    // Dispatch job for this user and date
-                    CoverageReportProcess::dispatch($user->id, $currentDate->toDateString(), $this->forceSync);
-                    $processedRecords++;
-
-                    $currentDate->addDay();
-                }
-            }
-
-            // Update sync timestamp
-            Setting::updateCoverageReportSyncTimestamp($toDate->timestamp);
-
-            $logger->info('Coverage report sync completed', [
-                'processed_records' => $processedRecords,
-                'new_sync_timestamp' => $toDate->timestamp
+            $logger->info('Processing users in chunks', [
+                'total_users' => count($userIds),
+                'chunk_size' => $chunkSize
             ]);
 
+            // Process users in batches to avoid dispatching too many jobs
+            foreach (array_chunk($userIds, $chunkSize) as $userChunk) {
+                CoverageReportBatchProcess::dispatch($userChunk, $fromDate->toDateString(), $toDate->toDateString(), $this->forceSync);
+                $processedRecords += count($userChunk);
+                
+                $logger->info('Dispatched batch job', [
+                    'users_in_batch' => count($userChunk),
+                    'total_processed' => $processedRecords
+                ]);
+            }
         } catch (\Exception $e) {
             $logger->error('Coverage report sync failed', [
                 'error' => $e->getMessage(),
