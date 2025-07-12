@@ -110,15 +110,15 @@ Route::get('/admin/ops/fix-orders-with-0-total', function () {
 // Route::get('/login', [\Filament\Http\Livewire\Auth::class,'login'])->name('filament.auth.login');
 // Route::get('/logout', [\Filament\Http\Livewire\Auth::class,'logout'])->name('filament.app.auth.logout');
 
-// Route::middleware([
-//     'auth:sanctum',
-//     config('jetstream.auth_session'),
-//     'verified'
-// ])->group(function () {
-//     Route::get('/dashboard', function () {
-//         return view('dashboard');
-//     })->name('dashboard');
-// });
+Route::middleware([
+    'auth:sanctum',
+    config('jetstream.auth_session'),
+    'verified'
+])->group(function () {
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard');
+});
 
 Route::get('/admin/ops/run-report-sync', [ReportSyncController::class, 'sync'])
     ->name('admin.ops.report-sync');

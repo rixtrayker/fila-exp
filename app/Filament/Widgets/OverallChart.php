@@ -2,65 +2,55 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\Visit;
 use Filament\Widgets\ChartWidget;
 use Livewire\Attributes\On;
-use Str;
+use App\Services\Stats\CoverageStatsService;
 
 class OverallChart extends ChartWidget
 {
-    public $users;
-    public $from;
-    public $to;
-    public $user_id;
+    public string $selectedType = 'am';
     protected static ?string $maxHeight = '300px';
-    public string $dataChecksum = '';
-
 
     protected function getType(): string
     {
-        return 'pie';
+        return 'doughnut';
     }
+
     protected function getOptions(): array
     {
         return [
             'scales' => [
-                'yAxis' => [
+                'r' => [
                     'display' => false,
                 ],
-                'xAxis' => [
-                    'display' => false,
+            ],
+            'plugins' => [
+                'legend' => [
+                    'display' => true,
+                    'position' => 'bottom',
+                ],
+                'tooltip' => [
+                    'enabled' => true,
                 ],
             ],
         ];
     }
 
-    #[On('updateVisitsList')]
-
-    public function updateVisitsList($eventData)
-    {
-        $this->from = $eventData['from'];
-        $this->to = $eventData['to'];
-        $this->user_id = $eventData['user_id'];
-        $this->updateChartData();
-    }
-
     protected $backgroundColor = [
-        'rgba(75, 192, 192, 0.2)',
-        'rgba(255, 99, 132, 0.2)',
-        'rgba(54, 162, 235, 0.2)',
+        'rgba(75, 192, 192, 0.8)',
+        'rgba(255, 205, 86, 0.8)',
+        'rgba(255, 99, 132, 0.8)',
     ];
+
     protected $borderColor = [
         'rgb(75, 192, 192)',
+        'rgb(255, 205, 86)',
         'rgb(255, 99, 132)',
-        'rgb(54, 162, 235)',
     ];
 
-
-
-    public function getHeading(): string
+        public function getHeading(): string
     {
-        return 'Visits Overall Chart';
+        return CoverageStatsService::getCoverageHeading($this->selectedType);
     }
 
     public function getColumnSpan(): int|string|array
@@ -68,62 +58,35 @@ class OverallChart extends ChartWidget
         return 1;
     }
 
-    protected function getData(): array
+        protected function getData(): array
     {
+        $data = CoverageStatsService::getCoverageData($this->selectedType);
+
         return [
-            'datasets' => $this->getDataSets(),
-            'labels' => $this->getLabels(),
+            'datasets' => [
+                [
+                    'label' => 'Visits',
+                    'data' => $data['data'],
+                    'backgroundColor' => $this->backgroundColor,
+                    'borderColor' => $this->borderColor,
+                    'borderWidth' => 2,
+                ],
+            ],
+            'labels' => $data['labels'],
         ];
     }
-    private function getLabels(){
-        $labels = ['Done Visits','Missed Visits','Pending visits'];
-        return $labels;
-    }
 
-    private function getDataSets()
+
+
+    #[On('switchChartType')]
+    public function switchType($type): void
     {
-        $data = [
-            $this->getVisits()->visited()->count(),
-            $this->getVisits()->missed()->count(),
-            $this->getVisits()->pending()->count()
-        ];
-
-        $datasets = [
-        [
-            'label' => 'Visit type',
-            'data'=> $data,
-            'backgroundColor' => $this->backgroundColor,
-            'borderColor' => $this->borderColor,
-        ],
-
-        ];
-        return $datasets;
+        $this->selectedType = $type;
+        $this->updateChartData();
     }
 
-    public function getVisits(){
-        $query =  Visit::query();
-
-        if($this->user_id){
-            $query->whereIn('user_id',$this->user_id)->orWhereIn('second_user_id',$this->user_id);
-        }
-
-        if($this->from){
-            $query->whereDate('visit_date','>=',$this->from);
-        }
-
-        if($this->to){
-            $query->whereDate('visit_date','<',$this->to);
-        }
-        return $query;
-    }
     public function updateChartData(): void
     {
-        $newData = $this->getData();
-        $newDataChecksum = md5(json_encode($newData));
-
-        if ($this->dataChecksum !== $newDataChecksum) {
-            $this->dataChecksum = $newDataChecksum;
-            $this->dispatch('updateChartData', data: $newData);
-        }
+        $this->dispatch('updateChartData', data: $this->getData());
     }
 }
