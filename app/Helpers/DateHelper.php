@@ -24,13 +24,17 @@ class DateHelper{
         // Get the start date of last Saturday
         return $today->copy()->previous(Carbon::SATURDAY)->startOfDay();
     }
-    public static function calculateVisitDates(): array
+    public static function calculateVisitDates($startDate = null): array
     {
         $dates = [];
 
         // Get the start date of the current or next week depending on the current day
-        $nextWeek = self::nextWeekRule();
-        $startDate = self::getFirstOfWeek($nextWeek);
+        if($startDate){
+            $startDate = Carbon::parse($startDate);
+        } else {
+            $nextWeek = self::nextWeekRule();
+            $startDate = self::getFirstOfWeek($nextWeek);
+        }
 
         // Loop through the next 7 days, starting from the start date
         for($i = 0; $i < 7; $i++) {

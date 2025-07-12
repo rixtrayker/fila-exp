@@ -22,12 +22,6 @@ class FormBuilder
      */
     public static function buildForm(Form $form): Form
     {
-        // Format dates for display in tabs
-        $dates = self::dates();
-        for ($i = 0; $i < 7; $i++) {
-            $dates[$i] = Carbon::createFromTimeString($dates[$i] . ' 00:00:00')->format('D M-d');
-        }
-
         return $form->schema([
             self::makeForm()
         ]);
@@ -57,9 +51,9 @@ class FormBuilder
     /**
      * Get visit dates from helper
      */
-    public static function dates(): array
+    public static function dates($startDate = null): array
     {
-        return DateHelper::calculateVisitDates();
+        return DateHelper::calculateVisitDates($startDate);
     }
     /**
      * Build the form tabs for the weekly plan
@@ -82,10 +76,14 @@ class FormBuilder
     private static function makeTab($key)
     {
         $day = self::$daysOfWeek[$key];
-        $tabName = Carbon::createFromTimeString(self::dates()[$key] . ' 00:00:00')->format('D M-d');
         $isListPlanPage = fn($record) => request()->fingerprint && Str::contains(request()->fingerprint['name'], 'list-plans');
 
-        return Tabs\Tab::make($tabName)
+        return Tabs\Tab::make($day)
+            ->label(function($record) use ($key) {
+                $startDate = $record?->start_at ?? null;
+                $dates = self::dates($startDate);
+                return Carbon::createFromTimeString($dates[$key] . ' 00:00:00')->format('D M-d');
+            })
             ->schema([
                 Select::make($day . '_am_shift')
                     ->label('AM shift')
