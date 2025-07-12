@@ -29,10 +29,10 @@
                 $chartData = $this->getChartData();
             @endphp
 
-            {{-- @if($stats['total'] === 0)
+            {{-- @if(count($chartData) === 0)
                 <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
                     <div class="text-sm text-yellow-800 dark:text-yellow-200">
-                        <strong>No data found for {{ $selectedType }} visits this month.</strong><br>
+                        <strong>No chart data available for {{ $selectedType }} visits.</strong><br>
                         <span class="text-xs">
                             User ID: {{ auth()->id() }} |
                             Date Range: {{ now()->startOfMonth()->format('Y-m-d') }} to {{ now()->endOfMonth()->format('Y-m-d') }} |
@@ -82,6 +82,9 @@
                 </div>
             </div>
         </div>
+
+        <!-- Include Chart.js if not already loaded -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
         <script>
             document.addEventListener('livewire:init', function () {
