@@ -3,20 +3,12 @@
 namespace App\Filament\Resources\VisitResource\Pages;
 
 use App\Filament\Resources\VisitResource;
-use App\Models\Feature;
-use App\Models\Visit;
-use App\Services\LocationService;
-use App\Services\VisitService;
-use Filament\Pages\Actions;
 use Filament\Resources\Pages\CreateRecord;
-use Filament\Support\Exceptions\Halt;
-use Filament\Notifications\Notification;
-use Illuminate\Support\Facades\Auth;
-use Spatie\Permission\Models\Role;
 use App\Filament\Resources\VisitResource\Pages\Traits\ServiceInitializer;
 use App\Filament\Resources\VisitResource\Pages\Traits\LocationValidator;
 use App\Filament\Resources\VisitResource\Pages\Traits\UserDataHandler;
 use App\Filament\Resources\VisitResource\Pages\Traits\VisitHandler;
+use App\Helpers\DateHelper;
 use Livewire\Attributes\On;
 
 class CreateVisit extends CreateRecord
@@ -27,6 +19,7 @@ class CreateVisit extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
+        $data['visit_date'] = DateHelper::today();
         $this->validateLocation($data);
         $this->setUserData($data);
         return $data;

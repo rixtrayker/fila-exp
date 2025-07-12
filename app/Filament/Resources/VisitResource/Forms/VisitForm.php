@@ -159,8 +159,7 @@ class VisitForm
                 ->minDate(today()->addDay()),
             DatePicker::make('visit_date')
                 ->label('Visit Date')
-                ->disabled(str_contains(request()->url(), 'visits/edit'))
-                ->default(today()),
+                ->disabled(!self::isViewPage()),
         ];
     }
 
