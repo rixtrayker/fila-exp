@@ -37,6 +37,7 @@ class EditDailyVisit extends EditRecord
     protected function mutateFormDataBeforeSave(array $data): array
     {
         $this->validateLocation($data);
+        $data['status'] = 'visited';
         return $data;
     }
 
