@@ -32,14 +32,18 @@ class ActivityResource extends Resource
                         'conference' => 'Conference',
                         'group-meeting' => 'Group Meeting',
                     ])
+                    ->reactive()
                     ->required(),
                 Forms\Components\DatePicker::make('date')
+                    ->minDate(today())
                     ->required(),
                 Forms\Components\TextInput::make('place')
                     ->required(),
                 Forms\Components\TextInput::make('attendees_number')
                     ->numeric()
                     ->minValue(1)
+                    ->reactive()
+                    ->required(fn (Forms\Get $get) => $get('type') === 'group-meeting')
                     ->visible(fn (Forms\Get $get) => $get('type') === 'group-meeting'),
                 Forms\Components\Textarea::make('comment')
                     ->required()
