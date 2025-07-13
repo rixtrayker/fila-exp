@@ -131,9 +131,12 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // Create view-only permissions for report models
         foreach ($this->reportModels as $reportModel) {
-            $permissionName = "view {$reportModel}";
+            $permissionName = "view-any {$reportModel}";
+            $permissionNameView = "view {$reportModel}";
             $permission = Permission::firstOrCreate(['name' => $permissionName]);
+            $permissionView = Permission::firstOrCreate(['name' => $permissionNameView]);
             $permissions->push($permission);
+            $permissions->push($permissionView);
         }
 
         // Create approve permissions for models that need approval

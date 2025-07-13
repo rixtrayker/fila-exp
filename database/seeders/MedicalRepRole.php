@@ -24,7 +24,7 @@ class MedicalRepRole extends Seeder
             'visit' => ['view', 'create', 'update', 'delete'],
             'edit-request' => ['view', 'create', 'update', 'delete'],
             'expenses' => ['view', 'create', 'update', 'delete'],
-            'frequency-report' => ['view'],
+            'frequency-report' => ['view-any', 'view'],
             'message' => ['view', 'create', 'update', 'delete'],
             'official-holiday' => ['view'],
             'order-report' => ['view'],
@@ -34,7 +34,7 @@ class MedicalRepRole extends Seeder
             'sales-report' => ['view'],
             'vacations-report' => ['view'],
             'visit-report' => ['view'],
-            'coverage-report' => ['view'],
+            'coverage-report' => ['view-any', 'view'],
             'activity' => ['view', 'create', 'update', 'delete'],
             'template-file' => ['view', 'view-any'],
         ];

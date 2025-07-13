@@ -27,6 +27,7 @@ class FrequencyReportResource extends Resource
     protected static ?string $navigationGroup = 'Reports';
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
     protected static ?string $slug = 'frequency-report';
+    protected static ?string $permissionName = 'frequency-report';
 
     public static function table(Table $table): Table
     {
@@ -100,7 +101,7 @@ class FrequencyReportResource extends Resource
                         $brickFilter = $table->getFilter('brick_id')?->getState() ?? null;
                         $gradeFilter = $table->getFilter('grade')?->getState() ?? null;
                         $clientTypeFilter = $table->getFilter('client_type_id')?->getState() ?? null;
-                        
+
                         $fromDate = $dateFilter['from_date'] ?? now()->startOfMonth();
                         $toDate = $dateFilter['to_date'] ?? now()->endOfMonth();
 
@@ -133,13 +134,13 @@ class FrequencyReportResource extends Resource
     {
         $tableFilters = request()->get('tableFilters', []);
         $dateRange = $tableFilters['date_range'] ?? [];
-        
-        $fromDate = isset($dateRange['from_date']) && !empty($dateRange['from_date']) 
-            ? $dateRange['from_date'] 
+
+        $fromDate = isset($dateRange['from_date']) && !empty($dateRange['from_date'])
+            ? $dateRange['from_date']
             : today()->subDays(7)->toDateString();
-            
-        $toDate = isset($dateRange['to_date']) && !empty($dateRange['to_date']) 
-            ? $dateRange['to_date'] 
+
+        $toDate = isset($dateRange['to_date']) && !empty($dateRange['to_date'])
+            ? $dateRange['to_date']
             : today()->toDateString();
 
         $filters = [
