@@ -65,21 +65,21 @@ class ClientRequestResource extends Resource
                     ->options(ClientRequestType::all()->pluck('name', 'id'))
                     ->preload()
                     ->required(),
-                TextInput::make('expected_revenue')
-                    ->label('Expected Revenue')
-                    ->numeric()
-                    ->minValue(1)
-                    ->required(),
+                // TextInput::make('expected_revenue')
+                //     ->label('Expected Revenue')
+                //     ->numeric()
+                //     ->minValue(1)
+                //     ->required(),
                 TextInput::make('request_cost')
                     ->label('Expected Cost')
                     ->numeric()
                     ->minValue(1)
                     ->required(),
-                Select::make('ordered_before')
-                    ->label('Previous orders')
-                    ->options(['yes'=>'Yes','no'=>'No'])
-                    ->preload()
-                    ->required(),
+                // Select::make('ordered_before')
+                //     ->label('Previous orders')
+                //     ->options(['yes'=>'Yes','no'=>'No'])
+                //     ->preload()
+                //     ->required(),
                 // Select::make('rx_rate')
                 //     ->label('Previous rate of RX')
                 //     ->options(['yes'=>'Yes','no'=>'No'])
@@ -92,9 +92,11 @@ class ClientRequestResource extends Resource
                 DatePicker::make('from_date')
                     ->label('Due date')
                     ->closeOnDateSelection()
+                    ->minDate(today())
                     ->required(),
                 DatePicker::make('to_date')
                     ->label('Due paid')
+                    ->minDate(fn($record) => $record->from_date->addDays(1))
                     ->closeOnDateSelection()
                     ->required(),
                 Textarea::make('description')
@@ -115,9 +117,6 @@ class ClientRequestResource extends Resource
                         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
                         'application/vnd.ms-excel',
                         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                        'image/jpeg',
-                        'image/png',
-                        'image/gif'
                     ])
                     ->downloadable()
                     ->openable()
