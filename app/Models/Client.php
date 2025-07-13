@@ -125,44 +125,54 @@ class Client extends Model
 
     public function scopeInMyAreas($builder)
     {
-        if (!$this->isAuthenticated()) {
+        if (!self::isAuthenticated()) {
             return;
         }
 
-        if ($this->isSuperAdmin()) {
+        if (self::isSuperAdmin()) {
             return $builder;
         }
 
-        $brickIds = $this->getUserBrickIds();
+        $brickIds = self::getUserBrickIds();
 
         return $builder->whereIn('brick_id', $brickIds);
     }
 
-    private function isAuthenticated(): bool
+    private static function isAuthenticated(): bool
     {
         return auth()->check();
     }
 
-    private function isSuperAdmin(): bool
+    private static function isSuperAdmin(): bool
     {
         return auth()->user()->hasRole('super-admin');
     }
 
-    private function getUserBrickIds(): array
+    private static function getUserBrickIds(): array
     {
         $user = auth()->user();
-        $brickIds = [];
+        
+        // Start with an empty collection
+        $brickIds = collect();
 
-        // Get brick IDs from user's areas
-        foreach ($user->areas as $area) {
-            $brickIds = array_merge($brickIds, $area->bricks()->pluck('bricks.id')->toArray());
+        // Get brick IDs from user's areas using a single query
+        if ($user->areas()->exists()) {
+            $areaBrickIds = $user->areas()
+                ->with('bricks')
+                ->get()
+                ->pluck('bricks')
+                ->flatten()
+                ->pluck('id');
+            
+            $brickIds = $brickIds->merge($areaBrickIds);
         }
 
         // If user is medical rep, add their direct brick assignments
         if ($user->hasRole('medical-rep')) {
-            $brickIds = array_merge($brickIds, $user->bricks()->pluck('bricks.id')->toArray());
+            $userBrickIds = $user->bricks()->pluck('id');
+            $brickIds = $brickIds->merge($userBrickIds);
         }
 
-        return array_unique($brickIds);
+        return $brickIds->unique()->values()->toArray();
     }
 }
