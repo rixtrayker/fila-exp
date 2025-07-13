@@ -25,9 +25,16 @@ class GetMineScope implements Scope
 
     public static function getUserIds(): array
     {
-        if(auth()->user() && auth()->user()->hasRole('medical-rep')){
+        if (!auth()->user()) {
+            return [];
+        }
+
+        // @phpstan-ignore-next-line - hasRole method exists from Spatie Permission package
+        if(auth()->user()->hasRole('medical-rep')){
             return [auth()->id()];
         }
-        return User::descendantsAndSelf(auth()->user())->pluck('id')->toArray();
+
+        $userIds = User::descendantsAndSelf(auth()->user())->pluck('id')->toArray();
+        return $userIds;
     }
 }

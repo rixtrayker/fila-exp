@@ -79,18 +79,18 @@ class CoverageReportResource extends Resource
                             ->default(today())
                             ->maxDate(today()),
                     ]),
-                Tables\Filters\SelectFilter::make('area')
-                    ->label('Area')
-                    ->options(Area::all()->pluck('name', 'id'))
-                    ->multiple(),
-                Tables\Filters\SelectFilter::make('grade')
-                    ->label('Client Class')
-                    ->options(['A' => 'A', 'B' => 'B', 'C' => 'C', 'N' => 'N', 'PH' => 'PH'])
-                    ->multiple(),
-                Tables\Filters\SelectFilter::make('client_type_id')
-                    ->label('Client Type')
-                    ->options(ClientType::all()->pluck('name', 'id'))
-                    ->multiple(),
+                // Tables\Filters\SelectFilter::make('area')
+                //     ->label('Area')
+                //     ->options(Area::all()->pluck('name', 'id'))
+                //     ->multiple(),
+                // Tables\Filters\SelectFilter::make('grade')
+                //     ->label('Client Class')
+                //     ->options(['A' => 'A', 'B' => 'B', 'C' => 'C', 'N' => 'N', 'PH' => 'PH'])
+                //     ->multiple(),
+                // Tables\Filters\SelectFilter::make('client_type_id')
+                //     ->label('Client Type')
+                //     ->options(ClientType::all()->pluck('name', 'id'))
+                //     ->multiple(),
             ])
             ->paginated([10, 25, 50, 100, 1000, 'all'])
             ->actions([
@@ -105,7 +105,7 @@ class CoverageReportResource extends Resource
                         $areaFilter = $table->getFilter('area')?->getState() ?? null;
                         $gradeFilter = $table->getFilter('grade')?->getState() ?? null;
                         $clientTypeFilter = $table->getFilter('client_type_id')?->getState() ?? null;
-                        
+
                         $fromDate = $dateFilter['from_date'] ?? now()->startOfMonth();
                         $toDate = $dateFilter['to_date'] ?? now()->endOfMonth();
 
@@ -117,14 +117,14 @@ class CoverageReportResource extends Resource
                         ];
 
                         // Add additional filters if they exist
-                        if ($areaFilter) {
-                            $params['area'] = is_array($areaFilter) ? implode(',', $areaFilter) : $areaFilter;
+                        if (isset($areaFilter['values']) && !empty($areaFilter['values'])) {
+                            $params['area'] = is_array($areaFilter['values']) ? implode(',', $areaFilter['values']) : $areaFilter['values'];
                         }
-                        if ($gradeFilter) {
-                            $params['grade'] = is_array($gradeFilter) ? implode(',', $gradeFilter) : $gradeFilter;
+                        if (isset($gradeFilter['values']) && !empty($gradeFilter['values'])) {
+                            $params['grade'] = is_array($gradeFilter['values']) ? implode(',', $gradeFilter['values']) : $gradeFilter['values'];
                         }
-                        if ($clientTypeFilter) {
-                            $params['client_type_id'] = is_array($clientTypeFilter) ? implode(',', $clientTypeFilter) : $clientTypeFilter;
+                        if (isset($clientTypeFilter['values']) && !empty($clientTypeFilter['values'])) {
+                            $params['client_type_id'] = is_array($clientTypeFilter['values']) ? implode(',', $clientTypeFilter['values']) : $clientTypeFilter['values'];
                         }
 
                         return route('filament.admin.pages.visit-breakdown', $params);
@@ -149,16 +149,23 @@ class CoverageReportResource extends Resource
             ]);
     }
 
-    public static function getEloquentQuery(): Builder
+        public static function getEloquentQuery(): Builder
     {
-        $dateRange = request()->get('tableFilters')['date_range'] ?? [];
+        // Get filters from request in a more robust way
+        $tableFilters = request()->get('tableFilters', []);
+
+        $dateRange = $tableFilters['date_range'] ?? [];
         $fromDate = $dateRange['from_date'] ?? today()->startOfMonth();
         $toDate = $dateRange['to_date'] ?? today()->endOfMonth();
 
+        // Ensure dates are properly formatted
+        $fromDate = is_string($fromDate) ? Carbon::parse($fromDate)->format('Y-m-d') : $fromDate->format('Y-m-d');
+        $toDate = is_string($toDate) ? Carbon::parse($toDate)->format('Y-m-d') : $toDate->format('Y-m-d');
+
         $filters = [
-            'area' => request()->get('tableFilters')['area'] ?? null,
-            'grade' => request()->get('tableFilters')['grade'] ?? null,
-            'client_type_id' => request()->get('tableFilters')['client_type_id'] ?? null,
+            'area' => $tableFilters['area'] ?? null,
+            'grade' => $tableFilters['grade'] ?? null,
+            'client_type_id' => $tableFilters['client_type_id'] ?? null,
         ];
 
         return CoverageReportData::getAggregatedQuery($fromDate, $toDate, $filters);
@@ -175,4 +182,9 @@ class CoverageReportResource extends Resource
     {
         return false;
     }
+    // public static function shouldRegisterNavigation(): bool
+    // {
+    //     return self::canViewAny();
+    // }
+
 }
