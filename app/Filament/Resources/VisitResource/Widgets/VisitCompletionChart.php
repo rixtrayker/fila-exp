@@ -18,25 +18,20 @@ class VisitCompletionChart extends ChartWidget
         $today = DateHelper::today();
         $mineUsers = User::getMine()->pluck('id');
 
-        // Get all planned visits (including completed ones)
-        $totalPlannedVisits = Visit::whereIn('user_id', $mineUsers)
-            ->where('visit_date', $today)
-            ->whereNotNull('plan_id') // Only visits that were planned
-            ->count();
-
-        // Get completed planned visits
-        $completedPlannedVisits = Visit::whereIn('user_id', $mineUsers)
+        // Single query to get all counts at once
+        $visitStats = Visit::whereIn('user_id', $mineUsers)
             ->where('visit_date', $today)
             ->whereNotNull('plan_id')
-            ->where('status', 'visited')
-            ->count();
+            ->selectRaw('
+                COUNT(*) as total_planned_visits,
+                SUM(CASE WHEN status = "visited" THEN 1 ELSE 0 END) as completed_planned_visits,
+                SUM(CASE WHEN status IN ("pending", "planned") THEN 1 ELSE 0 END) as pending_planned_visits
+            ')
+            ->first();
 
-        // Get pending planned visits
-        $pendingPlannedVisits = Visit::whereIn('user_id', $mineUsers)
-            ->where('visit_date', $today)
-            ->whereNotNull('plan_id')
-            ->whereIn('status', ['pending', 'planned'])
-            ->count();
+        $totalPlannedVisits = $visitStats->total_planned_visits;
+        $completedPlannedVisits = $visitStats->completed_planned_visits;
+        $pendingPlannedVisits = $visitStats->pending_planned_visits;
 
         if ($totalPlannedVisits === 0) {
             $data = [1];
