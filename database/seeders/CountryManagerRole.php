@@ -32,7 +32,7 @@ class CountryManagerRole extends Seeder
 
         // Clear existing permissions first
         $role->permissions()->detach();
-        
+
         $permissionsToAttach = $districtManagerRole->permissions->pluck('name')->toArray();
 
         // Add additional permissions for country manager
