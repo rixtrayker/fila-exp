@@ -151,7 +151,7 @@ class Client extends Model
     private static function getUserBrickIds(): array
     {
         $user = auth()->user();
-        
+
         // Start with an empty collection
         $brickIds = collect();
 
@@ -160,16 +160,17 @@ class Client extends Model
             $areaBrickIds = $user->areas()
                 ->with('bricks')
                 ->get()
-                ->pluck('bricks')
-                ->flatten()
-                ->pluck('id');
-            
+                ->map(function($area) {
+                    return $area->bricks->pluck('id');
+                })
+                ->flatten();
+
             $brickIds = $brickIds->merge($areaBrickIds);
         }
 
         // If user is medical rep, add their direct brick assignments
         if ($user->hasRole('medical-rep')) {
-            $userBrickIds = $user->bricks()->pluck('id');
+            $userBrickIds = $user->bricks()->pluck('bricks.id');
             $brickIds = $brickIds->merge($userBrickIds);
         }
 
