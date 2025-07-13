@@ -236,21 +236,15 @@ class RolesAndPermissionsSeeder extends Seeder
         // Create admin user
         $this->createUserWithRole(
             'super admin',
-            'amr@super-admin.com',
+            'admin@admin.com',
             'super-admin'
         );
 
-        // Create moderator user
-        $this->createUserWithRole(
-            'admin',
-            'amr@admin.com',
-            'moderator'
-        );
 
         // Create developer user
         $this->createUserWithRole(
             'developer',
-            'amr@developer.com',
+            'developer@admin.com',
             'developer'
         );
 
