@@ -76,17 +76,17 @@ class CoverageReportData extends Model
         DB::statement("SET SESSION sql_mode=''");
 
         // First, get the filtered user IDs based on the filters
-        $filteredUserIds = self::getFilteredUserIds($fromDate, $toDate, $filters, $userIds);
+        // $filteredUserIds = self::getFilteredUserIds($fromDate, $toDate, $filters, $userIds);
 
 
 
-        // If no filtered user IDs, return empty query
-        if (empty($filteredUserIds)) {
-            return static::query()->whereRaw('1 = 0'); // Return empty result set
-        }
+        // // If no filtered user IDs, return empty query
+        // if (empty($filteredUserIds)) {
+        //     return static::query()->whereRaw('1 = 0'); // Return empty result set
+        // }
 
         // Build the SQL query manually to avoid any interference
-        $userIdsString = implode(',', $filteredUserIds);
+        // $userIdsString = implode(',', $filteredUserIds);
 
         $sql = "
             SELECT
@@ -108,12 +108,37 @@ class CoverageReportData extends Model
             INNER JOIN users ON coverage_report_data.user_id = users.id
             LEFT JOIN area_user ON users.id = area_user.user_id
             LEFT JOIN areas ON area_user.area_id = areas.id
-            WHERE coverage_report_data.user_id IN ({$userIdsString})
             AND coverage_report_data.report_date BETWEEN '{$fromDate}' AND '{$toDate}'
             AND (coverage_report_data.actual_working_days > 0 OR coverage_report_data.actual_visits > 0)
             GROUP BY coverage_report_data.user_id, users.id
             HAVING SUM(coverage_report_data.actual_visits) > 0
         ";
+        // $sql = "
+        //     SELECT
+        //         coverage_report_data.user_id as user_id,
+        //         users.id as id,
+        //         GROUP_CONCAT(DISTINCT users.name) as name,
+        //         GROUP_CONCAT(DISTINCT areas.name) as area_name,
+        //         SUM(coverage_report_data.working_days) as working_days,
+        //         ROUND(AVG(coverage_report_data.daily_visit_target), 2) as daily_visit_target,
+        //         SUM(coverage_report_data.office_work_count) as office_work_count,
+        //         SUM(coverage_report_data.activities_count) as activities_count,
+        //         SUM(coverage_report_data.actual_working_days) as actual_working_days,
+        //         SUM(coverage_report_data.actual_working_days) * ROUND(AVG(coverage_report_data.daily_visit_target), 2) as monthly_visit_target,
+        //         ROUND(AVG(coverage_report_data.sops), 2) as sops,
+        //         SUM(coverage_report_data.actual_visits) as actual_visits,
+        //         ROUND(AVG(coverage_report_data.call_rate), 2) as call_rate,
+        //         SUM(coverage_report_data.total_visits) as total_visits
+        //     FROM coverage_report_data
+        //     INNER JOIN users ON coverage_report_data.user_id = users.id
+        //     LEFT JOIN area_user ON users.id = area_user.user_id
+        //     LEFT JOIN areas ON area_user.area_id = areas.id
+        //     WHERE coverage_report_data.user_id IN ({$userIdsString})
+        //     AND coverage_report_data.report_date BETWEEN '{$fromDate}' AND '{$toDate}'
+        //     AND (coverage_report_data.actual_working_days > 0 OR coverage_report_data.actual_visits > 0)
+        //     GROUP BY coverage_report_data.user_id, users.id
+        //     HAVING SUM(coverage_report_data.actual_visits) > 0
+        // ";
 
 
 

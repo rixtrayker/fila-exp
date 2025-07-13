@@ -163,9 +163,9 @@ class CoverageReportResource extends Resource
         $toDate = is_string($toDate) ? Carbon::parse($toDate)->format('Y-m-d') : $toDate->format('Y-m-d');
 
         $filters = [
-            'area' => $tableFilters['area'] ?? null,
-            'grade' => $tableFilters['grade'] ?? null,
-            'client_type_id' => $tableFilters['client_type_id'] ?? null,
+            // 'area' => $tableFilters['area'] ?? null,
+            // 'grade' => $tableFilters['grade'] ?? null,
+            // 'client_type_id' => $tableFilters['client_type_id'] ?? null,
         ];
 
         return CoverageReportData::getAggregatedQuery($fromDate, $toDate, $filters);
