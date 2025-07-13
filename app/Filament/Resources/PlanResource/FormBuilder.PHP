@@ -80,9 +80,9 @@ class FormBuilder
 
         return Tabs\Tab::make($day)
             ->label(function($record) use ($key) {
-                $startDate = $record?->start_at ?? null;
-                $dates = self::dates($startDate);
-                return Carbon::createFromTimeString($dates[$key] . ' 00:00:00')->format('D M-d');
+                $startDate = $record?->start_at ?? DateHelper::getFirstOfWeek();
+                $date = $startDate->addDays($key)->format('D M-d');
+                return $date;
             })
             ->schema([
                 Select::make($day . '_am_shift')
