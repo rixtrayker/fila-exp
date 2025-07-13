@@ -32,7 +32,7 @@ class DistrictManagerRole extends Seeder
 
         // Clear existing permissions first
         $role->permissions()->detach();
-        
+
         $permissionsToAttach = $medicalRepRole->permissions->pluck('name')->toArray();
 
         // Add additional permissions for district manager
