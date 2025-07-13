@@ -62,19 +62,14 @@ class VacationResource extends Resource
                             DatePicker::make('start')
                                 ->hiddenLabel()
                                 ->closeOnDateSelection()
+                                ->minDate(today())
+                                ->reactive()
+                                ->default(today())
                                 ->required(),
-                            DatePicker::make('end')
-                                ->rules([
-                                    function ($get) {
-                                        return function (string $attribute, $value, Closure $fail) use ($get) {
-                                            $start = Carbon::createFromDate($get('start'));
-                                            $end = Carbon::createFromDate($get('end'));
-                                            if ($end->isBefore($start)) {
-                                                $fail("The end date cannot be before start date.");
-                                            }
-                                        };
-                                    },
-                                ])
+
+                                DatePicker::make('end')
+                                ->minDate(fn($get) => Carbon::parse($get('start') ? $get('start') : today()))
+                                ->reactive()
                                 ->hiddenLabel()
                                 ->closeOnDateSelection()
                                 ->required(),
@@ -82,6 +77,7 @@ class VacationResource extends Resource
                                 ->hiddenLabel()
                                 ->default('AM')
                                 ->options(['AM'=>'AM','PM'=>'PM'])
+                                ->reactive()
                                 ->required(),
                             Select::make('end_shift')
                                 ->hiddenLabel()
@@ -90,8 +86,8 @@ class VacationResource extends Resource
                                 ->rules([
                                     function ($get) {
                                         return function (string $attribute, $value, Closure $fail) use ($get) {
-                                            $start = Carbon::createFromDate($get('start'));
-                                            $end = Carbon::createFromDate($get('end'));
+                                            $start = Carbon::parse($get('start') ? $get('start') : today());
+                                            $end = Carbon::parse($get('end') ? $get('end') : today());
 
                                             $start_shift = $get('start_shift');
                                             $end_shift = $get('end_shift');
@@ -116,7 +112,7 @@ class VacationResource extends Resource
                     ->label('Medical Rep')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('start_at')
+                TextColumn::make('star')
                     ->label('Start date') // todo:
                     ->dateTime('d-M-Y')
                     ->sortable()
@@ -132,14 +128,15 @@ class VacationResource extends Resource
                             return ['success' => $record->approved];
                         if($record->approved < 0)
                             return ['danger' => $record->approved];
-                        return ['secondary'];
+
+                        return ['secondary' => $record->approved];
                     })
                     ->options(function($record){
                         if($record->approved > 0)
                                 return ['heroicon-o-check-circle' => $record->approved];
                         if($record->approved < 0)
                             return ['heroicon-o-x-circle' =>  $record->approved];
-                        return ['heroicon-o-clock'];
+                        return ['heroicon-o-clock' => $record->approved];
                     }),
                 TextColumn::make('approved_by')
                     ->label('Approved By'),

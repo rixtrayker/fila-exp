@@ -8,6 +8,7 @@ use App\Models\ClientRequest;
 use App\Models\ClientRequestType;
 use App\Models\User;
 use App\Traits\ResourceHasPermission;
+use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -93,11 +94,13 @@ class ClientRequestResource extends Resource
                     ->label('Due date')
                     ->closeOnDateSelection()
                     ->minDate(today())
+                    ->reactive()
                     ->required(),
                 DatePicker::make('to_date')
                     ->label('Due paid')
-                    ->minDate(fn($record) => $record->from_date->addDays(1))
+                    ->minDate(fn($get) => Carbon::parse($get('from_date') ? $get('from_date') : today())->addDays(1))
                     ->closeOnDateSelection()
+                    ->reactive()
                     ->required(),
                 Textarea::make('description')
                     ->label('Description')
@@ -157,14 +160,14 @@ class ClientRequestResource extends Resource
                             return ['success' => $record->approved];
                         if($record->approved < 0)
                             return ['danger' => $record->approved];
-                        return ['secondary'];
+                        return ['secondary' => $record->approved];
                     })
                     ->options(function($record){
                         if($record->approved > 0)
                                 return ['heroicon-o-check-circle' => $record->approved];
                         if($record->approved < 0)
                             return ['heroicon-o-x-circle' =>  $record->approved];
-                        return ['heroicon-o-clock'];
+                        return ['heroicon-o-clock' => $record->approved];
                     }),
                 TextColumn::make('approved_by')
                     ->label('Approved By'),
