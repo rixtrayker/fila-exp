@@ -15,7 +15,8 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Illuminate\Support\Facades\Route;
-
+use Filament\Resources\Pages\EditRecord;
+use Filament\Resources\Pages\CreateRecord;
 class VisitForm
 {
     protected static $clients;
@@ -128,7 +129,7 @@ class VisitForm
                     ->pluck('name_en', 'id');
             })
             ->options(self::$clientOptions)
-            ->getOptionLabelUsing(fn ($value): ?string => self::getClientName($value))
+            // ->getOptionLabelUsing(fn ($value): ?string => self::getClientName($value))
             ->preload()
             ->reactive()
             ->required(!$isDailyVisits);
@@ -159,7 +160,8 @@ class VisitForm
                 ->minDate(today()->addDay()),
             DatePicker::make('visit_date')
                 ->label('Visit Date')
-                ->disabled(!self::isViewPage()),
+                ->default(today())
+                ->disabled(fn($livewire) => $livewire instanceof EditRecord || $livewire instanceof CreateRecord),
         ];
     }
 
@@ -168,7 +170,7 @@ class VisitForm
         $url = request()->url();
         $uri = Route::current()->uri();
         $referer = request()->headers->get('referer');
-        $isLivewireUpdate = str_contains($url, 'livewire/update');
+        $isLivewireUpdate = str_contains($uri, 'livewire/update');
 
         if ($isLivewireUpdate) {
             if (str_contains($referer, 'admin/visits/create') ||
@@ -177,6 +179,7 @@ class VisitForm
                 return false;
             }
         }
+
         return ! (
             str_contains($uri, 'create') ||
             str_contains($uri, 'edit') && !str_contains($uri, 'daily-visits')
@@ -186,13 +189,11 @@ class VisitForm
     private static function getProductsSection(): Section
     {
         $repeater = self::getProductsRepeater();
-        if (self::isViewPage()) {
-            $repeater->relationship('products');
-        }
+        $viewRepeater = self::getProductsRepeater()->relationship('products');
 
         return Section::make('products')
             ->hiddenLabel()
-            ->schema([$repeater])
+            ->schema(fn($livewire) => $livewire instanceof EditRecord || $livewire instanceof CreateRecord ? [$repeater] : [$viewRepeater])
             ->compact();
     }
 
