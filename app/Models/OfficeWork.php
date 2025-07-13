@@ -15,6 +15,7 @@ class OfficeWork extends Model
         'description',
         'time_from',
         'time_to',
+        'shift',
         'status',
         'user_id',
     ];

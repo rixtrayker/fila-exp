@@ -18,6 +18,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
+use Illuminate\Support\Str;
 
 class OfficeWorkResource extends Resource
 {
@@ -41,16 +42,26 @@ class OfficeWorkResource extends Resource
                     ->required()
                     ->rows(3)
                     ->maxLength(65535),
-                TimePicker::make('time_from')
-                    ->label('Time from')
+                // Select shift am, pm, am/pm
+                Select::make('shift')
+                    ->options([
+                        'am' => 'AM',
+                        'pm' => 'PM',
+                        'am/pm' => 'AM/PM',
+                    ])
                     ->native(false)
-                    ->seconds(false)
-                    ->nullable(),
-                TimePicker::make('time_to')
-                    ->label('Time to')
-                    ->native(false)
-                    ->seconds(false)
-                    ->nullable(),
+                    ->default('am')
+                    ->required(),
+                // TimePicker::make('time_from')
+                //     ->label('Time from')
+                //     ->native(false)
+                //     ->seconds(false)
+                //     ->nullable(),
+                // TimePicker::make('time_to')
+                //     ->label('Time to')
+                //     ->native(false)
+                //     ->seconds(false)
+                //     ->nullable(),
                 // Select::make('status')
                 //     ->options([
                 //         'pending' => 'Pending',
@@ -68,10 +79,16 @@ class OfficeWorkResource extends Resource
                 TextColumn::make('description')
                     ->wrap()
                     ->searchable(),
-                TextColumn::make('time_from')
-                    ->dateTime('d-m-Y H:i'),
-                TextColumn::make('time_to')
-                    ->dateTime('d-m-Y H:i'),
+                // TextColumn::make('time_from')
+                //     ->dateTime('d-m-Y H:i'),
+                // TextColumn::make('time_to')
+                //     ->dateTime('d-m-Y H:i'),
+                TextColumn::make('shift')
+                    ->sortable()
+                    ->searchable()
+                    ->label('Shift')
+                    ->badge()
+                    ->formatStateUsing(fn($state) => Str::upper($state)),
                 TextColumn::make('status')
                     ->sortable()
                     ->badge()
