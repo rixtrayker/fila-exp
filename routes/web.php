@@ -107,6 +107,11 @@ Route::get('/admin/ops/fix-orders-with-0-total', function () {
     return true;
 });
 
+Route::get('/admin/ops/clear-permission-cache', function () {
+    Artisan::call('permission:cache-reset');
+    return true;
+});
+
 // Route::get('/login', [\Filament\Http\Livewire\Auth::class,'login'])->name('filament.auth.login');
 // Route::get('/logout', [\Filament\Http\Livewire\Auth::class,'logout'])->name('filament.app.auth.logout');
 
