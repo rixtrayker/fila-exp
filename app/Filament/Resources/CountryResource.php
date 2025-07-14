@@ -34,6 +34,11 @@ class CountryResource extends Resource
                 TextInput::make('name')
                 ->label('Name')
                     ->unique()
+                    ->length(3)
+                    ->required(),
+                TextInput::make('code')
+                    ->label('Code')
+                    ->unique()
                     ->length(2)
                     ->required(),
             ]);
@@ -45,6 +50,8 @@ class CountryResource extends Resource
             ->columns([
                 TextColumn::make('name')
                     ->label('Name'),
+                TextColumn::make('code')
+                    ->label('Code'),
             ])
             ->filters([
                 //

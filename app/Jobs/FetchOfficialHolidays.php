@@ -46,9 +46,8 @@ class FetchOfficialHolidays implements ShouldQueue
                 return;
             }
 
-            // Fetch country model using the provided name
-            // The country code is the name of the country in the database
-            $country = Country::where('name', $this->countryCode)->first();
+            // Fetch country model using the provided code
+            $country = Country::where('code', $this->countryCode)->first();
 
             if (!$country) {
                 Log::channel('fetch-holidays')->error("Country with code {$this->countryCode} not found.");
