@@ -42,7 +42,10 @@ class PlanResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('user.name')
+                TextColumn::make("user.name")->sortable()->searchable(),
+                TextColumn::make("approved_by")->label("Approved By"),
+                TextColumn::make("start_at")
+                    ->dateTime("d-M-Y")
                     ->sortable()
                     ->searchable(),
                 TextColumn::make('approved_by')

@@ -8,6 +8,8 @@ use App\Models\Visit;
 use App\Helpers\DateHelper;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Builder;
+
 class ClientManager
 {
     // Client cache management
@@ -16,6 +18,11 @@ class ClientManager
     private static array $clients = [];
     private static array $pmClients = [];
     private static array $pharmacyClients = [];
+    private static array $clientTypes = [
+        "am" => [ClientType::AM],
+        "pm" => [ClientType::PM],
+        "pharmacy" => [ClientType::PH],
+    ];
 
     /**
      * Get clients by type from the cache
@@ -40,35 +47,31 @@ class ClientManager
      */
     private static function prepareData(): void
     {
-        $allClients = Client::inMyAreas()->select('client_type_id', 'name_en', 'id')->get();
-        $clientTypes = ClientType::all();
-
-        // Define client type mappings
-        $amTypeIDs = $clientTypes->whereIn('name', [
-            'Hospital',
-            'Resuscitation Centre',
-            'Incubators Centre'
-        ])->pluck('id')->toArray();
-
-        $pmTypeIDs = $clientTypes->whereIn('name', [
-            // 'doctor',
-            'Clinic',
-            'Poly Clinic'
-        ])->pluck('id')->toArray();
-
-        $pharmacyTypeIDs = $clientTypes->whereIn('name', [
-            'pharmacy'
-        ])->pluck('id')->toArray();
+        $allClients = Client::inMyAreas()
+            ->select("client_type_id", "name_en", "id")
+            ->get();
 
         // Cache base client lists
-        self::$clients['all'] = $allClients->pluck('name_en', 'id')->toArray();
-        self::$clients['am'] = $allClients->whereIn('client_type_id', $amTypeIDs)->pluck('name_en', 'id')->toArray();
-        self::$clients['pm'] = $allClients->whereIn('client_type_id', $pmTypeIDs)->pluck('name_en', 'id')->toArray();
-        self::$clients['pharmacy'] = $allClients->whereIn('client_type_id', $pharmacyTypeIDs)->pluck('name_en', 'id')->toArray();
+        self::$clients["all"] = $allClients->pluck("name_en", "id")->toArray();
+        self::$clients["am"] = $allClients
+            ->whereIn("client_type_id", self::$clientTypes["am"])
+            ->pluck("name_en", "id")
+            ->toArray();
+        self::$clients["pm"] = $allClients
+            ->whereIn("client_type_id", self::$clientTypes["pm"])
+            ->pluck("name_en", "id")
+            ->toArray();
+        self::$clients["pharmacy"] = $allClients
+            ->whereIn("client_type_id", self::$clientTypes["pharmacy"])
+            ->pluck("name_en", "id")
+            ->toArray();
 
-        if (auth()->user()->hasRole('district_manager')) {
+        if (auth()->user()->hasRole("district_manager")) {
             $dates = DateHelper::calculateVisitDates();
-            $days = array_map(fn($date) => Str::lower(Carbon::parse($date)->format('D')), $dates);
+            $days = array_map(
+                fn($date) => Str::lower(Carbon::parse($date)->format("D")),
+                $dates
+            );
             $plannedClients = Visit::districtManagerClients();
 
             foreach ($dates as $i => $date) {
@@ -76,15 +79,23 @@ class ClientManager
                 $dayClients = $plannedClients->where('visit_date', $date);
 
                 // Store day-specific clients with name_en as values
-                self::$clients[$day] = $dayClients->pluck('client.name_en', 'client_id')->toArray();
+                self::$clients[$day] = $dayClients
+                    ->pluck("client.name_en", "client_id")
+                    ->toArray();
 
                 // Filter day-specific clients by type
-                self::$clients["{$day}-am"] = $dayClients->whereIn('client.client_type_id', $amTypeIDs)
-                    ->pluck('client.name_en', 'client_id')->toArray();
-                self::$clients["{$day}-pm"] = $dayClients->whereIn('client.client_type_id', $pmTypeIDs)
-                    ->pluck('client.name_en', 'client_id')->toArray();
-                self::$clients["{$day}-pharmacy"] = $dayClients->whereIn('client.client_type_id', $pharmacyTypeIDs)
-                    ->pluck('client.name_en', 'client_id')->toArray();
+                self::$clients["{$day}-am"] = $dayClients
+                    ->whereIn("client.client_type_id", $amTypeIDs)
+                    ->pluck("client.name_en", "client_id")
+                    ->toArray();
+                self::$clients["{$day}-pm"] = $dayClients
+                    ->whereIn("client.client_type_id", $pmTypeIDs)
+                    ->pluck("client.name_en", "client_id")
+                    ->toArray();
+                self::$clients["{$day}-pharmacy"] = $dayClients
+                    ->whereIn("client.client_type_id", $pharmacyTypeIDs)
+                    ->pluck("client.name_en", "client_id")
+                    ->toArray();
             }
         }
 
@@ -94,12 +105,25 @@ class ClientManager
     /**
      * Search clients by name
      */
-    public static function searchClients(string $search)
+
+    public static function searchQuery(string $search): Builder
     {
         return Client::inMyAreas()
-            ->where('name_en', 'like', "%{$search}%")
-            ->orWhere('name_ar', 'like', "%{$search}%")
-            ->limit(50)
-            ->pluck('name_en', 'id');
+            ->where("name_en", "like", "%{$search}%")
+            ->orWhere("name_ar", "like", "%{$search}%");
+    }
+
+    public static function searchClients(string $search): array
+    {
+        return self::searchQuery($search)->pluck("name_en", "id")->toArray();
+    }
+
+    public static function searchClientsByType(string $search, string $type): array
+    {
+        $typeIds = self::$clientTypes[$type];
+
+        return self::searchQuery($search)
+            ->whereIn("client.client_type_id", $typeIds)
+            ->pluck("name_en", "id");
     }
 }
