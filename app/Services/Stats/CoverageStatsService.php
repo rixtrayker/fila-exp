@@ -17,18 +17,23 @@ class CoverageStatsService
     {
         $today = DateHelper::today();
         $userId = Auth::id();
-        $date = $today->format('Y-m-d');
+        $date = $today->format("Y-m-d");
 
-        $cacheType = match($type) {
-            'am' => VisitCacheService::TYPE_COVERAGE_AM,
-            'pm' => VisitCacheService::TYPE_COVERAGE_PM,
-            'pharmacy' => VisitCacheService::TYPE_COVERAGE_PHARMACY,
+        $cacheType = match ($type) {
+            "am" => VisitCacheService::TYPE_COVERAGE_AM,
+            "pm" => VisitCacheService::TYPE_COVERAGE_PM,
+            "pharmacy" => VisitCacheService::TYPE_COVERAGE_PHARMACY,
             default => VisitCacheService::TYPE_COVERAGE_AM,
         };
 
-        return VisitCacheService::getCachedCoverageData($userId, $date, $cacheType, function () use ($today, $type) {
-            return self::getVisitData($today, $type);
-        });
+        return VisitCacheService::getCachedCoverageData(
+            $userId,
+            $date,
+            $cacheType,
+            function () use ($today, $type) {
+                return self::getVisitData($today, $type);
+            }
+        );
     }
 
     /**
@@ -39,21 +44,23 @@ class CoverageStatsService
         $clientTypeIds = self::getClientTypeIds($type);
 
         $query = Visit::query()
-            ->whereDate('visit_date', $date)
-            ->whereHas('client', function ($q) use ($clientTypeIds) {
-                $q->whereIn('client_type_id', $clientTypeIds);
+            ->whereDate("visit_date", $date)
+            ->whereHas("client", function ($q) use ($clientTypeIds) {
+                $q->whereIn("client_type_id", $clientTypeIds);
             });
 
         $totalVisits = $query->count();
-        $visitedVisits = (clone $query)->where('status', 'visited')->count();
-        $pendingVisits = (clone $query)->whereIn('status', ['pending', 'planned'])->count();
-        $missedVisits = (clone $query)->where('status', 'cancelled')->count();
+        $visitedVisits = (clone $query)->where("status", "visited")->count();
+        $pendingVisits = (clone $query)
+            ->whereIn("status", ["pending", "planned"])
+            ->count();
+        $missedVisits = (clone $query)->where("status", "cancelled")->count();
 
         return [
-            'labels' => ['Visited', 'Pending', 'Missed'],
-            'data' => [$visitedVisits, $pendingVisits, $missedVisits],
-            'total' => $totalVisits,
-            'type' => $type,
+            "labels" => ["Visited", "Pending", "Missed"],
+            "data" => [$visitedVisits, $pendingVisits, $missedVisits],
+            "total" => $totalVisits,
+            "type" => $type,
         ];
     }
 
@@ -64,8 +71,8 @@ class CoverageStatsService
     {
         $data = self::getCoverageData($type);
         $typeLabel = ucfirst($type);
-        $total = array_sum($data['data']);
-        $visited = $data['data'][0];
+        $total = array_sum($data["data"]);
+        $visited = $data["data"][0];
 
         $percentage = $total > 0 ? round(($visited / $total) * 100, 1) : 0;
 
@@ -77,27 +84,26 @@ class CoverageStatsService
      */
     private static function getClientTypeIds(string $type): array
     {
-        return match($type) {
-            'am' => [
-                ClientType::HOSPITAL,
-                ClientType::RESUSCITATION_CENTRE,
-                ClientType::INCUBATORS_CENTRE
+        return match ($type) {
+            "am" => [
+                ClientType::AM,
+                // ClientType::HOSPITAL,
+                // ClientType::RESUSCITATION_CENTRE,
+                // ClientType::INCUBATORS_CENTRE
             ],
 
-            'pm' => [
-                ClientType::CLINIC,
-                ClientType::POLY_CLINIC
+            "pm" => [
+                ClientType::AM,
+                // ClientType::CLINIC,
+                // ClientType::POLY_CLINIC
             ],
 
-            'pharmacy' => [
-                ClientType::PHARMACY
+            "pharmacy" => [
+                ClientType::PH,
+                // ClientType::PHARMACY
             ],
 
-            default => [
-                ClientType::HOSPITAL,
-                ClientType::RESUSCITATION_CENTRE,
-                ClientType::INCUBATORS_CENTRE
-            ],
+            default => [ClientType::AM, ClientType::PM, ClientType::PH],
         };
     }
 }

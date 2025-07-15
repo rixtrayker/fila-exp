@@ -124,11 +124,11 @@ class FormBuilder
                             ? $record->shiftClient($day)?->pm_shift
                             : null
                     )
-                    ->getSearchResultsUsing(
-                        fn(
-                            string $search
-                        ) => ClientManager::searchClientsByType($search, "pm")
-                    )
+                    // ->getSearchResultsUsing(
+                    //     fn(
+                    //         string $search
+                    //     ) => ClientManager::searchClientsByType($search, "pm")
+                    // )
                     ->searchable()
                     ->options(PlanResource::getClients("pm", $day))
                     ->preload(),

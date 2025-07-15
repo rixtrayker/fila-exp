@@ -14,47 +14,47 @@ class Client extends Model
     use HasEditRequest;
     use HasRelationships;
 
-    protected $appends = ['name','mapUrl'];
+    protected $appends = ["name", "mapUrl"];
 
-    protected $with = ['brick.area'];
+    protected $with = ["brick.area"];
     protected $fillable = [
-        'name_en',
-        'name_ar',
-        'email',
-        'phone',
-        'address',
-        'location',
-        'brick_id',
-        'grade',
-        'shift',
-        'related_pharmacy',
-        'am_work',
-        'client_type_id',
-        'speciality_id',
-        'lat',
-        'lng',
+        "name_en",
+        "name_ar",
+        "email",
+        "phone",
+        "address",
+        "location",
+        "brick_id",
+        "grade",
+        "shift",
+        "related_pharmacy",
+        "am_work",
+        "client_type_id",
+        "speciality_id",
+        "lat",
+        "lng",
     ];
     public $editable = [
-        'name_en',
-        'name_ar',
-        'email',
-        'phone',
-        'address',
+        "name_en",
+        "name_ar",
+        "email",
+        "phone",
+        "address",
         // 'location',
-        'brick_id',
-        'grade',
-        'shift',
-        'related_pharmacy',
-        'am_work',
-        'client_type_id',
-        'speciality_id',
-        'lat',
-        'lng',
+        "brick_id",
+        "grade",
+        "shift",
+        "related_pharmacy",
+        "am_work",
+        "client_type_id",
+        "speciality_id",
+        "lat",
+        "lng",
     ];
 
     public function setLocationAttribute($value)
     {
-        $this->attributes['location'] = json_encode($value);
+        $this->attributes["location"] = json_encode($value);
     }
 
     public function visits()
@@ -64,7 +64,10 @@ class Client extends Model
 
     public function visitedBy()
     {
-        return $this->hasManyDeepFromRelations($this->visits(), (new Visit())->user());
+        return $this->hasManyDeepFromRelations(
+            $this->visits(),
+            (new Visit())->user()
+        );
     }
     public function brick()
     {
@@ -80,7 +83,7 @@ class Client extends Model
     }
     public function getNameAttribute()
     {
-        return $this->name_en .' - '. $this->name_ar;
+        return $this->name_en . " - " . $this->name_ar;
     }
 
     public function mapUrl(): string|null
@@ -88,7 +91,10 @@ class Client extends Model
         if (!$this->lat || !$this->lng) {
             return null;
         }
-        return 'https://www.google.com/maps/place/'. $this->lat . ',' . $this->lng;
+        return "https://www.google.com/maps/place/" .
+            $this->lat .
+            "," .
+            $this->lng;
     }
 
     public function getMapUrlAttribute(): string|null
@@ -96,17 +102,18 @@ class Client extends Model
         return $this->mapUrl();
     }
 
-    public function setLocation($value){
-        $this->lat = $value['lat'];
-        $this->lng = $value['lng'];
+    public function setLocation($value)
+    {
+        $this->lat = $value["lat"];
+        $this->lng = $value["lng"];
         $this->location = $value;
         $this->save();
     }
 
     public function scopeFilter($query, array $filters)
     {
-        $query->when($filters['search'] ?? null, function ($query, $search) {
-            $query->whereJsonContains('name', $search);
+        $query->when($filters["search"] ?? null, function ($query, $search) {
+            $query->whereJsonContains("name", $search);
         });
         // ->when($filters['status'] ?? null, function ($query, $status) {
         //     $query->where('status', '=', $status);
@@ -120,7 +127,7 @@ class Client extends Model
     // pharmacy filter
     public function scopePharmacy($query)
     {
-        return $query->where('client_type_id', ClientType::PHARMACY);
+        return $query->where("client_type_id", ClientType::PH);
     }
 
     public function scopeInMyAreas($builder)
@@ -135,7 +142,7 @@ class Client extends Model
 
         $brickIds = self::getUserBrickIds();
 
-        return $builder->whereIn('brick_id', $brickIds);
+        return $builder->whereIn("brick_id", $brickIds);
     }
 
     private static function isAuthenticated(): bool
@@ -145,7 +152,7 @@ class Client extends Model
 
     private static function isSuperAdmin(): bool
     {
-        return auth()->user()->hasRole('super-admin');
+        return auth()->user()->hasRole("super-admin");
     }
 
     private static function getUserBrickIds(): array
@@ -157,11 +164,12 @@ class Client extends Model
 
         // Get brick IDs from user's areas using a single query
         if ($user->areas()->exists()) {
-            $areaBrickIds = $user->areas()
-                ->with('bricks')
+            $areaBrickIds = $user
+                ->areas()
+                ->with("bricks")
                 ->get()
-                ->map(function($area) {
-                    return $area->bricks->pluck('id');
+                ->map(function ($area) {
+                    return $area->bricks->pluck("id");
                 })
                 ->flatten();
 
@@ -169,8 +177,8 @@ class Client extends Model
         }
 
         // If user is medical rep, add their direct brick assignments
-        if ($user->hasRole('medical-rep')) {
-            $userBrickIds = $user->bricks()->pluck('bricks.id');
+        if ($user->hasRole("medical-rep")) {
+            $userBrickIds = $user->bricks()->pluck("bricks.id");
             $brickIds = $brickIds->merge($userBrickIds);
         }
 
