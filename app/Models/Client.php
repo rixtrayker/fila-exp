@@ -33,6 +33,7 @@ class Client extends Model
         "speciality_id",
         "lat",
         "lng",
+        "active",
     ];
     public $editable = [
         "name_en",
@@ -50,7 +51,35 @@ class Client extends Model
         "speciality_id",
         "lat",
         "lng",
+        "active",
     ];
+
+    protected static function booted()
+    {
+        static::addGlobalScope('active', function ($query) {
+            $query->where('active', true);
+        });
+    }
+
+    public function activate()
+    {
+        $this->update(['active' => true]);
+    }
+
+    public function deactivate()
+    {
+        $this->update(['active' => false]);
+    }
+
+    public function scopeWithInactive($query)
+    {
+        return $query->withoutGlobalScope('active');
+    }
+
+    public function scopeOnlyInactive($query)
+    {
+        return $query->withoutGlobalScope('active')->where('active', false);
+    }
 
     public function setLocationAttribute($value)
     {

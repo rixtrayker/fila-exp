@@ -30,198 +30,277 @@ class ClientResource extends Resource
 {
     use ResourceHasPermission;
     protected static ?string $model = Client::class;
-    protected static ?string $navigationIcon = 'heroicon-o-user-group';
-    protected static ?string $navigationGroup = 'Admin management';
+    protected static ?string $navigationIcon = "heroicon-o-user-group";
+    protected static ?string $navigationGroup = "Admin management";
     protected static ?int $navigationSort = 1;
     protected static $clientTypes = [];
 
     protected static $bricks;
     public static function form(Form $form): Form
     {
-        self::$bricks = Brick::get()->pluck('zone_code', 'id')->toArray();
-        self::$clientTypes = ClientType::pluck('name','id')->toArray();
+        self::$bricks = Brick::get()->pluck("zone_code", "id")->toArray();
+        self::$clientTypes = ClientType::pluck("name", "id")->toArray();
 
-        return $form
-            ->schema([
-                TextInput::make('name_en')
-                    ->label('Name')
-                    ->required(),
-                TextInput::make('name_ar')
-                    ->label('Name (العربية)'),
-                TextInput::make('email')
-                    ->email()
-                    ->label('Email'),
-                TextInput::make('phone')
-                    ->label('Phone'),
-                TextInput::make('am_work')
-                    ->label('AM work'),
-                TextInput::make('address')
-                    ->label('Address'),
-                Select::make('brick_id')
-                    ->label('Brick')
-                    ->searchable()
-                    ->options(self::$bricks)
-                    ->getSearchResultsUsing(fn(string $search)=>ClientResource::searchBrick($search))
-                    ->preload()
-                    ->required(),
-                Select::make('grade')
-                    ->label('Grade')
-                    ->options(['A'=>'A','B'=>'B','C'=>'C','N'=>'N','PH'=>'PH'])
-                    ->required(),
-                Select::make('shift')
-                    ->options(['AM'=>'AM','PM'=>'PM'])
-                    ->label('Shift'),
-                Select::make('client_type_id')
-                    ->label('Type')
-                    ->relationship('clientType','name')
-                    ->required(),
-                Select::make('speciality_id')
-                    ->label('Speciality')
-                    ->relationship('speciality','name')
-                    ->required(),
-            ]);
+        return $form->schema([
+            TextInput::make("name_en")->label("Name")->required(),
+            TextInput::make("name_ar")->label("Name (العربية)"),
+            TextInput::make("email")->email()->label("Email"),
+            TextInput::make("phone")->label("Phone"),
+            TextInput::make("am_work")->label("AM work"),
+            TextInput::make("address")->label("Address"),
+            Select::make("brick_id")
+                ->label("Brick")
+                ->searchable()
+                ->options(self::$bricks)
+                ->getSearchResultsUsing(
+                    fn(string $search) => ClientResource::searchBrick($search),
+                )
+                ->preload()
+                ->required(),
+            Select::make("grade")
+                ->label("Grade")
+                ->options([
+                    "A" => "A",
+                    "B" => "B",
+                    "C" => "C",
+                    "N" => "N",
+                    "PH" => "PH",
+                ])
+                ->required(),
+            Select::make("shift")
+                ->options(["AM" => "AM", "PM" => "PM"])
+                ->label("Shift"),
+            Select::make("client_type_id")
+                ->label("Type")
+                ->relationship("clientType", "name")
+                ->required(),
+            Select::make("speciality_id")
+                ->label("Speciality")
+                ->relationship("speciality", "name")
+                ->required(),
+            Forms\Components\Toggle::make("active")
+                ->label("Active")
+                ->default(true),
+        ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                TextColumn::make('name_en')
+                TextColumn::make("name_en")
                     ->searchable()
                     ->sortable()
-                    ->label('Name'),
-                TextColumn::make('name_ar')
-                    ->label('Name (العربية)')
+                    ->label("Name"),
+                TextColumn::make("name_ar")
+                    ->label("Name (العربية)")
                     ->searchable()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault:true),
-                TextColumn::make('email')
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make("email")
                     ->sortable()
                     ->searchable()
-                    ->toggleable(isToggledHiddenByDefault:true)
-                    ->label('Email'),
-                TextColumn::make('phone')
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->label("Email"),
+                TextColumn::make("phone")
                     ->sortable()
                     ->searchable()
-                    ->toggleable(isToggledHiddenByDefault:true)
-                    ->label('Phone'),
-                TextColumn::make('am_work')
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->label("Phone"),
+                TextColumn::make("am_work")
                     ->sortable()
                     ->searchable()
-                    ->toggleable(isToggledHiddenByDefault:true)
-                    ->label('AM work'),
-                IconColumn::make('mapUrl')
-                    ->label('Map URL')
-                    ->url(fn($record) => $record->mapUrl ?? '#')
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->label("AM work"),
+                IconColumn::make("mapUrl")
+                    ->label("Map URL")
+                    ->url(fn($record) => $record->mapUrl ?? "#")
                     ->visible(true)
                     ->openUrlInNewTab()
-                    ->icon('heroicon-o-map-pin')
-                    ->tooltip(fn($record) => $record->mapUrl ? 'Open in Google Maps' : 'Capture location first')
-                    ->color(fn($record) => $record->mapUrl ? 'success' : 'danger'),
-                TextColumn::make('address')
+                    ->icon("heroicon-o-map-pin")
+                    ->tooltip(
+                        fn($record) => $record->mapUrl
+                            ? "Open in Google Maps"
+                            : "Capture location first",
+                    )
+                    ->color(
+                        fn($record) => $record->mapUrl ? "success" : "danger",
+                    ),
+                TextColumn::make("address")
                     ->sortable()
                     ->searchable()
-                    ->toggleable(isToggledHiddenByDefault:true)
-                    ->label('Address'),
-                TextColumn::make('related_pharmacy')
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->label("Address"),
+                TextColumn::make("related_pharmacy")
                     ->sortable()
                     ->searchable()
-                    ->label('Related Pharmacy'),
-                TextColumn::make('brick.name')
-                    ->sortable()
-                    ->label('Brick'),
-                TextColumn::make('grade')
+                    ->label("Related Pharmacy"),
+                TextColumn::make("brick.name")->sortable()->label("Brick"),
+                TextColumn::make("grade")
                     ->sortable()
                     ->searchable()
-                    ->label('Grade'),
-                TextColumn::make('shift')
+                    ->label("Grade"),
+                TextColumn::make("shift")
                     ->sortable()
                     ->searchable()
-                    ->toggleable(isToggledHiddenByDefault:true)
-                    ->label('Shift'),
-                TextColumn::make('clientType.name')
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->label("Shift"),
+                TextColumn::make("clientType.name")->sortable()->label("Type"),
+                TextColumn::make("speciality.name")
                     ->sortable()
-                    ->label('Type'),
-                TextColumn::make('speciality.name')
+                    ->label("Speciality"),
+                IconColumn::make("active")
+                    ->boolean()
                     ->sortable()
-                    ->label('Speciality'),
+                    ->label("Active"),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('brick')
+                Tables\Filters\SelectFilter::make("brick")
                     ->searchable()
                     ->options(self::$bricks)
-                    ->relationship('brick','name'),
-                Tables\Filters\SelectFilter::make('clientType')
-                    ->relationship('clientType','name'),
+                    ->relationship("brick", "name"),
+                Tables\Filters\SelectFilter::make("clientType")->relationship(
+                    "clientType",
+                    "name",
+                ),
+                Tables\Filters\TernaryFilter::make("active")
+                    ->label("Active Status")
+                    ->placeholder("All Clients")
+                    ->trueLabel("Active Clients")
+                    ->falseLabel("Inactive Clients")
+                    ->queries(
+                        true: fn ($query) => $query->withInactive()->where("active", true),
+                        false: fn ($query) => $query->withInactive()->where("active", false),
+                        blank: fn ($query) => $query->withInactive(),
+                    ),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
                 self::captureLocation(),
+                self::toggleActiveAction(),
             ])
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),
+                self::bulkActivateAction(),
+                self::bulkDeactivateAction(),
             ]);
     }
 
     public static function getRelations(): array
     {
         return [
-            //
-        ];
+                //
+            ];
     }
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-          ->with(['clientType','brick','speciality'])
-          ->scopes([
-            'inMyAreas',
-          ]);
+            ->with(["clientType", "brick", "speciality"])
+            ->scopes(["inMyAreas"])
+            ->withInactive();
     }
 
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListClients::route('/'),
-            'create' => Pages\CreateClient::route('/create'),
-            'view' => Pages\ViewClient::route('/{record}'),
-            'edit' => Pages\EditClient::route('/{record}/edit'),
+            "index" => Pages\ListClients::route("/"),
+            "create" => Pages\CreateClient::route("/create"),
+            "view" => Pages\ViewClient::route("/{record}"),
+            "edit" => Pages\EditClient::route("/{record}/edit"),
         ];
     }
 
     public static function searchBrick(string $search)
     {
+        $search = strtolower($search);
         $result = array_filter(self::$bricks, function ($value) use ($search) {
-            return strpos($value, $search) !== false;
+            return strpos(strtolower($value), $search) !== false;
         });
 
         return $result;
     }
-    public static function captureLocation():Action
+    public static function captureLocation(): Action
     {
-        return Action::make('captureLocation')
-            ->icon('heroicon-o-map-pin')
-            ->modalHeading('Capture Location')
-            ->modalDescription('Are you sure you want to capture the location?')
-            ->label(fn($record)=>$record->mapUrl ? 'Edit Location' : 'Add Location')
+        return Action::make("captureLocation")
+            ->icon("heroicon-o-map-pin")
+            ->modalHeading("Capture Location")
+            ->modalDescription("Are you sure you want to capture the location?")
+            ->label(
+                fn($record) => $record->mapUrl
+                    ? "Edit Location"
+                    : "Add Location",
+            )
             ->form([
-                LocationPickr::make('location')
+                LocationPickr::make("location")
                     ->mapControls([
-                        'mapTypeControl'    => false,
-                        'scaleControl'      => true,
-                        'streetViewControl' => false,
-                        'rotateControl'     => false,
-                        'fullscreenControl' => true,
-                        'searchBoxControl'  => true,
-                        'zoomControl'       => true,
+                        "mapTypeControl" => false,
+                        "scaleControl" => true,
+                        "streetViewControl" => false,
+                        "rotateControl" => false,
+                        "fullscreenControl" => false,
+                        "searchBoxControl" => true,
+                        "zoomControl" => true,
                     ])
                     ->defaultZoom(15)
-                    ->defaultView('roadmap')
-                    ->defaultLocation([30.608837,32.3063521])
+                    ->defaultView("roadmap")
+                    ->defaultLocation([30.608837, 32.3063521])
                     ->draggable()
                     ->clickable()
-                    ->height('40vh'),
+                    ->height("40vh"),
             ])
-            ->action(fn($record,array $data)=> $record->setLocation($data['location']))
-            ->color(fn($record)=>$record->mapUrl ? 'secondary' : 'success');
+            ->action(
+                fn($record, array $data) => $record->setLocation(
+                    $data["location"],
+                ),
+            )
+            ->color(fn($record) => $record->mapUrl ? "secondary" : "success");
+    }
+
+    public static function toggleActiveAction(): Action
+    {
+        return Action::make("toggleActive")
+            ->icon(fn($record) => $record->active ? "heroicon-o-x-circle" : "heroicon-o-check-circle")
+            ->color(fn($record) => $record->active ? "danger" : "success")
+            ->label(fn($record) => $record->active ? "Deactivate" : "Activate")
+            ->action(function ($record) {
+                if ($record->active) {
+                    $record->deactivate();
+                } else {
+                    $record->activate();
+                }
+            })
+            ->requiresConfirmation()
+            ->modalHeading(fn($record) => $record->active ? "Deactivate Client" : "Activate Client")
+            ->modalDescription(fn($record) => $record->active
+                ? "Are you sure you want to deactivate this client?"
+                : "Are you sure you want to activate this client?");
+    }
+
+    public static function bulkActivateAction(): Tables\Actions\BulkAction
+    {
+        return Tables\Actions\BulkAction::make("bulkActivate")
+            ->label("Activate Selected")
+            ->icon("heroicon-o-check-circle")
+            ->color("success")
+            ->action(function ($records) {
+                $records->each->activate();
+            })
+            ->requiresConfirmation()
+            ->modalHeading("Activate Clients")
+            ->modalDescription("Are you sure you want to activate the selected clients?");
+    }
+
+    public static function bulkDeactivateAction(): Tables\Actions\BulkAction
+    {
+        return Tables\Actions\BulkAction::make("bulkDeactivate")
+            ->label("Deactivate Selected")
+            ->icon("heroicon-o-x-circle")
+            ->color("danger")
+            ->action(function ($records) {
+                $records->each->deactivate();
+            })
+            ->requiresConfirmation()
+            ->modalHeading("Deactivate Clients")
+            ->modalDescription("Are you sure you want to deactivate the selected clients?");
     }
 }
