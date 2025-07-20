@@ -168,6 +168,7 @@ class ClientResource extends Resource
                     ->placeholder("All Clients")
                     ->trueLabel("Active Clients")
                     ->falseLabel("Inactive Clients")
+                    ->default(false)
                     ->queries(
                         true: fn ($query) => $query->withInactive()->where("active", true),
                         false: fn ($query) => $query->withInactive()->where("active", false),
@@ -183,7 +184,9 @@ class ClientResource extends Resource
                 Tables\Actions\DeleteBulkAction::make(),
                 self::bulkActivateAction(),
                 self::bulkDeactivateAction(),
-            ]);
+            ])
+            ->defaultPaginationPageOption(25)
+            ->paginationPageOptions([25, 50, 100, 250, 500]);
     }
 
     public static function getRelations(): array
