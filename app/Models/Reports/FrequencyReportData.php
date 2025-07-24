@@ -26,6 +26,7 @@ class FrequencyReportData extends Model
         'total_visits_count',
         'achievement_percentage',
         'metadata',
+        'is_final',
     ];
 
     protected $casts = [
