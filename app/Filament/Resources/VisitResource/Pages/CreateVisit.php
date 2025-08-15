@@ -13,6 +13,8 @@ use Livewire\Attributes\On;
 
 class CreateVisit extends CreateRecord
 {
+    protected static bool $canCreateAnother = false;
+
     use ServiceInitializer, LocationValidator, UserDataHandler, VisitHandler;
     protected static string $view = 'vendor.filament.pages.create-visit';
     protected static string $resource = VisitResource::class;

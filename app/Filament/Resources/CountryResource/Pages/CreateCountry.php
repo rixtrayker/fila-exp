@@ -8,5 +8,7 @@ use Filament\Resources\Pages\CreateRecord;
 
 class CreateCountry extends CreateRecord
 {
+    protected static bool $canCreateAnother = false;
+
     protected static string $resource = CountryResource::class;
 }

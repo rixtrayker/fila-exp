@@ -8,5 +8,7 @@ use Filament\Resources\Pages\CreateRecord;
 
 class CreateBusinessOrder extends CreateRecord
 {
+    protected static bool $canCreateAnother = false;
+
     protected static string $resource = BusinessOrderResource::class;
 }

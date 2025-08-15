@@ -8,5 +8,7 @@ use Filament\Resources\Pages\CreateRecord;
 
 class CreateCompanyBranch extends CreateRecord
 {
+    protected static bool $canCreateAnother = false;
+
     protected static string $resource = CompanyBranchResource::class;
 }

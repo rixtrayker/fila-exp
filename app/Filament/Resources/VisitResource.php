@@ -26,7 +26,6 @@ class VisitResource extends Resource
     protected static ?string $navigationGroup = 'Visits';
     protected static ?int $navigationSort = 1;
 
-    protected static bool $canCreateAnother = false;
 
     public static function form(Form $form): Form
     {

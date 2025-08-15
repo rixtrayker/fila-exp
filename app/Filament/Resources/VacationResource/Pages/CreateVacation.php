@@ -8,6 +8,8 @@ use Filament\Resources\Pages\CreateRecord;
 
 class CreateVacation extends CreateRecord
 {
+    protected static bool $canCreateAnother = false;
+
     protected static string $resource = VacationResource::class;
 
     protected function mutateFormDataBeforeCreate(array $data): array

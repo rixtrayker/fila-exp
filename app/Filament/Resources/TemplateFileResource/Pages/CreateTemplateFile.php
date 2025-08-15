@@ -10,6 +10,8 @@ use Illuminate\Http\UploadedFile;
 
 class CreateTemplateFile extends CreateRecord
 {
+    protected static bool $canCreateAnother = false;
+
     protected static string $resource = TemplateFileResource::class;
 
     private static string $pathPrefix = 'template-files';

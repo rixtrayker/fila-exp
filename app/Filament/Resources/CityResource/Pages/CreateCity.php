@@ -8,6 +8,8 @@ use Filament\Resources\Pages\CreateRecord;
 
 class CreateCity extends CreateRecord
 {
+    protected static bool $canCreateAnother = false;
+
     protected static string $resource = CityResource::class;
 
     protected function getRedirectUrl(): string

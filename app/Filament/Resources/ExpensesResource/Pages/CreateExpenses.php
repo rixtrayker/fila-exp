@@ -9,6 +9,8 @@ use Filament\Resources\Pages\CreateRecord;
 
 class CreateExpenses extends CreateRecord
 {
+    protected static bool $canCreateAnother = false;
+
     protected static string $resource = ExpensesResource::class;
 
     protected function mutateFormDataBeforeCreate(array $data): array

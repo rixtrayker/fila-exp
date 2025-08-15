@@ -13,9 +13,9 @@ use Filament\Resources\Pages\CreateRecord;
 
 class CreatePlan extends CreateRecord
 {
-    protected static string $resource = PlanResource::class;
     protected static bool $canCreateAnother = false;
 
+    protected static string $resource = PlanResource::class;
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $userId = auth()->id();

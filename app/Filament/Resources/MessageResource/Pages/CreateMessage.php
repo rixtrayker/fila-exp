@@ -9,6 +9,8 @@ use Kalnoy\Nestedset\Collection as KCollection;
 
 class CreateMessage extends CreateRecord
 {
+    protected static bool $canCreateAnother = false;
+
     protected static string $resource = MessageResource::class;
 
     protected function mutateFormDataBeforeCreate(array $data): array

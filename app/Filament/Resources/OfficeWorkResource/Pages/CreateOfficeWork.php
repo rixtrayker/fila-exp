@@ -8,6 +8,8 @@ use Filament\Resources\Pages\CreateRecord;
 
 class CreateOfficeWork extends CreateRecord
 {
+    protected static bool $canCreateAnother = false;
+
     protected static string $resource = OfficeWorkResource::class;
 
     protected function mutateFormDataBeforeCreate(array $data): array

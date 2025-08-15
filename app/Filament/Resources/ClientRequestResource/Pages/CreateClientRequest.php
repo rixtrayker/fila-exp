@@ -8,6 +8,8 @@ use Filament\Resources\Pages\CreateRecord;
 
 class CreateClientRequest extends CreateRecord
 {
+    protected static bool $canCreateAnother = false;
+
     protected static string $resource = ClientRequestResource::class;
 
     protected function getRedirectUrl(): string
