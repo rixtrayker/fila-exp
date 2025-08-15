@@ -45,10 +45,10 @@ class VisitForm
 
         return [
             self::getUserSelect($isMedicalRep, $isDailyVisits),
-            self::getSecondUserSelect(),
             self::getClientSelect($isDailyVisits),
+            // ...self::getDatePickers(),
             self::getCallTypeSelect(),
-            ...self::getDatePickers(),
+            self::getSecondUserSelect(),
             self::getProductsSection(),
             self::getFeedbackField(),
             self::getCommentField(),
@@ -96,12 +96,7 @@ class VisitForm
             ])
             ->required(fn($get) => $get('call_type_id') == CallType::where('name', 'Double')->value('id'))
             ->placeholder('Search name')
-            ->getSearchResultsUsing(fn (string $search) => User::whereHas('roles', function($q) {
-                $q->where('name', 'district-manager');
-            })->where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'))
-            ->options(User::whereHas('roles', function($q) {
-                $q->where('name', 'district-manager');
-            })->pluck('name', 'id'))
+            ->options(options: User::myDistrictManager()->pluck('name', 'id'))
             ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
             ->preload();
     }
@@ -154,10 +149,10 @@ class VisitForm
     private static function getDatePickers(): array
     {
         return [
-            DatePicker::make('next_visit')
-                ->label('Next call time')
-                ->closeOnDateSelection()
-                ->minDate(today()->addDay()),
+            // DatePicker::make('next_visit')
+            //     ->label('Next call time')
+            //     ->closeOnDateSelection()
+            //     ->minDate(today()->addDay()),
             DatePicker::make('visit_date')
                 ->label('Visit Date')
                 ->default(today())

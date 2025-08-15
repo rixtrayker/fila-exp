@@ -93,6 +93,17 @@ class User extends Authenticatable implements FilamentUser
         return $this->belongsToMany(Brick::class);
     }
 
+    public function myManager()
+    {
+        return $this->belongsTo(User::class, 'parent_id');
+    }
+
+    public function scopeMyDistrictManager($query)
+    {
+        $id = auth()->user()->parent_id;
+        return $query->where('id', $id);
+    }
+
     public function areas()
     {
         return $this->belongsToMany(Area::class);
