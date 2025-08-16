@@ -8,8 +8,8 @@ class OfficeWorkStatsService
 {
     public function getOfficeWorkStats(): array
     {
-        $officeWork = OfficeWork::count();
-        $activities = Activity::count();
+        $officeWork = OfficeWork::whereDate('created_at',  today())->count();
+        $activities = Activity::whereDate('date',  today())->count();
         $totalActivities = $activities + $officeWork;
         $color = 'primary';
 
