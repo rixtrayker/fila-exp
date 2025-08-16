@@ -82,6 +82,7 @@ class RolesAndPermissionsSeeder extends Seeder
         'order',
         'plan',
         'vacation-request',
+        'expenses',
     ];
 
     /**
@@ -196,6 +197,7 @@ class RolesAndPermissionsSeeder extends Seeder
         Role::firstOrCreate(['name' => 'country-manager', 'display_name' => 'Country Manager']);
         Role::firstOrCreate(['name' => 'account-manager', 'display_name' => 'Account Manager']);
         Role::firstOrCreate(['name' => 'account', 'display_name' => 'Account']);
+        Role::firstOrCreate(['name' => 'accountant', 'display_name' => 'Accountant']);
     }
 
     /**
@@ -259,6 +261,13 @@ class RolesAndPermissionsSeeder extends Seeder
             'medical-rep',
             'medical-rep@admin.com',
             'medical-rep'
+        );
+
+        // Create accountant user
+        $this->createUserWithRole(
+            'accountant',
+            'accountant@admin.com',
+            'accountant'
         );
 
         // Create test users
