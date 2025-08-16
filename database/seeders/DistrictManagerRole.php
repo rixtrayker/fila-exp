@@ -37,13 +37,17 @@ class DistrictManagerRole extends Seeder
 
         // Add additional permissions for district manager
         $additionalResources = [
+            'bundle' => ['view', 'create', 'update', 'delete'],
+            // 'bundle-distribution' => ['view', 'create', 'update', 'delete'],
             'call-type' => ['view', 'create', 'update', 'delete'],
+            'campaign' => ['view', 'create', 'update', 'delete'],
             'city' => ['view', 'create', 'update', 'delete'],
             'client-request-type' => ['view', 'create', 'update', 'delete'],
             'client-type' => ['view', 'create', 'update', 'delete'],
             'country' => ['view', 'create', 'update', 'delete'],
             'edit-request' => ['view', 'create', 'update', 'delete'],
             'expenses' => ['view', 'create', 'update', 'delete'],
+            'item' => ['view', 'create', 'update', 'delete'],
             'message' => ['view', 'create', 'update', 'delete'],
             'product-category' => ['view', 'create', 'update', 'delete'],
             'region' => ['view', 'create', 'update', 'delete'],

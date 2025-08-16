@@ -32,9 +32,18 @@ class AreaManagerRole extends Seeder
 
         // Clear existing permissions first
         $role->permissions()->detach();
-        
+
         $medicalRepPermissions = $medicalRepRole->permissions->pluck('name')->toArray();
-        $role->syncPermissions($medicalRepPermissions);
+
+        // Add additional permissions for area manager
+        $additionalPermissions = [
+            'item' => ['view', 'create', 'update', 'delete'],
+            'bundle' => ['view', 'create', 'update', 'delete'],
+            'campaign' => ['view', 'create', 'update', 'delete'],
+        ];
+
+        $allPermissions = array_merge($medicalRepPermissions, $additionalPermissions);
+        $role->syncPermissions($allPermissions);
     }
 }
 

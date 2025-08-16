@@ -104,6 +104,10 @@ class Visit extends Model
     {
         return $this->belongsToMany(Product::class,'product_visits');
     }
+    public function campaign()
+    {
+        return $this->belongsTo(Campaign::class);
+    }
     public static function boot()
     {
         parent::boot();
