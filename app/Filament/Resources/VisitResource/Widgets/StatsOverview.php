@@ -39,7 +39,7 @@ class StatsOverview extends BaseWidget
             $this->visitsStats(),
             $this->workStats(),
             $this->coveredClientsStats(),
-            $this->directOrdersStats(),
+            // $this->directOrdersStats(),
         ];
     }
 
