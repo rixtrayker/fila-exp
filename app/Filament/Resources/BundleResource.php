@@ -55,13 +55,12 @@ class BundleResource extends Resource
                 Section::make('Bundle Items')
                     ->schema([
                         Repeater::make('bundle_items')
-                            ->relationship('items')
                             ->schema([
                                 Grid::make(3)
                                     ->schema([
                                         Select::make('item_id')
                                             ->label('Item')
-                                            ->options(Item::active()->pluck('name', 'id'))
+                                            ->options(Item::pluck('name', 'id'))
                                             ->searchable()
                                             ->required(),
                                         TextInput::make('quantity')
@@ -75,8 +74,7 @@ class BundleResource extends Resource
                             ->columns(3)
                             ->defaultItems(1)
                             ->reorderable(false)
-                            ->addActionLabel('Add Item')
-                            ->deleteActionLabel('Remove Item'),
+                            ->addActionLabel('Add Item'),
                     ])
             ]);
     }
@@ -109,6 +107,7 @@ class BundleResource extends Resource
                     ->label('Active Status'),
             ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
@@ -131,6 +130,7 @@ class BundleResource extends Resource
         return [
             'index' => Pages\ListBundles::route('/'),
             'create' => Pages\CreateBundle::route('/create'),
+            'view' => Pages\ViewBundle::route('/{record}'),
             'edit' => Pages\EditBundle::route('/{record}/edit'),
         ];
     }
@@ -146,6 +146,11 @@ class BundleResource extends Resource
     }
 
     public static function canDelete(Model $record): bool
+    {
+        return auth()->user()->hasRole('super-admin');
+    }
+
+    public static function canView(Model $record): bool
     {
         return auth()->user()->hasRole('super-admin');
     }

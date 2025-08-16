@@ -66,8 +66,8 @@ class ItemResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Tables\Filters\TernaryFilter::make('active')
-                    ->label('Active Status'),
+                // Tables\Filters\TernaryFilter::make('active')
+                //     ->label('Active Status'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
