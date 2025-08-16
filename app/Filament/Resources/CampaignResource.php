@@ -51,7 +51,7 @@ class CampaignResource extends Resource
                                 DatePicker::make('start_date')
                                     ->label('Start Date')
                                     ->required()
-                                    ->minDate(now()),
+                                    ->minDate(today()),
                                 DatePicker::make('end_date')
                                     ->label('End Date')
                                     ->required()
@@ -78,19 +78,6 @@ class CampaignResource extends Resource
                 TextColumn::make('end_date')
                     ->date()
                     ->sortable(),
-                TextColumn::make('status')
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'active' => 'success',
-                        'upcoming' => 'warning',
-                        'ended' => 'danger',
-                    })
-                    ->formatStateUsing(function (Campaign $record): string {
-                        if (!$record->active) return 'inactive';
-                        if ($record->start_date->isFuture()) return 'upcoming';
-                        if ($record->end_date->isPast()) return 'ended';
-                        return 'active';
-                    }),
                 IconColumn::make('active')
                     ->boolean()
                     ->sortable(),
