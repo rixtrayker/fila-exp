@@ -31,11 +31,11 @@ class Kernel extends ConsoleKernel
         $schedule->job(new FetchOfficialHolidays)->monthlyOn(1, '00:00');
 
 
-        $schedule->job(new SyncCoverageReportData(today()->subDay(), today()->subDay(), true))->daily()->at('02:00');
-        $schedule->job(new SyncFrequencyReportData(today()->subDay(), today()->subDay(), true))->daily()->at('02:00');
+        // $schedule->job(new SyncCoverageReportData(today()->subDay(), today()->subDay(), true))->daily()->at('02:00');
+        // $schedule->job(new SyncFrequencyReportData(today()->subDay(), today()->subDay(), true))->daily()->at('02:00');
 
         // Clear old coverage report cache daily at 10:00 AM
-        $schedule->command('coverage:clear-old-cache')->daily()->at('10:00');
+        // $schedule->command('coverage:clear-old-cache')->daily()->at('10:00');
     }
 
     /**

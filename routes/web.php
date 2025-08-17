@@ -125,8 +125,8 @@ Route::middleware([
     })->name('dashboard');
 });
 
-Route::get('/admin/ops/run-report-sync', [ReportSyncController::class, 'sync'])
-    ->name('admin.ops.report-sync');
+// Route::get('/admin/ops/run-report-sync', [ReportSyncController::class, 'sync'])
+//     ->name('admin.ops.report-sync');
 
 // Template file download route
 Route::get('/template-files/{templateFile}/download', [TemplateFileController::class, 'download'])
