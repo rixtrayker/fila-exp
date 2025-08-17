@@ -59,7 +59,8 @@ class VisitStatsService
             return $this->getVisitsQuery()
                 ->whereNotNull('plan_id')
                 ->select('client_id')
-                ->distinct();
+                ->distinct()
+                ->get();
         }, 1800);
 
         $clientIds = $clientIds->pluck('client_id');
