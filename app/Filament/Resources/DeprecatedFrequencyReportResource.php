@@ -2,7 +2,10 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\FrequencyReportResource\Pages;
+// use App\Filament\Resources\FrequencyReportResource\Pages; // Deprecated - no longer needed
+use App\Models\Brick;
+use App\Models\Client;
+use App\Models\ClientType;
 use App\Models\Reports\FrequencyReportData;
 use App\Traits\ResourceHasPermission;
 use Filament\Forms;
@@ -14,81 +17,50 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Filament\Tables\Enums\FiltersLayout;
-use Illuminate\Support\Facades\DB;
 
-class FrequencyReportResource extends Resource
+class DeprecatedFrequencyReportResource extends Resource
 {
     use ResourceHasPermission;
-
     protected static ?string $model = FrequencyReportData::class;
-    protected static ?string $label = 'Frequency Report';
-    protected static ?string $navigationLabel = 'Frequency Report';
+    protected static ?string $label = 'Frequency report';
+    protected static ?string $navigationLabel = 'Frequency report';
     protected static ?string $navigationGroup = 'Reports';
-    protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
-    protected static ?string $slug = 'frequency-report-old';
-    protected static ?string $permissionName = 'frequency-report';
+    protected static ?string $navigationIcon = 'heroicon-o-document-text';
+    protected static ?string $slug = 'deprecated-frequency-report';
+    // protected static ?string $permissiodaily targetnName = 'frequency-report';
 
     public static function table(Table $table): Table
     {
         return $table
-            ->defaultPaginationPageOption(25)
+            ->defaultPaginationPageOption(10)
             ->columns([
+                TextColumn::make('client_id')
+                    ->label('ID'),
                 TextColumn::make('client_name')
-                    ->label('Client Name')
                     ->searchable()
-                    ->sortable(),
+                    ->label('Name'),
                 TextColumn::make('client_type_name')
-                    ->label('Client Type')
-                    ->searchable()
-                    ->sortable(),
+                    ->label('Client Type'),
                 TextColumn::make('grade')
-                    ->label('Grade')
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'A' => 'success',
-                        'B' => 'info',
-                        'C' => 'warning',
-                        'N' => 'danger',
-                        'PH' => 'gray',
-                        default => 'gray',
-                    }),
+                    ->label('Grade'),
                 TextColumn::make('brick_name')
-                    ->label('Brick')
-                    ->searchable()
-                    ->sortable(),
+                    ->label('Brick'),
+                // TextColumn::make('brick.area.name')
+                    // ->label('Area'),
                 TextColumn::make('done_visits_count')
-                    ->label('Done Visits')
-                    ->numeric()
                     ->color('success')
-                    ->sortable(),
+                    ->label('Done Visits'),
                 TextColumn::make('pending_visits_count')
-                    ->label('Planned & Pending Visits')
-                    ->numeric()
                     ->color('warning')
-                    ->sortable(),
+                    ->label('Planned & Pending Visits'),
                 TextColumn::make('missed_visits_count')
-                    ->label('Missed Visits')
-                    ->numeric()
                     ->color('danger')
-                    ->sortable(),
+                    ->label('Missed Visits'),
                 TextColumn::make('total_visits_count')
-                    ->label('Total Visits')
-                    ->numeric()
                     ->color('info')
-                    ->sortable(),
+                    ->label('Total Visits'),
                 TextColumn::make('achievement_percentage')
-                    ->label('Achievement %')
-                    ->numeric(
-                        decimalPlaces: 2,
-                        decimalSeparator: '.',
-                        thousandsSeparator: ',',
-                    )
-                    ->color(fn (string $state): string => match (true) {
-                        (float) $state >= 80 => 'success',
-                        (float) $state >= 60 => 'warning',
-                        default => 'danger',
-                    })
-                    ->sortable(),
+                    ->label('Achievement %'),
             ])
             ->filters([
                 Tables\Filters\Filter::make('date_range')
@@ -103,28 +75,21 @@ class FrequencyReportResource extends Resource
                     ]),
                 Tables\Filters\SelectFilter::make('brick_id')
                     ->label('Brick')
-                    ->options(function () {
-                        return DB::table('bricks')->pluck('name', 'id')->toArray();
-                    })
+                    ->options(Brick::all()->pluck('name', 'id'))
                     ->searchable()
                     ->preload()
                     ->multiple(),
                 Tables\Filters\SelectFilter::make('grade')
-                    ->label('Grade')
-                    ->options(['A' => 'A', 'B' => 'B', 'C' => 'C', 'N' => 'N', 'PH' => 'PH'])
-                    ->multiple(),
+                    ->options(['A' => 'A', 'B' => 'B', 'C' => 'C', 'N' => 'N', 'PH' => 'PH']),
                 Tables\Filters\SelectFilter::make('client_type_id')
                     ->label('Client Type')
-                    ->options(function () {
-                        return DB::table('client_types')->pluck('name', 'id')->toArray();
-                    })
+                    ->options(ClientType::all()->pluck('name', 'id'))
                     ->searchable()
                     ->preload()
                     ->multiple(),
             ])
             ->filtersLayout(FiltersLayout::AboveContent)
-            ->paginated([25, 50, 100, 250, 500, 'all'])
-            ->defaultSort('client_name', 'asc')
+            ->paginated([10, 25, 50, 100, 1000, 'all'])
             ->actions([
                 Tables\Actions\Action::make('visit_breakdown')
                     ->label('Visit Breakdown')
@@ -141,7 +106,7 @@ class FrequencyReportResource extends Resource
                         $toDate = $dateFilter['to_date'] ?? now()->endOfMonth();
 
                         $params = [
-                            'client_id' => $record->client_id,
+                            'client_id' => $record->id,
                             'from_date' => Carbon::parse($fromDate)->format('Y-m-d'),
                             'to_date' => Carbon::parse($toDate)->format('Y-m-d'),
                             'strategy' => 'frequency',
@@ -194,21 +159,11 @@ class FrequencyReportResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListFrequencyReports::route('/'),
+            // 'index' => Pages\ListFrequencyReports::route('/'), // Deprecated - no longer needed
         ];
     }
 
     public static function canCreate(): bool
-    {
-        return false;
-    }
-
-    public static function canEdit(Model $record): bool
-    {
-        return false;
-    }
-
-    public static function canDelete(Model $record): bool
     {
         return false;
     }
