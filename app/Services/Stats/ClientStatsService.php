@@ -17,8 +17,8 @@ class ClientStatsService
 
     public function getCoveredClientsStats(): array
     {
-        $coveredClients = $this->visitStatsService->getDailyPlanCoveredClients();
-        $totalClients = $this->visitStatsService->getClientsCount();
+        $coveredClients = $this->visitStatsService->getDailyPlanCoveredPMClients();
+        $totalClients = $this->visitStatsService->getPMClientsCount();
 
         $percentage = round($this->calculatePercentage($coveredClients, $totalClients), 2);
 

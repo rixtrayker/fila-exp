@@ -48,34 +48,37 @@ class VisitStatsService
     /**
      * Get daily plan covered clients
      */
-    public function getDailyPlanCoveredClients(): int
+    public function getDailyPlanCoveredPMClients(): int
     {
         $userId = Auth::id();
         $date = DateHelper::today()->format('Y-m-d');
 
         $visitCacheService = app(VisitCacheService::class);
         $fullCacheKey = $visitCacheService->makePublicCacheKey('visit_stats_daily_plan', $userId, $date);
-        return $visitCacheService->getPublicCached($fullCacheKey, function () {
+        $clientIds = $visitCacheService->getPublicCached($fullCacheKey, function () {
             return $this->getVisitsQuery()
                 ->whereNotNull('plan_id')
                 ->select('client_id')
-                ->distinct()
-                ->count();
+                ->distinct();
         }, 1800);
+
+        $clientIds = $clientIds->pluck('client_id');
+        $clients = Client::whereIn('id', $clientIds)->where('client_type_id', 1)->count();
+        return $clients;
     }
 
     /**
      * Get clients count
      */
-    public function getClientsCount(): int
+    public function getPMClientsCount(): int
     {
         $userId = Auth::id();
         $date = DateHelper::today()->format('Y-m-d');
 
         $visitCacheService = app(VisitCacheService::class);
-        $fullCacheKey = $visitCacheService->makePublicCacheKey('visit_stats_clients_count', $userId, $date);
+        $fullCacheKey = $visitCacheService->makePublicCacheKey('visit_stats_pm_clients_count', $userId, $date);
         return $visitCacheService->getPublicCached($fullCacheKey, function () {
-            return Client::count();
+            return Client::where('client_type_id', 1)->count();
         }, 1800);
     }
 
