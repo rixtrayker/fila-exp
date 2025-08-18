@@ -29,8 +29,8 @@ class CoverageReportExport implements FromCollection, WithHeadings, WithStyles
     {
         return $this->query->get()->map(function ($record) {
             return [
-                $record->user->id,
-                $record->user->name,
+                $record->id,
+                $record->name,
                 $record->area_name,
                 $record->working_days,
                 $record->daily_visit_target,
@@ -38,9 +38,9 @@ class CoverageReportExport implements FromCollection, WithHeadings, WithStyles
                 $record->activities_count,
                 $record->actual_working_days,
                 $record->monthly_visit_target,
-                $record->sops,
+                number_format($record->sops, 2),
                 $record->actual_visits,
-                $record->call_rate,
+                number_format($record->call_rate, 2),
                 $record->total_visits,
             ];
         });

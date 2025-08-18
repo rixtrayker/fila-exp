@@ -15,6 +15,8 @@ use Illuminate\Support\Carbon;
 use Filament\Tables\Enums\FiltersLayout;
 use Illuminate\Support\Facades\DB;
 use App\Models\Scopes\GetMineScope;
+use App\Exports\CoverageReportExport;
+use Filament\Tables\Actions\Action;
 use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Collection;
@@ -125,10 +127,6 @@ class CoverageReportResource extends Resource
                     ->searchable()
                     ->preload()
                     ->multiple(),
-                Tables\Filters\SelectFilter::make('grade')
-                    ->label('Client Grade')
-                    ->options(['A' => 'A', 'B' => 'B', 'C' => 'C', 'N' => 'N', 'PH' => 'PH'])
-                    ->multiple(),
                 Tables\Filters\SelectFilter::make('client_type_id')
                     ->label('Client Type')
                     ->options(function () {
@@ -141,6 +139,16 @@ class CoverageReportResource extends Resource
             ->filtersLayout(FiltersLayout::AboveContent)
             ->paginated([25, 50, 100, 250, 500, 'all'])
             ->defaultSort('name', 'asc')
+            ->headerActions([
+                Action::make('export')
+                    ->label('Export to Excel')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->color('success')
+                    ->action(function () {
+                        $query = static::getEloquentQuery();
+                        return (new CoverageReportExport($query))->download('coverage_report_' . date('Y-m-d_H-i-s') . '.xlsx');
+                    })
+            ])
             ->bulkActions([]);
     }
 
@@ -159,7 +167,6 @@ class CoverageReportResource extends Resource
 
         $filters = [
             'user_id' => $tableFilters['user_id'] ?? null,
-            'grade' => $tableFilters['grade'] ?? null,
             'client_type_id' => $tableFilters['client_type_id'] ?? null,
         ];
 
@@ -179,12 +186,7 @@ class CoverageReportResource extends Resource
         }
 
         // Build filter strings for SQL functions
-        $gradeFilter = null;
         $clientTypeFilter = null;
-
-        if (isset($filters['grade']) && !empty($filters['grade'])) {
-            $gradeFilter = "'" . implode("','", $filters['grade']) . "'";
-        }
 
         if (isset($filters['client_type_id']) && !empty($filters['client_type_id'])) {
             $clientTypeFilter = implode(',', $filters['client_type_id']);
@@ -192,8 +194,8 @@ class CoverageReportResource extends Resource
 
         // Use raw query to avoid triggering model accessors
         $userIdsStr = empty($userIds) ? '0' : implode(',', $userIds);
-        $actualVisitsClause = self::buildVisitSelectClause($fromDate, $toDate, $gradeFilter, $clientTypeFilter);
-        $totalVisitsClause = self::buildTotalVisitSelectClause($fromDate, $toDate, $gradeFilter, $clientTypeFilter);
+        $actualVisitsClause = self::buildVisitSelectClause($fromDate, $toDate, $clientTypeFilter);
+        $totalVisitsClause = self::buildTotalVisitSelectClause($fromDate, $toDate, $clientTypeFilter);
 
         // Build SQL query using our custom functions
         $sql = "
@@ -234,19 +236,13 @@ class CoverageReportResource extends Resource
             ->fromSub($sql, 'coverage_report');
     }
 
-    private static function buildVisitSelectClause(string $fromDate, string $toDate, ?string $gradeFilter, ?string $clientTypeFilter): string
+    private static function buildVisitSelectClause(string $fromDate, string $toDate, ?string $clientTypeFilter): string
     {
-        if ($gradeFilter || $clientTypeFilter) {
+        if ($clientTypeFilter) {
             $joins = " JOIN clients c ON v.client_id = c.id ";
             $conditions = [];
 
-            if ($gradeFilter) {
-                $conditions[] = "c.grade IN ({$gradeFilter})";
-            }
-
-            if ($clientTypeFilter) {
-                $conditions[] = "c.client_type_id IN ({$clientTypeFilter})";
-            }
+            $conditions[] = "c.client_type_id IN ({$clientTypeFilter})";
 
             $whereConditions = !empty($conditions) ? " AND " . implode(' AND ', $conditions) : "";
 
@@ -265,19 +261,13 @@ class CoverageReportResource extends Resource
         }
     }
 
-    private static function buildTotalVisitSelectClause(string $fromDate, string $toDate, ?string $gradeFilter, ?string $clientTypeFilter): string
+    private static function buildTotalVisitSelectClause(string $fromDate, string $toDate, ?string $clientTypeFilter): string
     {
-        if ($gradeFilter || $clientTypeFilter) {
+        if ($clientTypeFilter) {
             $joins = " JOIN clients c ON v.client_id = c.id ";
             $conditions = [];
 
-            if ($gradeFilter) {
-                $conditions[] = "c.grade IN ({$gradeFilter})";
-            }
-
-            if ($clientTypeFilter) {
-                $conditions[] = "c.client_type_id IN ({$clientTypeFilter})";
-            }
+            $conditions[] = "c.client_type_id IN ({$clientTypeFilter})";
 
             $whereConditions = !empty($conditions) ? " AND " . implode(' AND ', $conditions) : "";
 
