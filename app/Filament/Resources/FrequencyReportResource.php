@@ -91,22 +91,22 @@ class FrequencyReportResource extends Resource
                             ->default(today())
                             ->maxDate(today()),
                     ]),
-                Tables\Filters\SelectFilter::make('brick_id')
-                    ->label('Brick')
-                    ->options(function () {
-                        return DB::table('bricks')->pluck('name', 'id')->toArray();
-                    })
-                    ->searchable()
-                    ->preload()
-                    ->multiple(),
-                Tables\Filters\SelectFilter::make('client_type_id')
-                    ->label('Client Type')
-                    ->options(function () {
-                        return DB::table('client_types')->pluck('name', 'id')->toArray();
-                    })
-                    ->searchable()
-                    ->preload()
-                    ->multiple(),
+                // Tables\Filters\SelectFilter::make('brick_id')
+                //     ->label('Brick')
+                //     ->options(function () {
+                //         return DB::table('bricks')->pluck('name', 'id')->toArray();
+                //     })
+                //     ->searchable()
+                //     ->preload()
+                //     ->multiple(),
+                // Tables\Filters\SelectFilter::make('client_type_id')
+                //     ->label('Client Type')
+                //     ->options(function () {
+                //         return DB::table('client_types')->pluck('name', 'id')->toArray();
+                //     })
+                //     ->searchable()
+                //     ->preload()
+                //     ->multiple(),
             ])
             ->filtersLayout(FiltersLayout::AboveContent)
             ->paginated([25, 50, 100, 250, 500, 'all'])
@@ -161,10 +161,10 @@ class FrequencyReportResource extends Resource
             ? $dateRange['to_date']
             : today()->toDateString();
 
-        $filters = [
-            'brick_id' => $tableFilters['brick_id'] ?? null,
-            'client_type_id' => $tableFilters['client_type_id'] ?? null,
-        ];
+        $filters = [];
+        //     'brick_id' => $tableFilters['brick_id'] ?? null,
+        //     'client_type_id' => $tableFilters['client_type_id'] ?? null,
+        // ];
 
         return self::buildFrequencyReportQuery($fromDate, $toDate, $filters);
     }
@@ -175,13 +175,13 @@ class FrequencyReportResource extends Resource
         $brickFilter = null;
         $clientTypeFilter = null;
 
-        if (isset($filters['brick_id']) && !empty($filters['brick_id'])) {
-            $brickFilter = implode(',', $filters['brick_id']);
-        }
+        // if (isset($filters['brick_id']) && !empty($filters['brick_id'])) {
+        //     $brickFilter = implode(',', $filters['brick_id']);
+        // }
 
-        if (isset($filters['client_type_id']) && !empty($filters['client_type_id'])) {
-            $clientTypeFilter = implode(',', $filters['client_type_id']);
-        }
+        // if (isset($filters['client_type_id']) && !empty($filters['client_type_id'])) {
+        //     $clientTypeFilter = implode(',', $filters['client_type_id']);
+        // }
 
         // Build SQL query for frequency report
         $sql = "
