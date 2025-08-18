@@ -130,7 +130,7 @@ class VisitStatsService
         $fullCacheKey = $visitCacheService->makePublicCacheKey('visit_stats_planned_vs_actual', $userId, $date);
         return $visitCacheService->getPublicCached($fullCacheKey, function () {
             $plannedVisits = $this->getVisitsQuery()
-                ->where('status', 'pending')
+                ->whereIn('status', ['pending', 'visited'])
                 ->whereNotNull('plan_id')
                 ->where('visit_date', DateHelper::today())
                 ->count();
@@ -139,8 +139,8 @@ class VisitStatsService
                 ->where('status', 'visited')
                 ->where('visit_date', DateHelper::today())
                 ->count();
-
-            $percentage = $this->calculatePercentage($actualVisits, $plannedVisits);
+            $total = $plannedVisits + $actualVisits;
+            $percentage = $this->calculatePercentage($plannedVisits, $total);
 
             return [
                 'plannedVisits' => $plannedVisits,
