@@ -98,20 +98,35 @@ class DailyPlanSummaryWidget extends Widget
             return 'AM'; // Default fallback
         }
 
-        // Map client types to display types based on CoverageStatsService logic
-        $amTypes = ['Hospital', 'Resuscitation Centre', 'Incubators Centre'];
-        $pmTypes = ['Clinic', 'Poly Clinic'];
-        $pharmacyTypes = ['Pharmacy'];
-
         $typeName = $client->clientType->name;
 
-        if (in_array($typeName, $pharmacyTypes)) {
+        // Check for pharmacy types first (most specific)
+        if (stripos($typeName, 'pharmacy') !== false || stripos($typeName, 'ph') !== false) {
             return 'PH';
-        } elseif (in_array($typeName, $pmTypes)) {
-            return 'PM';
-        } else {
-            return 'AM'; // Default for hospitals and other AM types
         }
+        
+        // Check for PM types (clinics)
+        if (stripos($typeName, 'clinic') !== false || stripos($typeName, 'poly clinic') !== false) {
+            return 'PM';
+        }
+        
+        // Check for AM types (hospitals and medical centers)
+        if (stripos($typeName, 'hospital') !== false || 
+            stripos($typeName, 'resuscitation') !== false || 
+            stripos($typeName, 'incubators') !== false ||
+            stripos($typeName, 'medical center') !== false ||
+            stripos($typeName, 'medical centre') !== false) {
+            return 'AM';
+        }
+
+        // Default fallback - check client grade if available
+        if (isset($client->grade)) {
+            if ($client->grade === 'PH') {
+                return 'PH';
+            }
+        }
+
+        return 'AM'; // Final fallback
     }
 
     public function getTotalClients(): int
