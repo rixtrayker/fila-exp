@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\VisitResource\Tables;
 
+use App\Models\Bundle;
 use App\Models\ClientType;
 use App\Models\User;
 use Filament\Forms\Components\DatePicker;
@@ -60,6 +61,10 @@ class VisitTable
             TextColumn::make('comment')
                 ->limit(100)
                 ->wrap(),
+            TextColumn::make('bundles.name')
+                ->label('Bundles')
+                ->badge()
+                ->separator(','),
         ];
     }
 
@@ -73,6 +78,7 @@ class VisitTable
             self::getDateFilter(),
             self::getGradeFilter(),
             self::getClientTypeFilter(),
+            self::getBundlesFilter(),
             TrashedFilter::make(),
         ];
     }
@@ -161,6 +167,25 @@ class VisitTable
                 if ($data['values']) {
                     return $query->whereHas('client', function ($q) use ($data) {
                         $q->whereIn('client_type_id', $data['values']);
+                    });
+                }
+                return $query;
+            });
+    }
+
+    /**
+     * Get the bundles filter configuration.
+     */
+    private static function getBundlesFilter(): SelectFilter
+    {
+        return SelectFilter::make('bundles')
+            ->label('Bundles')
+            ->multiple()
+            ->options(Bundle::active()->pluck('name', 'id'))
+            ->query(function (Builder $query, array $data): Builder {
+                if ($data['values']) {
+                    return $query->whereHas('bundles', function ($q) use ($data) {
+                        $q->whereIn('bundles.id', $data['values']);
                     });
                 }
                 return $query;

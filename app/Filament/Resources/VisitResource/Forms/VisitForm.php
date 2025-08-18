@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\VisitResource\Forms;
 
+use App\Models\Bundle;
 use App\Models\CallType;
 use App\Models\Client;
 use App\Models\ClientType;
@@ -49,6 +50,7 @@ class VisitForm
             // ...self::getDatePickers(),
             self::getCallTypeSelect(),
             self::getSecondUserSelect(),
+            self::getBundlesSelect(),
             self::getProductsSection(),
             self::getFeedbackField(),
             self::getCommentField(),
@@ -141,6 +143,21 @@ class VisitForm
             ->default(1)
             ->preload()
             ->required();
+    }
+
+    /**
+     * Get the bundles select field.
+     */
+    private static function getBundlesSelect(): Select
+    {
+        return Select::make('bundles')
+            ->label('Bundles')
+            ->multiple()
+            ->relationship('bundles', 'name')
+            ->searchable()
+            ->placeholder('Select bundles')
+            ->options(Bundle::active()->pluck('name', 'id'))
+            ->preload();
     }
 
     /**

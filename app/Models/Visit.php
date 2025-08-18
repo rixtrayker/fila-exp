@@ -104,6 +104,13 @@ class Visit extends Model
     {
         return $this->belongsToMany(Product::class,'product_visits');
     }
+
+    public function bundles()
+    {
+        return $this->belongsToMany(Bundle::class, 'visit_bundles')
+            ->withPivot('quantity', 'campaign_id', 'notes')
+            ->withTimestamps();
+    }
     public function campaign()
     {
         return $this->belongsTo(Campaign::class);
