@@ -24,6 +24,13 @@ class Visit extends Model
     protected $casts = [
         'visit_date' => 'date'
     ];
+
+    protected $appends = ['is_planned'];
+    public function getIsPlannedAttribute()
+    {
+        return $this->plan_id ? true : false;
+    }
+
     protected $fillable = [
         'user_id',
         'plan_id',
