@@ -50,9 +50,50 @@ class VisitCompletionChart extends ChartWidget
                     'data' => $data,
                     'backgroundColor' => $colors,
                     'hoverBackgroundColor' => $colors,
+                    'borderWidth' => 2,
+                    'borderColor' => '#ffffff',
                 ],
             ],
             'labels' => $labels,
+        ];
+    }
+
+    protected function getOptions(): array
+    {
+        return [
+            'plugins' => [
+                'legend' => [
+                    'display' => true,
+                    'position' => 'bottom',
+                    'labels' => [
+                        'padding' => 20,
+                        'usePointStyle' => true,
+                        'font' => [
+                            'size' => 12,
+                        ],
+                    ],
+                ],
+                'tooltip' => [
+                    'enabled' => true,
+                    'mode' => 'index',
+                    'intersect' => false,
+                ],
+            ],
+            'scales' => [
+                'x' => [
+                    'display' => false,
+                ],
+                'y' => [
+                    'display' => false,
+                ],
+            ],
+            'elements' => [
+                'arc' => [
+                    'borderWidth' => 2,
+                ],
+            ],
+            'responsive' => true,
+            'maintainAspectRatio' => false,
         ];
     }
 
