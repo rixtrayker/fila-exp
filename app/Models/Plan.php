@@ -7,6 +7,7 @@ use App\Traits\CanApprove;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 class Plan extends Model
 {
@@ -66,7 +67,10 @@ class Plan extends Model
     protected static function boot()
     {
         static::addGlobalScope(new GetMineScope);
-
+        // after updated approved add clear cache of visit stats
+        static::updated(function ($plan) {
+            Cache::forget('visit_stats_daily_plan_' . $plan->user_id);
+        });
         parent::boot();
     }
 
