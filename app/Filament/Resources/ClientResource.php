@@ -168,7 +168,7 @@ class ClientResource extends Resource
                     ->placeholder("All Clients")
                     ->trueLabel("Active Clients")
                     ->falseLabel("Inactive Clients")
-                    ->default(false)
+                    ->default(true)
                     ->queries(
                         true: fn ($query) => $query->withInactive()->where("active", true),
                         false: fn ($query) => $query->withInactive()->where("active", false),

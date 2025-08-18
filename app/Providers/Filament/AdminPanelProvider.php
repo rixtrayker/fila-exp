@@ -36,7 +36,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('/admin')
-            ->brandName('Avant Garde')
+            ->brandName('Spyro Pharma')
             // ->domain(config('app.url'))
             ->login()
             ->colors([
