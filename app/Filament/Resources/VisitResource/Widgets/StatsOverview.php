@@ -99,7 +99,7 @@ class StatsOverview extends BaseWidget
         $percentage = $stats['percentage'] ?? 0;
         $uncoveredClients = $totalClients - $coveredClients;
 
-        $message = "{$coveredClients} covered  - {$uncoveredClients} uncovered ({$percentage}%)";
+        $message = "{$coveredClients} covered ({$percentage}%) - {$uncoveredClients} uncovered";
 
         return Stat::make('Accounts', $totalClients)
             ->description($message)
