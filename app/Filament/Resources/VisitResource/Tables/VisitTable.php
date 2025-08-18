@@ -48,7 +48,12 @@ class VisitTable
                 ->label('Client Type'),
             TextColumn::make('client.grade')
                 ->label('Client Grade'),
-
+            // label is_planned green for the visit has plan id and grey (secondary) for the visit has no plan id
+            TextColumn::make('is_planned')
+                ->label('Planned')
+                ->badge()
+                ->formatStateUsing(fn ($state) => $state ? 'Planned' : 'Random')
+                ->color(fn ($record) => $record->is_planned ? 'success' : 'gray'),
             // Visit-related columns
             TextColumn::make('visit_date')
                 ->dateTime('d-M-Y')
@@ -79,6 +84,7 @@ class VisitTable
             self::getGradeFilter(),
             self::getClientTypeFilter(),
             self::getBundlesFilter(),
+            self::getPlannedFilter(),
             TrashedFilter::make(),
         ];
     }
@@ -204,6 +210,29 @@ class VisitTable
             Tables\Actions\RestoreAction::make()
                 ->hidden(fn($record) => $record->deleted_at == null)
         ];
+    }
+
+    private static function getPlannedFilter(): SelectFilter
+    {
+        return SelectFilter::make('is_planned')
+            ->label('Planned')
+            ->multiple()
+            ->options([true => 'Planned', false => 'Random'])
+            ->query(function (Builder $query, array $data): Builder {
+                if (empty($data['values'])) {
+                    return $query;
+                }
+
+                $planned = in_array(true, $data['values']);
+                $random = in_array(false, $data['values']);
+
+                return match (true) {
+                    $planned && $random => $query,
+                    $planned => $query->whereNotNull('plan_id'),
+                    $random => $query->whereNull('plan_id'),
+                    default => $query,
+                };
+            });
     }
 
     /**
