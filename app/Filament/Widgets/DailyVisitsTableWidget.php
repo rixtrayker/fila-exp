@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Builder;
 
 class DailyVisitsTableWidget extends BaseWidget
 {
-    protected static ?string $heading = 'Daily Visits';
+    protected static ?string $heading = 'Daily Visits ( Pending Plan visits )';
     protected static ?int $sort = 2;
 
     public function getColumnSpan(): int|string|array
@@ -22,12 +22,14 @@ class DailyVisitsTableWidget extends BaseWidget
     protected function getTableQuery(): Builder
     {
         $today = DateHelper::today();
-        
+
         return Visit::query()
+            ->with(['client.brick', 'client.clientType', 'user', 'callType'])
             ->whereDate('visit_date', $today)
-            ->where('status', 'pending')
-            ->whereNotNull('plan_id')
-            ->with(['client.brick', 'client.clientType', 'user', 'callType']);
+            ->whereIn('status', ['pending', 'visited'])
+            ->whereNotNull('plan_id');
+            // ->orderBy('status', 'asc');
+            // ->orderBy('client.name_en', 'asc');
     }
 
     protected function getTableColumns(): array
@@ -37,7 +39,7 @@ class DailyVisitsTableWidget extends BaseWidget
                 ->label('Client')
                 ->searchable()
                 ->sortable(),
-            
+
             Tables\Columns\TextColumn::make('client.clientType.name')
                 ->label('Type')
                 ->badge()
@@ -47,26 +49,26 @@ class DailyVisitsTableWidget extends BaseWidget
                     str_contains(strtolower($state), 'pharmacy') => 'warning',
                     default => 'gray',
                 }),
-            
+
             Tables\Columns\TextColumn::make('client.brick.name')
                 ->label('Brick')
                 ->sortable(),
-            
+
             Tables\Columns\TextColumn::make('user.name')
                 ->label('Rep')
                 ->sortable()
                 ->toggleable(),
-            
+
             Tables\Columns\TextColumn::make('callType.name')
                 ->label('Call Type')
                 ->badge()
                 ->toggleable(),
-            
+
             Tables\Columns\TextColumn::make('visit_date')
                 ->label('Visit Date')
                 ->date()
                 ->sortable(),
-            
+
             Tables\Columns\TextColumn::make('status')
                 ->label('Status')
                 ->badge()
@@ -107,5 +109,18 @@ class DailyVisitsTableWidget extends BaseWidget
     protected function getDefaultTableSortDirection(): ?string
     {
         return 'asc';
+    }
+
+    protected function getTableGroups(): array
+    {
+        return [
+            'status',
+            // 'user.name',
+        ];
+    }
+
+    protected function getDefaultTableGroup(): ?string
+    {
+        return 'status';
     }
 }
