@@ -25,7 +25,7 @@ class FrequencyReportResource extends Resource
     protected static ?string $navigationLabel = 'Frequency Report';
     protected static ?string $navigationGroup = 'Reports';
     protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
-    protected static ?string $slug = 'frequency-report-old';
+    protected static ?string $slug = 'frequency-report';
     protected static ?string $permissionName = 'frequency-report';
 
     public static function table(Table $table): Table

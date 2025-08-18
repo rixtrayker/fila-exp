@@ -30,7 +30,7 @@ class CoverageReportResource extends Resource
     protected static ?string $navigationLabel = 'Coverage Report';
     protected static ?string $navigationGroup = 'Reports';
     protected static ?string $navigationIcon = 'heroicon-o-chart-bar';
-    protected static ?string $slug = 'coverage-report-old';
+    protected static ?string $slug = 'coverage-report';
     protected static ?string $permissionName = 'coverage-report';
 
     public static function table(Table $table): Table
