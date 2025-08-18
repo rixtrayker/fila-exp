@@ -3,7 +3,6 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\CoverageReportResource\Pages;
-use App\Models\Reports\CoverageReportData;
 use App\Traits\ResourceHasPermission;
 use Filament\Forms;
 use Filament\Resources\Resource;
@@ -24,7 +23,7 @@ class CoverageReportResource extends Resource
 {
     use ResourceHasPermission;
 
-    protected static ?string $model = CoverageReportData::class;
+    protected static ?string $model = \App\Models\User::class;
     protected static ?string $label = 'Coverage Report';
     protected static ?string $navigationLabel = 'Coverage Report';
     protected static ?string $navigationGroup = 'Reports';
@@ -116,19 +115,6 @@ class CoverageReportResource extends Resource
                             ->default(today())
                             ->maxDate(today()),
                     ]),
-                Tables\Filters\SelectFilter::make('area')
-                    ->label('Area')
-                    ->options(function () {
-                        return DB::table('areas')
-                            ->join('area_user', 'areas.id', '=', 'area_user.area_id')
-                            ->join('users', 'area_user.user_id', '=', 'users.id')
-                            ->whereIn('users.id', GetMineScope::getUserIds())
-                            ->pluck('areas.name', 'areas.id')
-                            ->toArray();
-                    })
-                    ->searchable()
-                    ->preload()
-                    ->multiple(),
                 Tables\Filters\SelectFilter::make('user_id')
                     ->label('User')
                     ->options(function () {
@@ -158,24 +144,6 @@ class CoverageReportResource extends Resource
             ->defaultSort('name', 'asc')
             ->bulkActions([]);
     }
-    // use the getTableRecords instead of table query
-    // public static function getTableRecords(): Collection | Paginator | CursorPaginator
-    // {
-    //     $query = self::getQuery();
-
-    //     return $query->get();
-    // }
-    public static function getRecords(): Collection | Paginator | CursorPaginator
-    {
-        return self::getQuery()->get();
-        // return $this->getLivewire()->getTableRecords();
-    }
-
-    // empty getEloquentQuery
-    // public static function getEloquentQuery(): EloquentBuilder
-    // {
-    //     return new EloquentBuilder(self::getQuery());
-    // }
 
     public static function getEloquentQuery(): Builder
     {
@@ -191,16 +159,18 @@ class CoverageReportResource extends Resource
             : today()->toDateString();
 
         $filters = [
-            'area' => $tableFilters['area'] ?? null,
             'user_id' => $tableFilters['user_id'] ?? null,
             'grade' => $tableFilters['grade'] ?? null,
             'client_type_id' => $tableFilters['client_type_id'] ?? null,
         ];
 
-        // Build custom query with correct calculations
+        return self::buildCoverageReportQuery($fromDate, $toDate, $filters);
+    }
+
+    private static function buildCoverageReportQuery(string $fromDate, string $toDate, array $filters): Builder
+    {
         $userIds = GetMineScope::getUserIds();
 
-        // If no user IDs from scope, use all users (for admin purposes)
         if (empty($userIds)) {
             $userIds = DB::table('users')->pluck('id')->toArray();
         }
@@ -209,65 +179,113 @@ class CoverageReportResource extends Resource
             $userIds = array_intersect($userIds, $filters['user_id']);
         }
 
-        $query = DB::table('users')
-            ->select([
-                'users.id',
-                'users.name',
-                DB::raw('COALESCE(GROUP_CONCAT(DISTINCT areas.name), "") as area_name'),
-                DB::raw('COUNT(DISTINCT DATE(visits.visit_date)) as working_days'),
-                DB::raw('8 as daily_visit_target'), // Default daily target of 8
-                DB::raw('COUNT(DISTINCT DATE(visits.visit_date)) * 8 as monthly_visit_target'),
-                // activities and office work is wrong . . .. . .
-                DB::raw('COUNT(CASE WHEN visits.status = "office_work" THEN 1 END) as office_work_count'),
-                DB::raw('COUNT(CASE WHEN visits.status = "activity" THEN 1 END) as activities_count'),
-                DB::raw('COUNT(DISTINCT CASE WHEN visits.status = "visited" THEN DATE(visits.visit_date) END) as actual_working_days'),
-                DB::raw('COUNT(CASE WHEN visits.status = "visited" THEN 1 END) as actual_visits'),
-                // sops is actual visits / (8 * actual working days)
-                // is multiplied by 100 then rounded to 2 decimal places
-                DB::raw('CASE
-                    WHEN COUNT(DISTINCT CASE WHEN visits.status = "visited" THEN DATE(visits.visit_date) END) > 0
-                    THEN ROUND((COUNT(CASE WHEN visits.status = "visited" THEN 1 END) / (8 * COUNT(DISTINCT CASE WHEN visits.status = "visited" THEN DATE(visits.visit_date) END))) * 100, 2)
-                    ELSE 0.00
-                END as sops'),
-                // call rate is how many visits per date so it's calculated: actual visits / working days
-                // call rate = sum of actual visits / sum of actual working days
-                DB::raw(value: 'ROUND(SUM(CASE WHEN visits.status = "visited" THEN 1 ELSE 0 END) / SUM(CASE WHEN visits.status = "visited" THEN 1 ELSE 0 END), 2) as call_rate'),
-                DB::raw('COUNT(*) as total_visits'),
-            ])
-            ->leftJoin('area_user', 'users.id', '=', 'area_user.user_id')
-            ->leftJoin('areas', 'area_user.area_id', '=', 'areas.id')
-            ->leftJoin('visits', function ($join) use ($fromDate, $toDate, $filters) {
-                $join->on('users.id', '=', 'visits.user_id')
-                     ->whereBetween('visits.visit_date', [$fromDate, $toDate])
-                     ->whereNull('visits.deleted_at');
-
-                // Apply grade filter if specified
-                if (isset($filters['grade']) && !empty($filters['grade'])) {
-                    $join->join('clients', 'visits.client_id', '=', 'clients.id')
-                         ->whereIn('clients.grade', $filters['grade']);
-                }
-
-                // Apply client type filter if specified
-                if (isset($filters['client_type_id']) && !empty($filters['client_type_id'])) {
-                    if (!isset($filters['grade'])) {
-                        $join->join('clients', 'visits.client_id', '=', 'clients.id');
-                    }
-                    $join->whereIn('clients.client_type_id', $filters['client_type_id']);
-                }
-            })
-            ->whereIn('users.id', $userIds)
-            ->groupBy('users.id', 'users.name');
-
-        // Apply area filter if specified
-        if (isset($filters['area']) && !empty($filters['area'])) {
-            $query->whereIn('areas.id', $filters['area']);
+        // Build filter strings for SQL functions
+        $gradeFilter = null;
+        $clientTypeFilter = null;
+        
+        if (isset($filters['grade']) && !empty($filters['grade'])) {
+            $gradeFilter = "'" . implode("','", $filters['grade']) . "'";
+        }
+        
+        if (isset($filters['client_type_id']) && !empty($filters['client_type_id'])) {
+            $clientTypeFilter = implode(',', $filters['client_type_id']);
         }
 
-        // Only include users with actual visits or office work
-        $query->havingRaw('COUNT(*) > 0');
+        $query = \App\Models\User::query()
+            ->selectRaw("
+                users.id,
+                users.name,
+                get_working_calendar_days('{$fromDate}', '{$toDate}') as working_days,
+                8 as daily_visit_target,
+                get_working_calendar_days('{$fromDate}', '{$toDate}') * 8 as monthly_visit_target,
+                (
+                    SELECT COUNT(*) 
+                    FROM office_works ow 
+                    WHERE ow.user_id = users.id 
+                      AND DATE(ow.time_from) BETWEEN '{$fromDate}' AND '{$toDate}'
+                ) as office_work_count,
+                (
+                    SELECT COUNT(*) 
+                    FROM activities a 
+                    WHERE a.user_id = users.id 
+                      AND DATE(a.date) BETWEEN '{$fromDate}' AND '{$toDate}' 
+                      AND a.deleted_at IS NULL
+                ) as activities_count,
+                get_user_actual_working_days(users.id, '{$fromDate}', '{$toDate}') as actual_working_days,
+                " . self::buildVisitSelectClause($fromDate, $toDate, $gradeFilter, $clientTypeFilter) . " as actual_visits,
+                get_user_call_rate(users.id, '{$fromDate}', '{$toDate}') as call_rate,
+                get_user_sops(users.id, '{$fromDate}', '{$toDate}', 8) as sops,
+                " . self::buildTotalVisitSelectClause($fromDate, $toDate, $gradeFilter, $clientTypeFilter) . " as total_visits
+            ")
+            ->whereIn('users.id', $userIds)
+            ->havingRaw("
+                " . self::buildTotalVisitSelectClause($fromDate, $toDate, $gradeFilter, $clientTypeFilter) . " > 0
+            ");
 
         return $query;
     }
+
+    private static function buildVisitSelectClause(string $fromDate, string $toDate, ?string $gradeFilter, ?string $clientTypeFilter): string
+    {
+        if ($gradeFilter || $clientTypeFilter) {
+            $joins = " JOIN clients c ON v.client_id = c.id ";
+            $conditions = [];
+            
+            if ($gradeFilter) {
+                $conditions[] = "c.grade IN ({$gradeFilter})";
+            }
+            
+            if ($clientTypeFilter) {
+                $conditions[] = "c.client_type_id IN ({$clientTypeFilter})";
+            }
+            
+            $whereConditions = !empty($conditions) ? " AND " . implode(' AND ', $conditions) : "";
+            
+            return "(
+                SELECT COUNT(*) 
+                FROM visits v
+                {$joins}
+                WHERE (v.user_id = users.id OR v.second_user_id = users.id)
+                  AND v.status = 'visited'
+                  AND DATE(v.visit_date) BETWEEN '{$fromDate}' AND '{$toDate}'
+                  AND v.deleted_at IS NULL
+                  {$whereConditions}
+            )";
+        } else {
+            return "get_user_actual_visits(users.id, '{$fromDate}', '{$toDate}')";
+        }
+    }
+
+    private static function buildTotalVisitSelectClause(string $fromDate, string $toDate, ?string $gradeFilter, ?string $clientTypeFilter): string
+    {
+        if ($gradeFilter || $clientTypeFilter) {
+            $joins = " JOIN clients c ON v.client_id = c.id ";
+            $conditions = [];
+            
+            if ($gradeFilter) {
+                $conditions[] = "c.grade IN ({$gradeFilter})";
+            }
+            
+            if ($clientTypeFilter) {
+                $conditions[] = "c.client_type_id IN ({$clientTypeFilter})";
+            }
+            
+            $whereConditions = !empty($conditions) ? " AND " . implode(' AND ', $conditions) : "";
+            
+            return "(
+                SELECT COUNT(*) 
+                FROM visits v
+                {$joins}
+                WHERE (v.user_id = users.id OR v.second_user_id = users.id)
+                  AND DATE(v.visit_date) BETWEEN '{$fromDate}' AND '{$toDate}'
+                  AND v.deleted_at IS NULL
+                  {$whereConditions}
+            )";
+        } else {
+            return "get_user_total_visits(users.id, '{$fromDate}', '{$toDate}')";
+        }
+    }
+
 
     public static function getPages(): array
     {
