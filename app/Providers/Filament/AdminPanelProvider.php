@@ -42,15 +42,7 @@ class AdminPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Blue,
             ])
-            ->resources([
-                // Explicitly list only the resources we want to load
-                // This prevents deprecated resources from being loaded
-                \App\Filament\Resources\CoverageReportResource::class,
-                \App\Filament\Resources\FrequencyReportResource::class,
-                \App\Filament\Resources\VisitPerformanceReportResource::class,
-                \App\Filament\Resources\ClientCoverageReportResource::class,
-                // Add other active resources here as needed
-            ])
+            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
                 Pages\Dashboard::class,
