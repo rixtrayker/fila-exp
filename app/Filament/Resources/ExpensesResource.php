@@ -281,6 +281,16 @@ class ExpensesResource extends Resource
         ];
     }
 
+    public static function canView(Model $record): bool
+    {
+        return auth()->user()->hasRole(['medical-rep', 'super-admin', 'accountant', 'accountant-manager']);
+    }
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->hasRole(['medical-rep', 'super-admin', 'accountant', 'accountant-manager']);
+    }
+
     public static function canCreate(): bool
     {
         return auth()->user()->hasRole(['medical-rep', 'super-admin']);

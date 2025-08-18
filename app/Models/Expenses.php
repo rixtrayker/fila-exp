@@ -78,6 +78,8 @@ class Expenses extends Model
     public static function boot()
     {
         parent::boot();
-        static::addGlobalScope(new GetMineScope);
+        if (!auth()->user()->hasRole('accountant')) {
+            static::addGlobalScope(new GetMineScope);
+        }
     }
 }
