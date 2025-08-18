@@ -167,4 +167,9 @@ class DeprecatedFrequencyReportResource extends Resource
     {
         return false;
     }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false; // Deprecated resource - do not show in navigation
+    }
 }
