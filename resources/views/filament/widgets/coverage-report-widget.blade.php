@@ -66,7 +66,7 @@
                 </div>
             </div>
 
-            <!-- Chart -->
+            {{-- <!-- Chart -->
             <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow border dark:border-gray-700">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Coverage Report - {{ $selectedType }}</h3>
                 <div class="h-96">
@@ -80,12 +80,12 @@
 
                     <canvas id="coverageChart-{{ $this->getId() }}" width="400" height="200"></canvas>
                 </div>
-            </div>
+            </div> --}}
         </div>
 
         <!-- Include Chart.js if not already loaded -->
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        
+        {{-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
         <script>
             document.addEventListener('livewire:init', function () {
                 let chart = null;
@@ -156,6 +156,6 @@
                     setTimeout(initChart, 100);
                 });
             });
-        </script>
+        </script> --}}
     </x-filament::section>
 </x-filament-widgets::widget>
