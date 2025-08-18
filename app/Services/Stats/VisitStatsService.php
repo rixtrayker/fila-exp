@@ -63,7 +63,11 @@ class VisitStatsService
                 ->get();
         }, 1800);
 
-        $clientIds = $clientIds->pluck('client_id');
+        // it's not a query, it's a collection, pluck the client_id won't work
+        // so we need to iterate over the collection and get the client_id
+        $clientIds = $clientIds->map(function ($item) {
+            return $item->client_id;
+        });
         $clients = Client::whereIn('id', $clientIds)->where('client_type_id', 1)->count();
         return $clients;
     }
