@@ -18,11 +18,21 @@ class VisitTable
 {
     public static function table(Table $table): Table
     {
-        return $table
+        $isBreakdown = request()->get('breakdown') === 'true';
+
+        $table = $table
             ->columns(self::getColumns())
             ->filters(self::getFilters())
             ->actions(self::getActions())
             ->bulkActions(self::getBulkActions());
+
+        if ($isBreakdown) {
+            $table = $table
+                ->paginated(false)
+                ->modifyQueryUsing(fn (Builder $query): Builder => $query->limit(1000));
+        }
+
+        return $table;
     }
 
     /**
@@ -30,7 +40,9 @@ class VisitTable
      */
     private static function getColumns(): array
     {
-        return [
+        $isBreakdown = request()->get('breakdown') === 'true';
+
+        $columns = [
             // User-related columns
             TextColumn::make('user.name')
                 ->label('M.Rep')
@@ -48,6 +60,33 @@ class VisitTable
                 ->label('Client Type'),
             TextColumn::make('client.grade')
                 ->label('Client Grade'),
+        ];
+
+        // Add status column conditionally for breakdown mode
+        if ($isBreakdown) {
+            $columns[] = TextColumn::make('status')
+                ->label('Status')
+                ->badge()
+                ->color(fn (string $state): string => match ($state) {
+                    'visited' => 'success',
+                    'pending' => 'warning',
+                    'cancelled' => 'danger',
+                    'planned' => 'info',
+                    'missed' => 'gray',
+                    default => 'gray',
+                })
+                ->icon(fn (string $state): string => match ($state) {
+                    'visited' => 'heroicon-m-check-circle',
+                    'pending' => 'heroicon-m-clock',
+                    'cancelled' => 'heroicon-m-x-circle',
+                    'planned' => 'heroicon-m-calendar',
+                    'missed' => 'heroicon-m-exclamation-circle',
+                    default => 'heroicon-m-question-mark-circle',
+                });
+        }
+
+        // Continue with other columns
+        $columns = array_merge($columns, [
             // label is_planned green for the visit has plan id and grey (secondary) for the visit has no plan id
             TextColumn::make('is_planned')
                 ->label('Planned')
@@ -70,7 +109,9 @@ class VisitTable
                 ->label('Bundles')
                 ->badge()
                 ->separator(','),
-        ];
+        ]);
+
+        return $columns;
     }
 
     /**
@@ -106,15 +147,16 @@ class VisitTable
                     ->options(User::allWithRole('district-manager')->getMine()->pluck('name', 'id')),
             ])
             ->query(function (Builder $query, array $data): Builder {
-                return $query
-                    ->when(
-                        $data['user_id'],
-                        fn (Builder $query, $userIds): Builder => $query->whereIn('user_id', $userIds)
-                    )
-                    ->when(
-                        $data['second_user_id'],
-                        fn (Builder $query, $secondIds): Builder => $query->orWhereIn('second_user_id', $secondIds)
-                    );
+                $userIds = $data['user_id'] ?? [];
+
+                if (!empty($userIds)) {
+                    $query->where(function (Builder $nested) use ($userIds) {
+                        $nested->whereIn('user_id', $userIds);
+                        $nested->orWhereIn('second_user_id', $userIds);
+                    });
+                }
+
+                return $query;
             });
     }
 
@@ -203,12 +245,14 @@ class VisitTable
      */
     private static function getActions(): array
     {
+        $isBreakdown = request()->get('breakdown') === 'true';
+
         return [
             Tables\Actions\ViewAction::make(),
             Tables\Actions\DeleteAction::make()
-                ->hidden(auth()->user()->hasRole('medical-rep')),
+                ->hidden(fn() => auth()->user()->hasRole('medical-rep') || $isBreakdown),
             Tables\Actions\RestoreAction::make()
-                ->hidden(fn($record) => $record->deleted_at == null)
+                ->hidden(fn($record) => $record->deleted_at == null || $isBreakdown)
         ];
     }
 
@@ -240,6 +284,13 @@ class VisitTable
      */
     private static function getBulkActions(): array
     {
+        $isBreakdown = request()->get('breakdown') === 'true';
+
+        // Disable bulk actions in breakdown mode
+        if ($isBreakdown) {
+            return [];
+        }
+
         return [
             Tables\Actions\DeleteBulkAction::make(),
             Tables\Actions\RestoreBulkAction::make(),

@@ -155,9 +155,10 @@ class CoverageReportResource extends Resource
 
                         $params = [
                             'breakdown' => 'true',
+                            'user_id' => [$record->id],
                             'tableFilters' => [
                                 'id' => [
-                                    'user_id' => [0=>$record->user_id]
+                                    'user_id' => [$record->id]
                                 ],
                                 'visit_date' => [
                                     'from_date' => Carbon::parse($fromDate)->format('Y-m-d'),
