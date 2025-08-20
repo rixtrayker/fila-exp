@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\FrequencyReportResource\Pages;
 use App\Models\FrequencyReportRow;
 use App\Traits\ResourceHasPermission;
+// use App\Traits\HasAreaBrickSecurity;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Tables\Table;
@@ -19,6 +20,7 @@ use Illuminate\Support\Facades\DB;
 class FrequencyReportResource extends Resource
 {
     use ResourceHasPermission;
+    // use HasAreaBrickSecurity;
 
     protected static ?string $model = FrequencyReportRow::class;
     protected static ?string $label = 'Frequency Report';
@@ -126,22 +128,21 @@ class FrequencyReportResource extends Resource
                         $toDate = $dateFilter['to_date'] ?? now()->endOfMonth();
 
                         $params = [
-                            'client_id' => $record->client_id,
-                            'from_date' => Carbon::parse($fromDate)->format('Y-m-d'),
-                            'to_date' => Carbon::parse($toDate)->format('Y-m-d'),
-                            'strategy' => 'frequency',
+                            'breakdown' => 'true',
+                            'tableFilters' => [
+                                'visit_date' => [
+                                    'from_date' => Carbon::parse($fromDate)->format('Y-m-d'),
+                                    'to_date' => Carbon::parse($toDate)->format('Y-m-d')
+                                ]
+                            ]
                         ];
 
-                        // Add additional filters if they exist
-                        // if ($brickFilter) {
-                        //     $params['brick_id'] = is_array($brickFilter) ? implode(',', $brickFilter) : $brickFilter;
-                        // }
+                        // Add client filter using the client_type_id filter that exists in VisitTable
+                        // We'll filter by the specific client by using grade filter as workaround
+                        // Or we can add a direct client filter to the visits
+                        $params['client_id'] = $record->client_id;
 
-                        // if ($clientTypeFilter) {
-                        //     $params['client_type_id'] = is_array($clientTypeFilter) ? implode(',', $clientTypeFilter) : $clientTypeFilter;
-                        // }
-
-                        return route('filament.admin.pages.visit-breakdown', $params);
+                        return route('filament.admin.resources.visits.index', $params);
                     })
                     ->openUrlInNewTab(),
             ])
@@ -254,7 +255,10 @@ class FrequencyReportResource extends Resource
             WHERE c.active = 1
         ";
 
-        // Add filters if they exist
+        // // Add security filter for user's allowed bricks using the trait method
+        // $sql .= self::getBrickSecurityWhereClause('c.brick_id');
+
+        // // Add additional filters if they exist
         if ($brickFilter) {
             $sql .= " AND c.brick_id IN ({$brickFilter})";
         }

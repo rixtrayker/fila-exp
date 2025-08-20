@@ -139,6 +139,42 @@ class CoverageReportResource extends Resource
             ->filtersLayout(FiltersLayout::AboveContent)
             ->paginated([25, 50, 100, 250, 500, 'all'])
             ->defaultSort('name', 'asc')
+            ->actions([
+                Tables\Actions\Action::make('visit_breakdown')
+                    ->label('Visit Breakdown')
+                    ->icon('heroicon-o-clipboard-document-list')
+                    ->color('primary')
+                    ->url(function (Model $record, Table $table): string {
+                        // Get all current table filters
+                        $dateFilter = $table->getFilter('date_range')?->getState() ?? [];
+                        $userFilter = $table->getFilter('user_id')?->getState() ?? null;
+                        $clientTypeFilter = $table->getFilter('client_type_id')?->getState() ?? null;
+
+                        $fromDate = $dateFilter['from_date'] ?? now()->startOfMonth();
+                        $toDate = $dateFilter['to_date'] ?? now()->endOfMonth();
+
+                        $params = [
+                            'breakdown' => 'true',
+                            'tableFilters' => [
+                                'id' => [
+                                    'user_id' => [0=>$record->user_id]
+                                ],
+                                'visit_date' => [
+                                    'from_date' => Carbon::parse($fromDate)->format('Y-m-d'),
+                                    'to_date' => Carbon::parse($toDate)->format('Y-m-d')
+                                ]
+                            ]
+                        ];
+
+                        // // Add additional filters if they exist
+                        // if ($clientTypeFilter) {
+                        //     $params['tableFilters']['client_type_id'] = ['values' => is_array($clientTypeFilter) ? $clientTypeFilter : [$clientTypeFilter]];
+                        // }
+
+                        return route('filament.admin.resources.visits.index', $params);
+                    })
+                    ->openUrlInNewTab(),
+            ])
             ->headerActions([
                 Action::make('export')
                     ->label('Export to Excel')
@@ -197,15 +233,45 @@ class CoverageReportResource extends Resource
         $actualVisitsClause = self::buildVisitSelectClause($fromDate, $toDate, $clientTypeFilter);
         $totalVisitsClause = self::buildTotalVisitSelectClause($fromDate, $toDate, $clientTypeFilter);
 
-        // Build SQL query using our custom functions
+        // Build SQL query using standard SQL instead of custom functions
         $sql = "
             SELECT
                 u.id,
                 u.name,
                 COALESCE(GROUP_CONCAT(DISTINCT a.name SEPARATOR ', '), 'No Area') as area_name,
-                get_working_calendar_days('{$fromDate}', '{$toDate}') as working_days,
+                (
+                    SELECT COUNT(DISTINCT DATE(cal.date))
+                    FROM (
+                        SELECT DATE('{$fromDate}') + INTERVAL (a.a + b.a * 10 + c.a * 100) DAY as date
+                        FROM (SELECT 0 as a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) as a
+                        CROSS JOIN (SELECT 0 as a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) as b
+                        CROSS JOIN (SELECT 0 as a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) as c
+                    ) cal
+                    WHERE cal.date BETWEEN '{$fromDate}' AND '{$toDate}'
+                      AND DAYOFWEEK(cal.date) NOT IN (1, 7)
+                      AND cal.date NOT IN (
+                          SELECT DATE(oh.date)
+                          FROM official_holidays oh
+                          WHERE DATE(oh.date) BETWEEN '{$fromDate}' AND '{$toDate}'
+                      )
+                ) as working_days,
                 8 as daily_visit_target,
-                get_working_calendar_days('{$fromDate}', '{$toDate}') * 8 as monthly_visit_target,
+                (
+                    SELECT COUNT(DISTINCT DATE(cal.date))
+                    FROM (
+                        SELECT DATE('{$fromDate}') + INTERVAL (a.a + b.a * 10 + c.a * 100) DAY as date
+                        FROM (SELECT 0 as a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) as a
+                        CROSS JOIN (SELECT 0 as a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) as b
+                        CROSS JOIN (SELECT 0 as a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) as c
+                    ) cal
+                    WHERE cal.date BETWEEN '{$fromDate}' AND '{$toDate}'
+                      AND DAYOFWEEK(cal.date) NOT IN (1, 7)
+                      AND cal.date NOT IN (
+                          SELECT DATE(oh.date)
+                          FROM official_holidays oh
+                          WHERE DATE(oh.date) BETWEEN '{$fromDate}' AND '{$toDate}'
+                      )
+                ) * 8 as monthly_visit_target,
                 (
                     SELECT COUNT(*)
                     FROM office_works ow
@@ -218,10 +284,197 @@ class CoverageReportResource extends Resource
                     WHERE act.user_id = u.id
                       AND DATE(act.date) BETWEEN '{$fromDate}' AND '{$toDate}'
                 ) as activities_count,
-                get_user_actual_working_days(u.id, '{$fromDate}', '{$toDate}') as actual_working_days,
+                (
+                    SELECT COUNT(DISTINCT DATE(cal.date))
+                    FROM (
+                        SELECT DATE('{$fromDate}') + INTERVAL (a.a + b.a * 10 + c.a * 100) DAY as date
+                        FROM (SELECT 0 as a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) as a
+                        CROSS JOIN (SELECT 0 as a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) as b
+                        CROSS JOIN (SELECT 0 as a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) as c
+                    ) cal
+                    WHERE cal.date BETWEEN '{$fromDate}' AND '{$toDate}'
+                      AND DAYOFWEEK(cal.date) NOT IN (1, 7)
+                      AND cal.date NOT IN (
+                          SELECT DATE(oh.date)
+                          FROM official_holidays oh
+                          WHERE DATE(oh.date) BETWEEN '{$fromDate}' AND '{$toDate}'
+                      )
+                      AND (
+                          EXISTS (
+                              SELECT 1 FROM visits v
+                              WHERE (v.user_id = u.id OR v.second_user_id = u.id)
+                                AND DATE(v.visit_date) = cal.date
+                                AND v.deleted_at IS NULL
+                          )
+                          OR EXISTS (
+                              SELECT 1 FROM office_works ow
+                              WHERE ow.user_id = u.id
+                                AND DATE(ow.time_from) = cal.date
+                          )
+                          OR EXISTS (
+                              SELECT 1 FROM activities act
+                              WHERE act.user_id = u.id
+                                AND DATE(act.date) = cal.date
+                          )
+                      )
+                ) as actual_working_days,
                 {$actualVisitsClause} as actual_visits,
-                get_user_call_rate(u.id, '{$fromDate}', '{$toDate}') as call_rate,
-                get_user_sops(u.id, '{$fromDate}', '{$toDate}', 8) as sops,
+                (
+                    SELECT
+                        CASE
+                            WHEN (
+                                SELECT COUNT(DISTINCT DATE(cal.date))
+                                FROM (
+                                    SELECT DATE('{$fromDate}') + INTERVAL (a.a + b.a * 10 + c.a * 100) DAY as date
+                                    FROM (SELECT 0 as a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) as a
+                                    CROSS JOIN (SELECT 0 as a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) as b
+                                    CROSS JOIN (SELECT 0 as a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) as c
+                                ) cal
+                                WHERE cal.date BETWEEN '{$fromDate}' AND '{$toDate}'
+                                  AND DAYOFWEEK(cal.date) NOT IN (1, 7)
+                                  AND cal.date NOT IN (
+                                      SELECT DATE(oh.date)
+                                      FROM official_holidays oh
+                                      WHERE DATE(oh.date) BETWEEN '{$fromDate}' AND '{$toDate}'
+                                  )
+                                  AND (
+                                      EXISTS (
+                                          SELECT 1 FROM visits v
+                                          WHERE (v.user_id = u.id OR v.second_user_id = u.id)
+                                            AND DATE(v.visit_date) = cal.date
+                                            AND v.deleted_at IS NULL
+                                      )
+                                      OR EXISTS (
+                                          SELECT 1 FROM office_works ow
+                                          WHERE ow.user_id = u.id
+                                            AND DATE(ow.time_from) = cal.date
+                                      )
+                                      OR EXISTS (
+                                          SELECT 1 FROM activities act
+                                          WHERE act.user_id = u.id
+                                            AND DATE(act.date) = cal.date
+                                      )
+                                  )
+                            ) > 0
+                            THEN ROUND(
+                                {$actualVisitsClause} / (
+                                    SELECT COUNT(DISTINCT DATE(cal.date))
+                                    FROM (
+                                        SELECT DATE('{$fromDate}') + INTERVAL (a.a + b.a * 10 + c.a * 100) DAY as date
+                                        FROM (SELECT 0 as a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) as a
+                                        CROSS JOIN (SELECT 0 as a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) as b
+                                        CROSS JOIN (SELECT 0 as a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) as c
+                                    ) cal
+                                    WHERE cal.date BETWEEN '{$fromDate}' AND '{$toDate}'
+                                      AND DAYOFWEEK(cal.date) NOT IN (1, 7)
+                                      AND cal.date NOT IN (
+                                          SELECT DATE(oh.date)
+                                          FROM official_holidays oh
+                                          WHERE DATE(oh.date) BETWEEN '{$fromDate}' AND '{$toDate}'
+                                      )
+                                      AND (
+                                          EXISTS (
+                                              SELECT 1 FROM visits v
+                                              WHERE (v.user_id = u.id OR v.second_user_id = u.id)
+                                                AND DATE(v.visit_date) = cal.date
+                                                AND v.deleted_at IS NULL
+                                          )
+                                          OR EXISTS (
+                                              SELECT 1 FROM office_works ow
+                                              WHERE ow.user_id = u.id
+                                                AND DATE(ow.time_from) = cal.date
+                                          )
+                                          OR EXISTS (
+                                              SELECT 1 FROM activities act
+                                              WHERE act.user_id = u.id
+                                                AND DATE(act.date) = cal.date
+                                          )
+                                      )
+                                ),
+                                2
+                            )
+                            ELSE 0
+                        END
+                ) as call_rate,
+                (
+                    SELECT
+                        CASE
+                            WHEN (
+                                SELECT COUNT(DISTINCT DATE(cal.date))
+                                FROM (
+                                    SELECT DATE('{$fromDate}') + INTERVAL (a.a + b.a * 10 + c.a * 100) DAY as date
+                                    FROM (SELECT 0 as a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) as a
+                                    CROSS JOIN (SELECT 0 as a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) as b
+                                    CROSS JOIN (SELECT 0 as a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) as c
+                                ) cal
+                                WHERE cal.date BETWEEN '{$fromDate}' AND '{$toDate}'
+                                  AND DAYOFWEEK(cal.date) NOT IN (1, 7)
+                                  AND cal.date NOT IN (
+                                      SELECT DATE(oh.date)
+                                      FROM official_holidays oh
+                                      WHERE DATE(oh.date) BETWEEN '{$fromDate}' AND '{$toDate}'
+                                  )
+                                  AND (
+                                      EXISTS (
+                                          SELECT 1 FROM visits v
+                                          WHERE (v.user_id = u.id OR v.second_user_id = u.id)
+                                            AND DATE(v.visit_date) = cal.date
+                                            AND v.deleted_at IS NULL
+                                      )
+                                      OR EXISTS (
+                                          SELECT 1 FROM office_works ow
+                                          WHERE ow.user_id = u.id
+                                            AND DATE(ow.time_from) = cal.date
+                                      )
+                                      OR EXISTS (
+                                          SELECT 1 FROM activities act
+                                          WHERE act.user_id = u.id
+                                            AND DATE(act.date) = cal.date
+                                      )
+                                  )
+                            ) * 8 > 0
+                            THEN ROUND(
+                                {$actualVisitsClause} / (
+                                    (
+                                        SELECT COUNT(DISTINCT DATE(cal.date))
+                                        FROM (
+                                            SELECT DATE('{$fromDate}') + INTERVAL (a.a + b.a * 10 + c.a * 100) DAY as date
+                                            FROM (SELECT 0 as a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) as a
+                                            CROSS JOIN (SELECT 0 as a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) as b
+                                            CROSS JOIN (SELECT 0 as a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) as c
+                                        ) cal
+                                        WHERE cal.date BETWEEN '{$fromDate}' AND '{$toDate}'
+                                          AND DAYOFWEEK(cal.date) NOT IN (1, 7)
+                                          AND cal.date NOT IN (
+                                              SELECT DATE(oh.date)
+                                              FROM official_holidays oh
+                                              WHERE DATE(oh.date) BETWEEN '{$fromDate}' AND '{$toDate}'
+                                          )
+                                          AND (
+                                              EXISTS (
+                                                  SELECT 1 FROM visits v
+                                                  WHERE (v.user_id = u.id OR v.second_user_id = u.id)
+                                                    AND DATE(v.visit_date) = cal.date
+                                                    AND v.deleted_at IS NULL
+                                              )
+                                              OR EXISTS (
+                                                  SELECT 1 FROM office_works ow
+                                                  WHERE ow.user_id = u.id
+                                                    AND DATE(ow.time_from) = cal.date
+                                              )
+                                              OR EXISTS (
+                                                  SELECT 1 FROM activities act
+                                                  WHERE act.user_id = u.id
+                                                    AND DATE(act.date) = cal.date
+                                              )
+                                          )
+                                    ) * 8
+                                ),
+                                2
+                            )
+                            ELSE 0
+                        END
+                ) as sops,
                 {$totalVisitsClause} as total_visits
             FROM users u
             LEFT JOIN area_user au ON u.id = au.user_id
@@ -257,7 +510,14 @@ class CoverageReportResource extends Resource
                   {$whereConditions}
             )";
         } else {
-            return "get_user_actual_visits(u.id, '{$fromDate}', '{$toDate}')";
+            return "(
+                SELECT COUNT(*)
+                FROM visits v
+                WHERE (v.user_id = u.id OR v.second_user_id = u.id)
+                  AND v.status = 'visited'
+                  AND DATE(v.visit_date) BETWEEN '{$fromDate}' AND '{$toDate}'
+                  AND v.deleted_at IS NULL
+            )";
         }
     }
 
@@ -281,7 +541,13 @@ class CoverageReportResource extends Resource
                   {$whereConditions}
             )";
         } else {
-            return "get_user_total_visits(u.id, '{$fromDate}', '{$toDate}')";
+            return "(
+                SELECT COUNT(*)
+                FROM visits v
+                WHERE (v.user_id = u.id OR v.second_user_id = u.id)
+                  AND DATE(v.visit_date) BETWEEN '{$fromDate}' AND '{$toDate}'
+                  AND v.deleted_at IS NULL
+            )";
         }
     }
 
