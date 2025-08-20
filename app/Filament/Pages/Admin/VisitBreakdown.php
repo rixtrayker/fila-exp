@@ -15,11 +15,9 @@ class VisitBreakdown extends Page implements HasTable
 {
     use InteractsWithTable;
 
-    protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
+    protected static bool $shouldRegisterNavigation = false;
 
     protected static string $view = 'filament.pages.admin.visit-breakdown';
-
-    protected static ?string $navigationLabel = 'Visit Breakdown';
 
     protected static ?string $title = 'Visit Breakdown Analysis';
 
@@ -27,10 +25,6 @@ class VisitBreakdown extends Page implements HasTable
     {
         return $this->breakdownStrategy->getPageTitle($this->getFilters());
     }
-
-    protected static ?string $navigationGroup = 'Reports';
-
-    protected static ?int $navigationSort = 10;
 
     public ?string $fromDate = null;
     public ?string $toDate = null;
@@ -103,6 +97,7 @@ class VisitBreakdown extends Page implements HasTable
     {
         return $this->breakdownStrategy->getClientBreakdown($this->getFilters());
     }
+
 
     protected function getFilters(): array
     {
