@@ -9,6 +9,7 @@ use App\Models\Brick;
 use App\Models\City;
 use App\Models\Client;
 use App\Models\ClientType;
+use App\Models\User;
 use App\Traits\ResourceHasPermission;
 use Filament\Forms;
 use Filament\Forms\Components\Section;
@@ -155,6 +156,24 @@ class ClientResource extends Resource
                     ->label("Active"),
             ])
             ->filters([
+                Tables\Filters\SelectFilter::make("user")
+                    ->label("Filter by User (Overrides Default Area Filter)")
+                    ->searchable()
+                    ->placeholder("Select a user to filter by their areas and bricks")
+                    ->options(self::getUsersForFilter())
+                    ->query(function (Builder $query, array $data) {
+                        $userId = $data['value'] ?? null;
+                        if (!empty($userId)) {
+                            $brickIds = self::getUserBrickIds((int) $userId);
+
+                            if (!empty($brickIds)) {
+                                // Apply our custom filter by user's bricks
+                                $query->whereIn('brick_id', $brickIds);
+                            }
+                        }
+
+                        return $query;
+                    }),
                 Tables\Filters\SelectFilter::make("brick")
                     ->searchable()
                     ->options(self::$bricks)
@@ -222,6 +241,37 @@ class ClientResource extends Resource
 
         return $result;
     }
+
+    public static function getUsersForFilter(): array
+    {
+        return User::where('is_active', true)
+            ->pluck('name', 'id')
+            ->toArray();
+    }
+
+    public static function getUserBrickIds(int $userId): array
+    {
+        $user = User::find($userId);
+
+        if (!$user) {
+            return [];
+        }
+
+        // Get user's areas and their bricks
+        $userAreaIds = $user->areas()->pluck('areas.id')->toArray();
+        $userBrickIds = $user->bricks()->pluck('bricks.id')->toArray();
+
+        // Get bricks from user's areas
+        $areaBrickIds = Brick::whereIn('area_id', $userAreaIds)
+            ->pluck('id')
+            ->toArray();
+
+        // Combine all brick IDs
+        $allBrickIds = array_merge($userBrickIds, $areaBrickIds);
+
+        return array_unique($allBrickIds);
+    }
+
     public static function captureLocation(): Action
     {
         return Action::make("captureLocation")
