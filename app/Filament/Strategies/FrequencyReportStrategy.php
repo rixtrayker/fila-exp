@@ -254,12 +254,11 @@ class FrequencyReportStrategy implements VisitBreakdownStrategyInterface
 
     public function getClientBreakdown(array $filters): array
     {
-        // For frequency report, we show medical rep breakdown instead of client breakdown
-        return Visit::query()
-            ->with('user')
+        // For frequency report breakdown, show visits for the specific client only
+        $query = Visit::query()
+            ->with(['client', 'user'])
             ->when($filters['from_date'] ?? null, fn($q) => $q->whereDate('visit_date', '>=', $filters['from_date']))
             ->when($filters['to_date'] ?? null, fn($q) => $q->whereDate('visit_date', '<=', $filters['to_date']))
-            ->when($filters['client_id'] ?? null, fn($q) => $q->where('client_id', $filters['client_id']))
             ->when($filters['user_id'] ?? null, fn($q) => $q->where('user_id', $filters['user_id']))
             ->when($filters['brick_id'] ?? null, function($q) use ($filters) {
                 $q->whereHas('client', function($clientQuery) use ($filters) {
@@ -275,7 +274,14 @@ class FrequencyReportStrategy implements VisitBreakdownStrategyInterface
                 $q->whereHas('client', function($clientQuery) use ($filters) {
                     $clientQuery->whereIn('client_type_id', (array) $filters['client_type_id']);
                 });
-            })
+            });
+
+        // IMPORTANT: Filter by specific client_id for frequency report breakdown
+        if ($filters['client_id'] ?? null) {
+            $query->where('client_id', $filters['client_id']);
+        }
+
+        return $query
             ->selectRaw('user_id, status, COUNT(*) as count')
             ->groupBy('user_id', 'status')
             ->get()
@@ -286,10 +292,14 @@ class FrequencyReportStrategy implements VisitBreakdownStrategyInterface
                 
                 return [
                     'user' => $user,
+                    'user_name' => $user->name,
                     'total' => array_sum($statusCounts),
                     'visited' => $statusCounts['visited'] ?? 0,
                     'pending' => $statusCounts['pending'] ?? 0,
                     'missed' => $statusCounts['missed'] ?? 0,
+                    'frequency_rate' => array_sum($statusCounts) > 0 
+                        ? round(($statusCounts['visited'] ?? 0) / array_sum($statusCounts) * 100, 2)
+                        : 0
                 ];
             })
             ->sortByDesc('total')

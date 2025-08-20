@@ -89,7 +89,7 @@ class CoverageReportStrategy implements VisitBreakdownStrategyInterface
             TextColumn::make('comment')
                 ->label('Notes')
                 ->limit(50)
-                ->tooltip(function ($record) { 
+                ->tooltip(function ($record) {
                     return $record->comment ?: 'No notes available';
                 })
                 ->placeholder('No notes')
@@ -198,7 +198,7 @@ class CoverageReportStrategy implements VisitBreakdownStrategyInterface
             $user = User::find($filters['user_id']);
             return $user ? "Visit Breakdown - {$user->name}" : 'Visit Breakdown Analysis';
         }
-        
+
         return 'Visit Breakdown Analysis';
     }
 
@@ -209,11 +209,11 @@ class CoverageReportStrategy implements VisitBreakdownStrategyInterface
 
     public function getClientBreakdown(array $filters): array
     {
-        return Visit::query()
+        // For coverage report breakdown, show visits for the specific user (medical rep)
+        $query = Visit::query()
             ->with('client')
             ->when($filters['from_date'] ?? null, fn($q) => $q->whereDate('visit_date', '>=', $filters['from_date']))
             ->when($filters['to_date'] ?? null, fn($q) => $q->whereDate('visit_date', '<=', $filters['to_date']))
-            ->when($filters['user_id'] ?? null, fn($q) => $q->where('user_id', $filters['user_id']))
             ->when($filters['client_id'] ?? null, fn($q) => $q->where('client_id', $filters['client_id']))
             ->when($filters['area'] ?? null, function($q) use ($filters) {
                 $q->whereHas('user', function($userQuery) use ($filters) {
@@ -229,7 +229,15 @@ class CoverageReportStrategy implements VisitBreakdownStrategyInterface
                 $q->whereHas('client', function($clientQuery) use ($filters) {
                     $clientQuery->whereIn('client_type_id', (array) $filters['client_type_id']);
                 });
-            })
+            });
+
+        // IMPORTANT: Filter by specific user_id for coverage report breakdown
+        if ($filters['user_id'] ?? null) {
+            $query->where('user_id', $filters['user_id']);
+            $query->orWhere('second_id', $filters['user_id']);
+        }
+
+        return $query
             ->selectRaw('client_id, status, COUNT(*) as count')
             ->groupBy('client_id', 'status')
             ->get()
@@ -237,9 +245,10 @@ class CoverageReportStrategy implements VisitBreakdownStrategyInterface
             ->map(function ($visits) {
                 $client = $visits->first()->client;
                 $statusCounts = $visits->pluck('count', 'status')->toArray();
-                
+
                 return [
                     'client' => $client,
+                    'client_name' => $client->name_en ?? $client->name_ar,
                     'total' => array_sum($statusCounts),
                     'visited' => $statusCounts['visited'] ?? 0,
                     'pending' => $statusCounts['pending'] ?? 0,
