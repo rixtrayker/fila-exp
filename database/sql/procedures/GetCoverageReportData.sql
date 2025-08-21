@@ -63,24 +63,24 @@ BEGIN
         
         -- Complex calculations using subqueries
         COALESCE(busy_days_count, 0) as busy_days_count,
-        (v_total_working_days - busy_days_count) as actual_working_days,
-        ((v_total_working_days - busy_days_count) * v_daily_target) as monthly_visit_target,
+        (v_total_working_days - COALESCE(busy_days_count, 0)) as actual_working_days,
+        ((v_total_working_days - COALESCE(busy_days_count, 0)) * v_daily_target) as monthly_visit_target,
         
         -- Visit metrics
-        actual_visits,
-        total_visits,
-        vacation_days,
+        COALESCE(actual_visits, 0) as actual_visits,
+        COALESCE(total_visits, 0) as total_visits,
+        COALESCE(vacation_days, 0) as vacation_days,
         
         -- Performance metrics
         CASE 
-            WHEN (v_total_working_days - busy_days_count) > 0 
-            THEN ROUND(actual_visits / (v_total_working_days - busy_days_count), 2)
+            WHEN (v_total_working_days - COALESCE(busy_days_count, 0)) > 0 
+            THEN ROUND(COALESCE(actual_visits, 0) / (v_total_working_days - COALESCE(busy_days_count, 0)), 2)
             ELSE 0 
         END as call_rate,
         
         CASE 
-            WHEN ((v_total_working_days - busy_days_count) * v_daily_target) > 0 
-            THEN ROUND((actual_visits / ((v_total_working_days - busy_days_count) * v_daily_target)) * 100, 2)
+            WHEN ((v_total_working_days - COALESCE(busy_days_count, 0)) * v_daily_target) > 0 
+            THEN ROUND((COALESCE(actual_visits, 0) / ((v_total_working_days - COALESCE(busy_days_count, 0)) * v_daily_target)) * 100, 2)
             ELSE 0 
         END as sops
         
