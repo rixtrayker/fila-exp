@@ -8,7 +8,6 @@ use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvi
 use Illuminate\Support\Facades\Event;
 use App\Events\VisitsEvents\VisitUpdated;
 use App\Events\VisitsEvents\VisitCreated;
-use App\Listeners\UpdateReportData;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -21,12 +20,7 @@ class EventServiceProvider extends ServiceProvider
         Registered::class => [
             SendEmailVerificationNotification::class,
         ],
-        VisitUpdated::class => [
-            UpdateReportData::class,
-        ],
-        VisitCreated::class => [
-            UpdateReportData::class,
-        ],
+        // Removed UpdateReportData listener as part of old reports cleanup
     ];
 
     /**

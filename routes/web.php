@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\DB;
 use Laravel\Octane\Swoole\SwooleExtension;
 use App\Jobs\FixOrdersWith0Total;
 use Symfony\Component\Process\Process;
-use App\Http\Controllers\ReportSyncController;
 use App\Http\Controllers\TemplateFileController;
 use App\Http\Controllers\ClientRequestAttachmentController;
 
@@ -125,8 +124,6 @@ Route::middleware([
     })->name('dashboard');
 });
 
-// Route::get('/admin/ops/run-report-sync', [ReportSyncController::class, 'sync'])
-//     ->name('admin.ops.report-sync');
 
 // Template file download route
 Route::get('/template-files/{templateFile}/download', [TemplateFileController::class, 'download'])

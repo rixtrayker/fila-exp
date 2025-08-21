@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Traits\ReportSyncTimestamp;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
@@ -11,7 +10,6 @@ use Carbon\Carbon;
 class Setting extends Model
 {
     use HasFactory;
-    use ReportSyncTimestamp;
 
     protected $fillable = [
         'order',

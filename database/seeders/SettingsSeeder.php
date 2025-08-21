@@ -124,24 +124,6 @@ class SettingsSeeder extends Seeder
             ],
             [
                 'order' => 13,
-                'name' => 'Frequency Report Sync Cursor Index',
-                'key' => 'frequency_report_sync_cursor_index',
-                'description' => 'Last processed cursor index for frequency report sync (hidden)',
-                'type' => 'number',
-                'is_presistent' => true,
-                'hidden' => true,
-            ],
-            [
-                'order' => 14,
-                'name' => 'Coverage Report Sync Cursor Index',
-                'key' => 'coverage_report_sync_cursor_index',
-                'description' => 'Last processed cursor index for coverage report sync (hidden)',
-                'type' => 'number',
-                'is_presistent' => true,
-                'hidden' => true,
-            ],
-            [
-                'order' => 15,
                 'name' => 'Daily PH Target',
                 'description' => 'Daily target for Pharmacy (PH) shift visits',
                 'type' => 'number',
@@ -150,7 +132,7 @@ class SettingsSeeder extends Seeder
                 'value' => 8,
             ],
             [
-                'order' => 16,
+                'order' => 14,
                 'name' => 'Daily PM Target',
                 'description' => 'Daily target for PM shift visits',
                 'type' => 'number',
@@ -159,7 +141,7 @@ class SettingsSeeder extends Seeder
                 'value' => 6,
             ],
             [
-                'order' => 17,
+                'order' => 15,
                 'name' => 'Daily AM Target',
                 'description' => 'Daily target for AM shift visits',
                 'type' => 'number',
