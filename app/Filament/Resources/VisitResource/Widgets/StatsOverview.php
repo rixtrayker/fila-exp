@@ -52,7 +52,7 @@ class StatsOverview extends BaseWidget
 
         $message = match (true) {
             $plannedVisits == 0 && $actualVisits == 0 => "No visits today",
-            $percentage > 0 && $plannedVisits > 0 && $actualVisits > 0 => $this->calculatePercentage($stats['actualVisits'], $stats['plannedVisits']) . "% ( actual / planned )",
+            $plannedVisits > 0 && $actualVisits > 0 => $percentage . "% ( actual / planned )",
             $plannedVisits > 0 && $actualVisits == 0 => "100% (planned)",
             $plannedVisits == 0 && $actualVisits > 0 => "100% (actual)",
             default => "{$actualVisits} actual / {$plannedVisits} planned"

@@ -98,6 +98,16 @@ class VisitTable
                 ->dateTime('d-M-Y')
                 ->sortable()
                 ->searchable(),
+            TextColumn::make('created_at')
+                ->label('Created At')
+                ->date('d-m-Y h:i A')
+                // ->description('date format is 31-12-2025 10:00 AM')
+                ->tooltip(fn($record) => $record->created_at->format('d-M-Y'))
+                // ->copyable()
+                // ->copyMessage('Copied!')
+                // ->copyMessageDuration(500)
+                ->sortable()
+                ->searchable(),
             TextColumn::make('feedback')
                 ->label('Feedback')
                 ->searchable()

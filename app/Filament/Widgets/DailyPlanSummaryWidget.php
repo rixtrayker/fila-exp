@@ -94,39 +94,7 @@ class DailyPlanSummaryWidget extends Widget
 
     private function determineClientDisplayType($client): string
     {
-        if (!$client->clientType) {
-            return 'AM'; // Default fallback
-        }
-
-        $typeName = $client->clientType->name;
-
-        // Check for pharmacy types first (most specific)
-        if (stripos($typeName, 'pharmacy') !== false || stripos($typeName, 'ph') !== false) {
-            return 'PH';
-        }
-        
-        // Check for PM types (clinics)
-        if (stripos($typeName, 'clinic') !== false || stripos($typeName, 'poly clinic') !== false) {
-            return 'PM';
-        }
-        
-        // Check for AM types (hospitals and medical centers)
-        if (stripos($typeName, 'hospital') !== false || 
-            stripos($typeName, 'resuscitation') !== false || 
-            stripos($typeName, 'incubators') !== false ||
-            stripos($typeName, 'medical center') !== false ||
-            stripos($typeName, 'medical centre') !== false) {
-            return 'AM';
-        }
-
-        // Default fallback - check client grade if available
-        if (isset($client->grade)) {
-            if ($client->grade === 'PH') {
-                return 'PH';
-            }
-        }
-
-        return 'AM'; // Final fallback
+        return $client->shift ?? 'AM';
     }
 
     public function getTotalClients(): int
