@@ -17,13 +17,15 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Scopes\GetMineScope;
 use App\Exports\CoverageReportExport;
 use Filament\Tables\Actions\Action;
-use Illuminate\Pagination\CursorPaginator;
-use Illuminate\Pagination\Paginator;
-use Illuminate\Support\Collection;
+use App\Models\ClientType;
 
 class CoverageReportResource extends Resource
 {
     use ResourceHasPermission;
+
+    protected const DEFAULT_DAILY_AM_TARGET = 2;
+    protected const DEFAULT_DAILY_PM_TARGET = 6;
+    protected const DEFAULT_DAILY_PH_TARGET = 8;
 
     protected static ?string $model = \App\Models\CoverageReportRow::class;
     protected static ?string $label = 'Coverage Report';
@@ -134,7 +136,7 @@ class CoverageReportResource extends Resource
                     })
                     ->searchable()
                     ->preload()
-                    ->multiple(),
+                    ->default(ClientType::PM),
             ])
             ->filtersLayout(FiltersLayout::AboveContent)
             ->paginated([25, 50, 100, 250, 500, 'all'])
@@ -202,9 +204,14 @@ class CoverageReportResource extends Resource
             ? $dateRange['to_date']
             : today()->toDateString();
 
+        $selectedClientTypeId = $tableFilters['client_type_id'] ?? ClientType::PM;
+        if (is_array($selectedClientTypeId)) {
+            $selectedClientTypeId = reset($selectedClientTypeId) ?: ClientType::PM;
+        }
+
         $filters = [
             'user_id' => $tableFilters['user_id'] ?? null,
-            'client_type_id' => $tableFilters['client_type_id'] ?? null,
+            'client_type_id' => $selectedClientTypeId,
         ];
 
         return self::buildCoverageReportQuery($fromDate, $toDate, $filters);
@@ -222,12 +229,27 @@ class CoverageReportResource extends Resource
             $userIds = array_intersect($userIds, $filters['user_id']);
         }
 
-        // Build filter strings for SQL functions
-        $clientTypeFilter = null;
-
-        if (isset($filters['client_type_id']) && !empty($filters['client_type_id'])) {
-            $clientTypeFilter = implode(',', $filters['client_type_id']);
+        // Determine selected client type (single) and SQL for daily target from settings with fallback
+        $clientTypeId = $filters['client_type_id'] ?? ClientType::PM;
+        if (is_array($clientTypeId)) {
+            $clientTypeId = reset($clientTypeId) ?: ClientType::PM;
         }
+
+        $clientTypeFilter = (string) intval($clientTypeId);
+
+        $settingKey = match (intval($clientTypeId)) {
+            ClientType::AM => 'daily_am_target',
+            ClientType::PH => 'daily_ph_target',
+            default => 'daily_pm_target',
+        };
+
+        $defaultDailyTarget = match (intval($clientTypeId)) {
+            ClientType::AM => self::DEFAULT_DAILY_AM_TARGET,
+            ClientType::PH => self::DEFAULT_DAILY_PH_TARGET,
+            default => self::DEFAULT_DAILY_PM_TARGET,
+        };
+
+        $dailyTargetSql = "COALESCE((SELECT CAST(value AS UNSIGNED) FROM settings WHERE `key` = '{$settingKey}' LIMIT 1), {$defaultDailyTarget})";
 
         // Use raw query to avoid triggering model accessors
         $userIdsStr = empty($userIds) ? '0' : implode(',', $userIds);
@@ -256,7 +278,7 @@ class CoverageReportResource extends Resource
                           WHERE DATE(oh.date) BETWEEN '{$fromDate}' AND '{$toDate}'
                       )
                 ) as working_days,
-                8 as daily_visit_target,
+                {$dailyTargetSql} as daily_visit_target,
                 (
                     SELECT COUNT(DISTINCT DATE(cal.date))
                     FROM (
@@ -272,7 +294,7 @@ class CoverageReportResource extends Resource
                           FROM official_holidays oh
                           WHERE DATE(oh.date) BETWEEN '{$fromDate}' AND '{$toDate}'
                       )
-                ) * 8 as monthly_visit_target,
+                ) * ({$dailyTargetSql}) as monthly_visit_target,
                 (
                     SELECT COUNT(*)
                     FROM office_works ow
@@ -433,7 +455,7 @@ class CoverageReportResource extends Resource
                                             AND DATE(act.date) = cal.date
                                       )
                                   )
-                            ) * 8 > 0
+                            ) * ({$dailyTargetSql}) > 0
                             THEN ROUND(
                                 {$actualVisitsClause} / (
                                     (
@@ -469,7 +491,7 @@ class CoverageReportResource extends Resource
                                                     AND DATE(act.date) = cal.date
                                               )
                                           )
-                                    ) * 8
+                                    ) * ({$dailyTargetSql})
                                 ),
                                 2
                             )
