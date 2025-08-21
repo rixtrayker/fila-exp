@@ -1,44 +1,46 @@
-## Frequency Report Refactor Plan
+## Frequency Report – Documentation
 
-- **Scope**: Make the frequency report accurate, consistent, and fast. Keep UI in `Filament`. Decide whether to compute on the fly or via the materialized table `frequency_report_data` (current approach). Align status semantics across the app.
-- **Inputs**: Date range `[from_date, to_date]` with optional filters: `brick_id[]`, `grade[]`, `client_type_id[]` (wired in `FrequencyReportResource`).
-- **References**: `app/Filament/Resources/FrequencyReportResource.php`, `app/Filament/Resources/DeprecatedFrequencyReportResource.php`, `app/Models/Reports/FrequencyReportData.php`, `app/Jobs/SyncFrequencyReportData.php`, `app/Jobs/FrequencyReportBatchProcess.php`, `app/Filament/Strategies/FrequencyReportStrategy.php`, `app/Livewire/FrequencyReportCell.php`.
+This document describes how the Frequency Report is built and what each metric means in the current implementation.
 
-### Current behavior (brief)
+### Where it lives
 
-- `FrequencyReportData` stores per-`client_id`, per-`report_date` facts:
-  - `done_visits_count`, `pending_visits_count`, `missed_visits_count`, `total_visits_count`, `achievement_percentage`, `is_final`, `metadata`.
-- Aggregation for the grid uses `FrequencyReportData::getAggregatedQuery($from,$to,$filters)` summing those fields, and joining `clients`, `client_types`, `bricks` for labels.
-- Data population happens via jobs:
-  - `SyncFrequencyReportData` chunks clients and dispatches `FrequencyReportBatchProcess`.
-  - `FrequencyReportBatchProcess` loads visits for a client in range, groups by date, and writes rows via `updateOrCreateForDate`.
-- Visit breakdown action uses `FrequencyReportStrategy` to show actual visit rows with the same filters.
+- UI: `App\\Filament\\Resources\\FrequencyReportResource` (page: `ListFrequencyReports`)
+- Data source: a single SQL `fromSub(...)` query projected into `App\\Models\\FrequencyReportRow`
 
-### Definitions
+### Inputs and filters
 
-- **Done visits**: visits with `status = 'visited'`.
-- **Pending visits**: visits with `status IN ('pending','planned')`.
-- **Missed visits**: visits not completed. Current batch code counts `status = 'cancelled'`; elsewhere the UI/filters also reference `'missed'`. We must unify this.
-- **Total visits**: count of all visits considered in the period (excluding soft-deleted).
-- **Achievement %**: `SUM(done_visits_count) / NULLIF(SUM(total_visits_count), 0) * 100`, rounded to 2 decimals.
+- Required date range: `[from_date, to_date]`
+  - Defaults: from = 7 days ago; to = today
+- Optional filters (planned/partial):
+  - `brick_id[]`
+  - `client_type_id[]`
+  - Current implementation wires only the date range; additional filters can be re-enabled as needed.
 
-### Issues to fix
+### Core calculations (per client)
 
-- Status mismatch: batch uses `'cancelled'` for missed, while filters/UI also use `'missed'`. Define canonical mapping and enforce it everywhere.
-- Soft-deletes: batch does not exclude soft-deleted visits; ensure we filter `deleted_at IS NULL`.
-- Data retention: `cleanOldData()` keeps 30 days only; confirm desired retention for reporting windows.
-- Label joins: use deterministic label selection (e.g., `MIN(clients.name_en)`) instead of `GROUP_CONCAT`, since we group by `client_id`.
-- Indexes: ensure efficient queries on visits and report tables.
+- Done visits: count of `visits` where `status = 'visited'` in range.
+- Pending visits: count of `visits` where `status IN ('planned','pending')` in range.
+- Missed visits: count of `visits` where `status = 'missed'` in range.
+- Total visits: count of all `visits` for the client in range.
+- Achievement %: if `total_visits > 0`, `ROUND(done_visits * 100 / total_visits, 2)`, else `0`.
 
-### Target behavior
+All visit counts exclude soft-deleted rows (`deleted_at IS NULL`). Clients are shown only when `total_visits > 0` for the selected range.
 
-- Single source of truth for status categories:
-  - done = `visited`
-  - pending = `pending` + `planned`
-  - missed = `missed` + `cancelled` (pick one canonical app-level status; map the other)
-- Exclude soft-deleted visits from all computations.
-- Idempotent daily writes to `frequency_report_data` using `updateOrCreate` per `(client_id, report_date)`.
-- Aggregation query returns one row per client with sums and correct `achievement_percentage`.
+### Sorting and actions
+
+- Default sort: `client_name ASC`
+- Row action “Visit Breakdown”: opens Visits index filtered by the same date range and `client_id` to show underlying rows.
+
+### Implementation references
+
+- Resource: `app/Filament/Resources/FrequencyReportResource.php`
+- Related tables: `clients`, `client_types`, `bricks`, `visits`
+
+### Legacy removed
+
+- Materialized table and pipeline removed: `FrequencyReportData`, `SyncFrequencyReportData`, `FrequencyReportBatchProcess`.
+- Deprecated Filament resource `DeprecatedFrequencyReportResource` deleted.
+- Legacy Livewire widget and blade removed: `FrequencyReportCell` and admin `frequency-report.blade.php`.
 
 ### SQL-Only Refactor Approach
 
