@@ -54,6 +54,47 @@ class Setting extends Model
         return $targets['class-' . $grade . '-daily-target'];
     }
 
+    /**
+     * Get daily targets per shift (AM/PM/PH) from cache.
+     */
+    public static function getShiftDailyTargetsFromCache(): array
+    {
+        $map = [
+            'daily_am_target' => 2,
+            'daily_pm_target' => 6,
+            'daily_ph_target' => 8,
+        ];
+
+        $targets = [];
+        foreach ($map as $key => $default) {
+            $targets[$key] = self::getSetting($key)->value ?? $default;
+        }
+
+        return $targets;
+    }
+
+    /**
+     * Get daily target for a specific shift (AM, PM, PH).
+     */
+    public static function getShiftDailyTarget(string $shift): int
+    {
+        $normalized = strtoupper(trim($shift));
+        $key = match ($normalized) {
+            'AM' => 'daily_am_target',
+            'PM' => 'daily_pm_target',
+            'PH' => 'daily_ph_target',
+            default => 'daily_am_target',
+        };
+
+        $defaults = [
+            'daily_am_target' => 2,
+            'daily_pm_target' => 6,
+            'daily_ph_target' => 8,
+        ];
+
+        return (int) (self::getSetting($key)->value ?? $defaults[$key]);
+    }
+
     public static function getReportSyncEnabled()
     {
         return self::getSetting('report_sync_enabled')->value ?? false;

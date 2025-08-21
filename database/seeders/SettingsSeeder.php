@@ -140,6 +140,33 @@ class SettingsSeeder extends Seeder
                 'is_presistent' => true,
                 'hidden' => true,
             ],
+            [
+                'order' => 15,
+                'name' => 'Daily PH Target',
+                'description' => 'Daily target for Pharmacy (PH) shift visits',
+                'type' => 'number',
+                'is_presistent' => true,
+                'key' => 'daily_ph_target',
+                'value' => 8,
+            ],
+            [
+                'order' => 16,
+                'name' => 'Daily PM Target',
+                'description' => 'Daily target for PM shift visits',
+                'type' => 'number',
+                'is_presistent' => true,
+                'key' => 'daily_pm_target',
+                'value' => 6,
+            ],
+            [
+                'order' => 17,
+                'name' => 'Daily AM Target',
+                'description' => 'Daily target for AM shift visits',
+                'type' => 'number',
+                'is_presistent' => true,
+                'key' => 'daily_am_target',
+                'value' => 2,
+            ],
         ];
 
         foreach ($settings as $setting) {
