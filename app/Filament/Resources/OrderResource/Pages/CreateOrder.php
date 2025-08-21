@@ -5,6 +5,7 @@ namespace App\Filament\Resources\OrderResource\Pages;
 use App\Filament\Resources\OrderResource;
 use App\Models\OrderProduct;
 use App\Models\Product;
+use Filament\Support\Exceptions\Halt;
 use Filament\Pages\Actions;
 use Filament\Resources\Pages\CreateRecord;
 
@@ -31,7 +32,9 @@ class CreateOrder extends CreateRecord
     public function afterCreate()
     {
         $data = $this->form->getRawState();
-        $systemProducts = Product::pluck('price','id')->toArray();
+        $systemProducts = Product::select('id','price','market_price','discount_percentage','discount_value')
+            ->get()
+            ->keyBy('id');
         $products = $data['products'];
         $orderId = $this->record->id;
 
@@ -41,13 +44,20 @@ class CreateOrder extends CreateRecord
             if(!$product['product_id']){
                 continue;
             }
-            $cost = $systemProducts[$product['product_id']];
+            $productRow = $systemProducts[$product['product_id']] ?? null;
+            $cost = $productRow?->price ?? 0;
+            $marketPrice = $productRow?->market_price ?? 0;
+            $discountPercentage = $productRow?->discount_percentage ?? 0;
+            $discountValue = $productRow?->discount_value ?? 0;
             $insertData[] = [
                 'order_id' => $orderId,
                 'product_id' =>  $product['product_id'],
                 'count' => $product['count'],
                 'cost' => $cost,
                 'item_total' => intval($cost * $product['count']),
+                'market_price' => $marketPrice,
+                'discount_percentage' => $discountPercentage,
+                'discount_value' => $discountValue,
                 'created_at' => $now,
                 'updated_at' => $now,
             ];
@@ -109,7 +119,9 @@ class CreateOrder extends CreateRecord
         return $subtotal;
     }
     private function calculateTotal($data, $subtotal){
-        if(!auth()->user()->hasRole('medical-rep')){
+        /** @var \App\Models\User|null $user */
+        $user = auth()->user();
+        if(!($user?->hasRole('medical-rep'))){
             $discount = $this->calculateDiscount($subtotal, $data['discount_type'], $data['discount']);
             $total = $subtotal - $discount;
         }else{

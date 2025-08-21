@@ -31,7 +31,7 @@ class Order extends Model
     public function productsWithPivot   ()
     {
         return $this->belongsToMany(Product::class,'order_products')
-                    ->withPivot('count', 'cost','item_total');
+                    ->withPivot('count', 'cost','item_total','market_price','discount_percentage','discount_value');
     }
 
     public function orderProducts()
@@ -74,7 +74,9 @@ class Order extends Model
             return;
         }
 
-        if(!auth()->user()->hasRole(['accountant'])){
+        /** @var \App\Models\User|null $user */
+        $user = auth()->user();
+        if(!($user?->hasRole(['accountant']))){
             return $builder;
         }
 

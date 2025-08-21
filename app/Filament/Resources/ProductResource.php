@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Traits\ResourceHasPermission;
+use App\Models\Scopes\ActiveScope;
 
 class ProductResource extends Resource
 {
@@ -51,6 +52,50 @@ class ProductResource extends Resource
                     ->numeric()
                     ->minValue(1)
                     ->required(),
+                TextInput::make('market_price')
+                    ->label('Market Price')
+                    ->numeric()
+                    ->minValue(0)
+                    ->default(0)
+                    ->reactive()
+                    ->afterStateUpdated(function($get, $set) {
+                        $market = floatval($get('market_price') ?? 0);
+                        $percent = floatval($get('discount_percentage') ?? 0);
+                        $percent = max(0, min(100, $percent));
+                        $value = $market > 0 ? round($market * $percent / 100, 2) : 0;
+                        $set('discount_value', $value);
+                    }),
+                TextInput::make('discount_percentage')
+                    ->helperText('Discount percentage is applied on the market price')
+                    ->label('Discount %')
+                    ->numeric()
+                    ->minValue(0)
+                    ->maxValue(100)
+                    ->default(0)
+                    ->reactive()
+                    ->afterStateUpdated(function($get, $set) {
+                        $market = floatval($get('market_price') ?? 0);
+                        $percent = floatval($get('discount_percentage') ?? 0);
+                        $percent = max(0, min(100, $percent));
+                        $value = $market > 0 ? round($market * $percent / 100, 2) : 0;
+                        $set('discount_value', $value);
+                    }),
+                TextInput::make('discount_value')
+                    ->helperText('Discount value is applied on the market price')
+                    ->label('Discount Value')
+                    ->numeric()
+                    ->minValue(0)
+                    ->maxValue(fn($get) => max(0, floatval($get('market_price') ?? 0)))
+                    ->default(0)
+                    ->reactive()
+                    ->afterStateUpdated(function($get, $set) {
+                        $market = floatval($get('market_price') ?? 0);
+                        $value = floatval($get('discount_value') ?? 0);
+                        $market = max(0.0, $market);
+                        $value = max(0.0, min($value, $market));
+                        $percent = $market > 0 ? round(($value / $market) * 100, 2) : 0;
+                        $set('discount_percentage', $percent);
+                    }),
                 Toggle::make('active')
                     ->label('Active')
                     ->required(),
@@ -67,10 +112,15 @@ class ProductResource extends Resource
                     ->label('Name'),
                 TextColumn::make('productCategory.name'),
                 TextColumn::make('price'),
+                TextColumn::make('market_price'),
+                TextColumn::make('discount_percentage'),
+                TextColumn::make('discount_value'),
                 IconColumn::make('active')
                     ->boolean(),
                 TextColumn::make('created_at')
-                    ->dateTime(),
+                    ->dateTime()
+                    ->label('Created At')
+                    ->tooltip(fn($record) => $record->created_at->format('d-M-Y')),
             ])
             ->filters([
                 //
@@ -109,11 +159,15 @@ class ProductResource extends Resource
 
     public static function canEdit(Model $record): bool
     {
-        return auth()->user()->hasRole('super-admin');
+        /** @var \App\Models\User|null $user */
+        $user = auth()->user();
+        return (bool) ($user?->hasRole('super-admin'));
     }
 
     public static function canCreate(): bool
     {
-        return auth()->user()->hasRole('super-admin');
+        /** @var \App\Models\User|null $user */
+        $user = auth()->user();
+        return (bool) ($user?->hasRole('super-admin'));
     }
 }

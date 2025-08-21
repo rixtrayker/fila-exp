@@ -15,6 +15,9 @@ class Product extends Model
         'name',
         'product_category_id',
         'price',
+        'market_price',
+        'discount_percentage',
+        'discount_value',
         'active',
     ];
 
