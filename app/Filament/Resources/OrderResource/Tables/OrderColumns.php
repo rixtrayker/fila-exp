@@ -42,8 +42,10 @@ class OrderColumns
                 }),
             TextColumn::make('approved_by')
                 ->label('Approved By'),
-            TextColumn::make('order_date')
-                ->dateTime('d-M-Y')
+            TextColumn::make('created_at')
+                ->date('d-m-Y h:i A')
+                ->tooltip(fn($record) => $record->created_at->format('d-M-Y'))
+                ->label('Date')
                 ->sortable()
                 ->searchable(),
         ];

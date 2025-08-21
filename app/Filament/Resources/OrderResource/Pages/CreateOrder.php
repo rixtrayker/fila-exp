@@ -109,8 +109,12 @@ class CreateOrder extends CreateRecord
         return $subtotal;
     }
     private function calculateTotal($data, $subtotal){
-        $discount = $this->calculateDiscount($subtotal, $data['discount_type'], $data['discount']);
-        $total = $subtotal - $discount;
+        if(!auth()->user()->hasRole('medical-rep')){
+            $discount = $this->calculateDiscount($subtotal, $data['discount_type'], $data['discount']);
+            $total = $subtotal - $discount;
+        }else{
+            $total = $subtotal;
+        }
         return $total;
     }
     private function calculateDiscount($subtotal, $discountType, $discount){

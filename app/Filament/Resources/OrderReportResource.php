@@ -59,7 +59,9 @@ class OrderReportResource extends Resource
                     ->label('Products List'),
                 TextColumn::make('categories_list')
                     ->label('Categories List'),
-                TextColumn::make('date')
+                TextColumn::make('created_at')
+                    ->date('d-m-Y h:i A')
+                    ->tooltip(fn($record) => $record->created_at->format('d-M-Y'))
                     ->label('Date'),
             ])
             ->filters([
@@ -167,6 +169,7 @@ class OrderReportResource extends Resource
             'areas.id as area_id',
             'orders.user_id as user_id',
             'orders.client_id as client_id',
+            'orders.created_at as created_at',
             DB::raw('GROUP_CONCAT( products.name SEPARATOR ", ") AS product_list_report'),
         )
             ->leftJoin('users', 'users.id', '=', 'orders.user_id')
