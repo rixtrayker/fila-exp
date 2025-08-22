@@ -6,7 +6,7 @@ use App\Filament\Resources\VisitResource\Widgets\StatsOverview;
 use App\Filament\Resources\VisitResource\Widgets\VisitCompletionChart;
 use App\Filament\Resources\VisitResource\Widgets\WeeklyVisitsChart;
 use App\Filament\Resources\VisitResource\Widgets\YearVisitsChart;
-use App\Filament\Widgets\CoverageReportWidget;
+use App\Filament\Widgets\MonthlyVisitStatsWidget;
 use App\Filament\Widgets\DailyPlanSummaryWidget;
 use App\Filament\Widgets\DailyVisitsTableWidget;
 use App\Filament\Widgets\MonthlySalesChart;
@@ -87,7 +87,7 @@ class AdminPanelProvider extends PanelProvider
                 DailyPlanSummaryWidget::class,
                 DailyVisitsTableWidget::class,
                 VisitCompletionChart::class,
-                CoverageReportWidget::class,
+                MonthlyVisitStatsWidget::class,
                 // MonthlySalesChart::class,
                 // WeeklyVisitsChart::class,
             ])

@@ -7,9 +7,9 @@ use App\Services\VisitCacheService;
 use Filament\Widgets\Widget;
 use Illuminate\Support\Carbon;
 
-class CoverageReportWidget extends Widget
+class MonthlyVisitStatsWidget extends Widget
 {
-    protected static string $view = 'filament.widgets.coverage-report-widget';
+    protected static string $view = 'filament.widgets.monthly-visit-stats-widget';
     public ?string $selectedType = 'AM';
 
     public function mount(): void
