@@ -1,13 +1,13 @@
-## Coverage Report – Documentation
+## SOPs And Call Rate – Documentation
 
-This document describes how the Coverage Report is built and what each metric means in the current implementation.
+This document describes how the SOPs And Call Rate report is built and what each metric means in the current implementation.
 
 ### Where it lives
 
-- UI: `App\Filament\Resources\CoverageReportResource` (page: `ListCoverageReports`)
-- Data source: a single SQL `fromSub(...)` query projected into `App\Models\CoverageReportRow`
-- Export: `App\Exports\CoverageReportExport` (Excel)
-- Widget (dashboard summary): `App\Filament\Widgets\CoverageReportWidget`
+- UI: `App\Filament\Resources\SOPsAndCallRateResource` (page: `ListSOPsAndCallRates`)
+- Data source: stored procedure `GetSOPsAndCallRateData` projected into `App\Models\SOPsAndCallRate`
+- Export: `App\Exports\SOPsAndCallRateExport` (Excel)
+- Widget (dashboard summary): `App\Filament\Widgets\MonthlyVisitStatsWidget`
 
 ### Inputs and filters
 
@@ -42,7 +42,7 @@ Notes:
 
 - Default sort: `name ASC`
 - Row action “Visit Breakdown”: opens Visits index filtered by the same date range and the selected user to show underlying rows.
-- Header action “Export to Excel”: downloads the current query via `CoverageReportExport`.
+- Header action “Export to Excel”: downloads the current query via `SOPsAndCallRateExport`.
 
 ### Security
 
@@ -50,12 +50,12 @@ Notes:
 
 ### Implementation references
 
-- Resource: `app/Filament/Resources/CoverageReportResource.php`
-- Export: `app/Exports/CoverageReportExport.php`
-- Widget: `app/Filament/Widgets/CoverageReportWidget.php`
+- Resource: `app/Filament/Resources/SOPsAndCallRateResource.php`
+- Export: `app/Exports/SOPsAndCallRateExport.php`
+- Widget: `app/Filament/Widgets/SOPsAndCallRateWidget.php`
 - Related tables: `visits`, `activities`, `office_works`, `official_holidays`, `users`, `areas`, `area_user`, `settings`
 
 ### Legacy removed
 
-- Materialized model and jobs have been removed: `CoverageReportData`, `CoverageReportProcess`, `CoverageReportBatchProcess`, and related events/listeners/controllers.
-- Deprecated Filament resource `DeprecatedCoverageReportResource` has been deleted.
+- Materialized model and jobs have been removed: `SOPsAndCallRateData`, `SOPsAndCallRateProcess`, `SOPsAndCallRateBatchProcess`, and related events/listeners/controllers.
+- Deprecated Filament resource `DeprecatedSOPsAndCallRateResource` has been deleted.

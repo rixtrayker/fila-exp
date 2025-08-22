@@ -7,11 +7,11 @@ use App\Models\Scopes\GetMineScope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
-class CoverageReportService
+class SOPsAndCallRateService
 {
 
     /**
-     * Build the coverage report query using optimized stored procedure for better performance
+     * Build the SOPs and call rate query using optimized stored procedure for better performance
      */
     public function buildQuery(string $fromDate, string $toDate, array $filters = []): Builder
     {

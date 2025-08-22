@@ -4,7 +4,7 @@ namespace App\Filament\Pages\Admin;
 
 use App\Models\Visit;
 use App\Filament\Strategies\VisitBreakdownStrategyInterface;
-use App\Filament\Strategies\CoverageReportStrategy;
+use App\Filament\Strategies\SOPsAndCallRateStrategy;
 use App\Filament\Strategies\FrequencyReportStrategy;
 use Filament\Pages\Page;
 use Filament\Tables\Table;
@@ -65,7 +65,7 @@ class VisitBreakdown extends Page implements HasTable
         // Initialize strategy based on the strategy parameter
         $this->breakdownStrategy = $this->strategy === 'frequency' 
             ? new FrequencyReportStrategy() 
-            : new CoverageReportStrategy();
+            : new SOPsAndCallRateStrategy();
     }
 
     public function table(Table $table): Table

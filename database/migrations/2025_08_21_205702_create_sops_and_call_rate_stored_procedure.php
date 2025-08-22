@@ -11,10 +11,10 @@ return new class extends Migration
     public function up(): void
     {
         // Drop the procedure if it exists
-        DB::statement('DROP PROCEDURE IF EXISTS GetCoverageReportData');
+        DB::statement('DROP PROCEDURE IF EXISTS GetSOPsAndCallRateData');
 
         // Create the stored procedure from SQL file
-        $sqlFile = database_path('sql/procedures/GetCoverageReportData.sql');
+        $sqlFile = database_path('sql/procedures/GetSOPsAndCallRateData.sql');
         
         if (!file_exists($sqlFile)) {
             throw new \Exception("SQL file not found: {$sqlFile}");
@@ -34,6 +34,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement('DROP PROCEDURE IF EXISTS GetCoverageReportData');
+        DB::statement('DROP PROCEDURE IF EXISTS GetSOPsAndCallRateData');
     }
 };

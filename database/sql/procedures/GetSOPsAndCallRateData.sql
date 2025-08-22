@@ -1,4 +1,4 @@
-CREATE PROCEDURE GetCoverageReportData(
+CREATE PROCEDURE GetSOPsAndCallRateData(
     IN p_from_date DATE,
     IN p_to_date DATE,
     IN p_user_ids TEXT,

@@ -8,13 +8,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log; // Added Log facade
 
-class CoverageReport extends Model
+class SOPsAndCallRate extends Model
 {
     // This model uses stored procedures for data access, not a table
     public $timestamps = false;
     public $incrementing = false;
 
-    protected $table = 'coverage_reports'; // Add table name for compatibility
+    protected $table = 'sops_and_call_rates'; // Add table name for compatibility
     protected $primaryKey = 'id'; // Define primary key
 
     protected $fillable = [
@@ -90,7 +90,7 @@ class CoverageReport extends Model
         $clientTypeParam = $clientTypeId ?: 0;
 
         // Log the parameters being sent to stored procedure
-        Log::info('CoverageReport - Calling stored procedure GetCoverageReportData with params:', [
+        Log::info('SOPsAndCallRate - Calling stored procedure GetSOPsAndCallRateData with params:', [
             'fromDate' => $fromDate,
             'toDate' => $toDate,
             'userIds' => $userIds,
@@ -101,7 +101,7 @@ class CoverageReport extends Model
         ]);
 
         // Call the stored procedure with parameters
-        $results = DB::select('CALL GetCoverageReportData(?, ?, ?, ?)', [
+        $results = DB::select('CALL GetSOPsAndCallRateData(?, ?, ?, ?)', [
             $fromDate,
             $toDate,
             $userIdsParam,
@@ -109,7 +109,7 @@ class CoverageReport extends Model
         ]);
 
         // Log the results
-        Log::info('CoverageReport - Stored procedure GetCoverageReportData returned:', [
+        Log::info('SOPsAndCallRate - Stored procedure GetSOPsAndCallRateData returned:', [
             'totalResults' => count($results),
             'firstResult' => $results[0] ?? null,
             'sampleResults' => array_slice($results, 0, 3), // First 3 results for debugging
@@ -137,7 +137,7 @@ class CoverageReport extends Model
     {
         $userIds = GetMineScope::getUserIds();
 
-        Log::info('CoverageReport - GetMineScope returned user IDs:', [
+        Log::info('SOPsAndCallRate - GetMineScope returned user IDs:', [
             'userIds' => $userIds,
             'count' => count($userIds),
             'currentUserId' => auth()->id()
@@ -145,7 +145,7 @@ class CoverageReport extends Model
 
         if (empty($userIds)) {
             $userIds = DB::table('users')->pluck('id')->toArray();
-            Log::warning('CoverageReport - No users from GetMineScope, falling back to all users:', [
+            Log::warning('SOPsAndCallRate - No users from GetMineScope, falling back to all users:', [
                 'fallbackUserIds' => $userIds,
                 'fallbackCount' => count($userIds)
             ]);
@@ -154,7 +154,7 @@ class CoverageReport extends Model
         if (isset($filters['user_id']) && !empty($filters['user_id'])) {
             $originalUserIds = $userIds;
             $userIds = array_intersect($userIds, $filters['user_id']);
-            Log::info('CoverageReport - Applied user filter:', [
+            Log::info('SOPsAndCallRate - Applied user filter:', [
                 'originalUserIds' => $originalUserIds,
                 'filterUserIds' => $filters['user_id'],
                 'filteredUserIds' => $userIds,
@@ -162,7 +162,7 @@ class CoverageReport extends Model
             ]);
         }
 
-        Log::info('CoverageReport - Final user IDs for stored procedure:', [
+        Log::info('SOPsAndCallRate - Final user IDs for stored procedure:', [
             'finalUserIds' => $userIds,
             'finalCount' => count($userIds)
         ]);
@@ -181,7 +181,7 @@ class CoverageReport extends Model
             $clientTypeId = reset($clientTypeId) ?: ClientType::PM;
         }
 
-        Log::info('CoverageReport - Client type determined:', [
+        Log::info('SOPsAndCallRate - Client type determined:', [
             'originalClientTypeId' => $filters['client_type_id'] ?? 'not_set',
             'finalClientTypeId' => $clientTypeId,
             'ClientType::PM' => ClientType::PM

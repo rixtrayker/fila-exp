@@ -13,7 +13,7 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Support\Enums\FontWeight;
 use Illuminate\Database\Eloquent\Builder;
 
-class CoverageReportStrategy implements VisitBreakdownStrategyInterface
+class SOPsAndCallRateStrategy implements VisitBreakdownStrategyInterface
 {
     public function configureQuery(Builder $query, array $filters): Builder
     {

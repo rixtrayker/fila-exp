@@ -1,18 +1,18 @@
 <?php
 
-namespace App\Filament\Resources\CoverageReportResource\Pages;
+namespace App\Filament\Resources\SOPsAndCallRateResource\Pages;
 
-use App\Filament\Resources\CoverageReportResource;
-use App\Models\CoverageReport;
+use App\Filament\Resources\SOPsAndCallRateResource;
+use App\Models\SOPsAndCallRate;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
-class ListCoverageReports extends ListRecords
+class ListSOPsAndCallRates extends ListRecords
 {
-    protected static string $resource = CoverageReportResource::class;
+    protected static string $resource = SOPsAndCallRateResource::class;
 
     protected function getHeaderActions(): array
     {
@@ -30,7 +30,7 @@ class ListCoverageReports extends ListRecords
             $filtersState = $this->getTableFiltersForm()?->getState() ?? [];
 
             // Get data directly from stored procedure
-            $data = CoverageReport::getReportDataWithFilters($filtersState);
+            $data = SOPsAndCallRate::getReportDataWithFilters($filtersState);
 
             if (empty($data)) {
                 return new \Illuminate\Database\Eloquent\Collection([]);
@@ -38,7 +38,7 @@ class ListCoverageReports extends ListRecords
 
             // Convert to Eloquent collection of models for Filament
             $models = collect($data)->map(function ($item) {
-                $model = new CoverageReport();
+                $model = new SOPsAndCallRate();
                 // Ensure all fillable fields are properly set
                 $fillableData = [];
                 foreach ($model->getFillable() as $field) {
@@ -55,7 +55,7 @@ class ListCoverageReports extends ListRecords
             return new \Illuminate\Database\Eloquent\Collection($models->toArray());
         } catch (\Exception $e) {
             // Log error and return empty collection
-            Log::error('Error in CoverageReport getTableRecords: ' . $e->getMessage());
+            Log::error('Error in SOPsAndCallRate getTableRecords: ' . $e->getMessage());
             return new \Illuminate\Database\Eloquent\Collection([]);
         }
     }

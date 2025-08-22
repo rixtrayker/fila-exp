@@ -13,7 +13,7 @@ use PhpOffice\PhpSpreadsheet\Style\Font;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 
-class CoverageReportExport implements FromCollection, WithHeadings, WithStyles
+class SOPsAndCallRateExport implements FromCollection, WithHeadings, WithStyles
 {
     use Exportable;
 

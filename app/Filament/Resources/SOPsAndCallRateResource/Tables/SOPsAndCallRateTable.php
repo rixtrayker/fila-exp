@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Filament\Resources\CoverageReportResource\Tables;
+namespace App\Filament\Resources\SOPsAndCallRateResource\Tables;
 
-use App\Exports\CoverageReportExport;
+use App\Exports\SOPsAndCallRateExport;
 use App\Models\ClientType;
-use App\Models\CoverageReport;
+use App\Models\SOPsAndCallRate;
 use App\Models\Scopes\GetMineScope;
 use Filament\Forms;
 use Filament\Tables;
@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
-class CoverageReportTable
+class SOPsAndCallRateTable
 {
     public static function table(Table $table): Table
     {
@@ -213,10 +213,10 @@ class CoverageReportTable
         $filtersState = request()->input('tableFilters', []);
 
         // Option 1: Use the flexible filter normalizer (recommended)
-        $query = CoverageReport::getReportDataWithFilters($filtersState);
+        $query = SOPsAndCallRate::getReportDataWithFilters($filtersState);
 
         // Option 2: Extract from URL if needed
-        // $query = CoverageReport::getReportDataFromUrl();
+        // $query = SOPsAndCallRate::getReportDataFromUrl();
 
         // Option 3: Manual filter extraction (if you need custom logic)
         /*
@@ -234,9 +234,9 @@ class CoverageReportTable
             'client_type_id' => $selectedClientTypeId,
         ];
 
-        $query = CoverageReport::getReportData($fromDate, $toDate, $filters);
+        $query = SOPsAndCallRate::getReportData($fromDate, $toDate, $filters);
         */
 
-        return (new CoverageReportExport($query))->download('coverage_report_' . date('Y-m-d_H-i-s') . '.xlsx');
+        return (new SOPsAndCallRateExport($query))->download('sops_and_call_rate_' . date('Y-m-d_H-i-s') . '.xlsx');
     }
 }
