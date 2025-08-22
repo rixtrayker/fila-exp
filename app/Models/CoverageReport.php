@@ -6,49 +6,47 @@ use App\Models\Scopes\GetMineScope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log; // Added Log facade
 
 class CoverageReport extends Model
 {
     // This model uses stored procedures for data access, not a table
     public $timestamps = false;
     public $incrementing = false;
-    
+
+    protected $table = 'coverage_reports'; // Add table name for compatibility
+    protected $primaryKey = 'id'; // Define primary key
+
     protected $fillable = [
         'id',
-        'name', 
+        'name',
         'area_name',
-        'total_working_days_reference',
-        'daily_visit_target_pm',
-        'daily_visit_target_am',
-        'daily_visit_target_ph',
+        'working_days',
+        'daily_visit_target',
+        'monthly_visit_target',
         'office_work_count',
         'activities_count',
-        'total_visits_pm',
-        'total_visits_am',
-        'total_visits_ph',
-        'actual_visits_pm',
-        'actual_visits_am',
-        'actual_visits_ph',
-        'total_vacation_days',
-        'actual_working_days'
+        'actual_working_days',
+        'sops',
+        'actual_visits',
+        'call_rate',
+        'total_visits',
+        'vacation_days'
     ];
 
     protected $casts = [
         'id' => 'integer',
-        'total_working_days_reference' => 'integer',
-        'daily_visit_target_pm' => 'integer',
-        'daily_visit_target_am' => 'integer', 
-        'daily_visit_target_ph' => 'integer',
+        'working_days' => 'integer',
+        'daily_visit_target' => 'integer',
+        'monthly_visit_target' => 'integer',
         'office_work_count' => 'integer',
         'activities_count' => 'integer',
-        'total_visits_pm' => 'integer',
-        'total_visits_am' => 'integer',
-        'total_visits_ph' => 'integer',
-        'actual_visits_pm' => 'integer',
-        'actual_visits_am' => 'integer',
-        'actual_visits_ph' => 'integer',
-        'total_vacation_days' => 'float',
-        'actual_working_days' => 'integer'
+        'actual_working_days' => 'integer',
+        'sops' => 'float',
+        'actual_visits' => 'integer',
+        'call_rate' => 'float',
+        'total_visits' => 'integer',
+        'vacation_days' => 'float'
     ];
 
     /**
@@ -57,7 +55,7 @@ class CoverageReport extends Model
     public static function getReportDataFromUrl(): array
     {
         $filters = static::extractFiltersFromUrl();
-        
+
         return static::getReportDataWithFilters($filters);
     }
 
@@ -67,7 +65,7 @@ class CoverageReport extends Model
     public static function getReportDataWithFilters(array $appliedFilters): array
     {
         $filters = static::normalizeFilters($appliedFilters);
-        
+
         return static::getReportData(
             $filters['from_date'],
             $filters['to_date'],
@@ -82,13 +80,24 @@ class CoverageReport extends Model
     {
         $userIds = static::getFilteredUserIds($filters);
         $clientTypeId = static::getClientTypeId($filters);
-        
+
         // Format user IDs as comma-separated string for MySQL procedure
         $userIdsParam = !empty($userIds) ? implode(',', $userIds) : '';
-        
+
         // Use 0 for client type to mean "all types" instead of null
         $clientTypeParam = $clientTypeId ?: 0;
-        
+
+        // Log the parameters being sent to stored procedure
+        Log::info('CoverageReport - Calling stored procedure GetCoverageReportData with params:', [
+            'fromDate' => $fromDate,
+            'toDate' => $toDate,
+            'userIds' => $userIds,
+            'userIdsParam' => $userIdsParam,
+            'clientTypeId' => $clientTypeId,
+            'clientTypeParam' => $clientTypeParam,
+            'totalUsers' => count($userIds)
+        ]);
+
         // Call the stored procedure with parameters
         $results = DB::select('CALL GetCoverageReportData(?, ?, ?, ?)', [
             $fromDate,
@@ -96,7 +105,15 @@ class CoverageReport extends Model
             $userIdsParam,
             $clientTypeParam
         ]);
-        
+
+        // Log the results
+        Log::info('CoverageReport - Stored procedure GetCoverageReportData returned:', [
+            'totalResults' => count($results),
+            'firstResult' => $results[0] ?? null,
+            'sampleResults' => array_slice($results, 0, 3), // First 3 results for debugging
+            'allUserIdsInResults' => collect($results)->pluck('id')->toArray()
+        ]);
+
         return $results;
     }
 
@@ -107,7 +124,7 @@ class CoverageReport extends Model
     {
         $fromDate = today()->startOfMonth()->toDateString();
         $toDate = today()->toDateString();
-        
+
         return static::getReportData($fromDate, $toDate, $filters);
     }
 
@@ -118,13 +135,35 @@ class CoverageReport extends Model
     {
         $userIds = GetMineScope::getUserIds();
 
+        Log::info('CoverageReport - GetMineScope returned user IDs:', [
+            'userIds' => $userIds,
+            'count' => count($userIds),
+            'currentUserId' => auth()->id()
+        ]);
+
         if (empty($userIds)) {
             $userIds = DB::table('users')->pluck('id')->toArray();
+            Log::warning('CoverageReport - No users from GetMineScope, falling back to all users:', [
+                'fallbackUserIds' => $userIds,
+                'fallbackCount' => count($userIds)
+            ]);
         }
 
         if (isset($filters['user_id']) && !empty($filters['user_id'])) {
+            $originalUserIds = $userIds;
             $userIds = array_intersect($userIds, $filters['user_id']);
+            Log::info('CoverageReport - Applied user filter:', [
+                'originalUserIds' => $originalUserIds,
+                'filterUserIds' => $filters['user_id'],
+                'filteredUserIds' => $userIds,
+                'filteredCount' => count($userIds)
+            ]);
         }
+
+        Log::info('CoverageReport - Final user IDs for stored procedure:', [
+            'finalUserIds' => $userIds,
+            'finalCount' => count($userIds)
+        ]);
 
         return $userIds;
     }
@@ -139,6 +178,12 @@ class CoverageReport extends Model
         if (is_array($clientTypeId)) {
             $clientTypeId = reset($clientTypeId) ?: ClientType::PM;
         }
+
+        Log::info('CoverageReport - Client type determined:', [
+            'originalClientTypeId' => $filters['client_type_id'] ?? 'not_set',
+            'finalClientTypeId' => $clientTypeId,
+            'ClientType::PM' => ClientType::PM
+        ]);
 
         return (int) $clientTypeId;
     }
@@ -168,27 +213,27 @@ class CoverageReport extends Model
     protected static function extractFiltersFromUrl(): array
     {
         $request = request();
-        
+
         // Handle both direct request parameters and tableFilters structure
         $tableFilters = $request->input('tableFilters', []);
-        
+
         // Extract date range
         $dateRange = $tableFilters['date_range'] ?? $request->only(['from_date', 'to_date']);
         $fromDate = $dateRange['from_date'] ?? $request->input('from_date', today()->startOfMonth()->toDateString());
         $toDate = $dateRange['to_date'] ?? $request->input('to_date', today()->toDateString());
-        
+
         // Extract user filter
         $userFilter = $tableFilters['user_id'] ?? $request->input('user_id');
         if (is_array($userFilter) && array_key_exists('values', $userFilter)) {
             $userFilter = $userFilter['values'];
         }
-        
+
         // Extract client type filter
         $clientTypeFilter = $tableFilters['client_type_id'] ?? $request->input('client_type_id');
         if (is_array($clientTypeFilter) && array_key_exists('values', $clientTypeFilter)) {
             $clientTypeFilter = $clientTypeFilter['values'];
         }
-        
+
         return [
             'from_date' => $fromDate,
             'to_date' => $toDate,
@@ -204,7 +249,7 @@ class CoverageReport extends Model
     {
         // Handle different filter structures
         $normalized = [];
-        
+
         // Date range handling
         if (isset($appliedFilters['date_range'])) {
             $dateRange = $appliedFilters['date_range'];
@@ -214,7 +259,7 @@ class CoverageReport extends Model
             $normalized['from_date'] = $appliedFilters['from_date'] ?? today()->startOfMonth()->toDateString();
             $normalized['to_date'] = $appliedFilters['to_date'] ?? today()->toDateString();
         }
-        
+
         // User filter normalization
         $userFilter = $appliedFilters['user_id'] ?? null;
         if (is_array($userFilter)) {
@@ -229,13 +274,13 @@ class CoverageReport extends Model
         } else {
             $normalized['user_id'] = $userFilter ? [$userFilter] : null;
         }
-        
+
         // Client type filter normalization
         $clientTypeFilter = $appliedFilters['client_type_id'] ?? ClientType::PM;
         if (is_array($clientTypeFilter)) {
             if (array_key_exists('values', $clientTypeFilter)) {
-                $normalized['client_type_id'] = is_array($clientTypeFilter['values']) 
-                    ? reset($clientTypeFilter['values']) 
+                $normalized['client_type_id'] = is_array($clientTypeFilter['values'])
+                    ? reset($clientTypeFilter['values'])
                     : $clientTypeFilter['values'];
             } elseif (array_key_exists('value', $clientTypeFilter)) {
                 $normalized['client_type_id'] = $clientTypeFilter['value'];
@@ -245,7 +290,7 @@ class CoverageReport extends Model
         } else {
             $normalized['client_type_id'] = $clientTypeFilter;
         }
-        
+
         return $normalized;
     }
 
@@ -274,7 +319,7 @@ class CoverageReport extends Model
             'user_id' => $userIds,
             'client_type_id' => $clientTypeId ?? ClientType::PM
         ], $additionalFilters);
-        
+
         return static::getReportData(
             $filters['from_date'],
             $filters['to_date'],

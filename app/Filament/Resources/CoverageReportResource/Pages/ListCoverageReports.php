@@ -5,6 +5,8 @@ namespace App\Filament\Resources\CoverageReportResource\Pages;
 use App\Filament\Resources\CoverageReportResource;
 use App\Models\CoverageReport;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
@@ -20,50 +22,41 @@ class ListCoverageReports extends ListRecords
     }
 
     /**
-     * Get the table query using the optimized CoverageReport model with flexible filters
+     * Override to handle stored procedure results instead of database queries
      */
-    protected function getTableQuery(): Builder
+    public function getTableRecords(): \Illuminate\Database\Eloquent\Collection|\Illuminate\Contracts\Pagination\Paginator|\Illuminate\Contracts\Pagination\CursorPaginator
     {
-        $filtersState = $this->getTableFiltersForm()?->getState() ?? [];
+        try {
+            $filtersState = $this->getTableFiltersForm()?->getState() ?? [];
 
-        // Option 1: Use the flexible filter normalizer (recommended)
-        return CoverageReport::getReportDataWithFilters($filtersState);
+            // Get data directly from stored procedure
+            $data = CoverageReport::getReportDataWithFilters($filtersState);
 
-        // Option 2: Extract filters manually (if you need custom handling)
-        /*
-        $dateRange = $filtersState['date_range'] ?? [];
-        $fromDate = $dateRange['from_date'] ?? today()->startOfMonth()->toDateString();
-        $toDate = $dateRange['to_date'] ?? today()->toDateString();
+            if (empty($data)) {
+                return new \Illuminate\Database\Eloquent\Collection([]);
+            }
 
-        $userFilter = $filtersState['user_id'] ?? null;
-        if (is_array($userFilter) && array_key_exists('values', $userFilter)) {
-            $userFilter = $userFilter['values'];
+            // Convert to Eloquent collection of models for Filament
+            $models = collect($data)->map(function ($item) {
+                $model = new CoverageReport();
+                // Ensure all fillable fields are properly set
+                $fillableData = [];
+                foreach ($model->getFillable() as $field) {
+                    $fillableData[$field] = $item->{$field} ?? null;
+                }
+                $model->forceFill($fillableData);
+                // Set the primary key if it exists
+                if (isset($item->id)) {
+                    $model->setKey($item->id);
+                }
+                return $model;
+            });
+
+            return new \Illuminate\Database\Eloquent\Collection($models->toArray());
+        } catch (\Exception $e) {
+            // Log error and return empty collection
+            Log::error('Error in CoverageReport getTableRecords: ' . $e->getMessage());
+            return new \Illuminate\Database\Eloquent\Collection([]);
         }
-
-        $clientType = $filtersState['client_type_id'] ?? null;
-        if (is_array($clientType) && array_key_exists('values', $clientType)) {
-            $clientType = $clientType['values'];
-        }
-
-        $selectedClientTypeId = $clientType ?? \App\Models\ClientType::PM;
-
-        return CoverageReport::getReportData($fromDate, $toDate, [
-            'user_id' => $userFilter ?: null,
-            'client_type_id' => $selectedClientTypeId,
-        ]);
-        */
-
-        // Option 3: Use URL extraction (if coming from URL parameters)
-        // return CoverageReport::getReportDataFromUrl();
-
-        // Option 4: Use custom method with specific parameters
-        /*
-        return CoverageReport::getCustomReportData(
-            fromDate: $dateRange['from_date'] ?? null,
-            toDate: $dateRange['to_date'] ?? null,
-            userIds: $userFilter,
-            clientTypeId: $selectedClientTypeId
-        );
-        */
     }
 }
