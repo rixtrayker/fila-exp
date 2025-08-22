@@ -31,7 +31,8 @@ class CoverageReport extends Model
         'actual_visits',
         'call_rate',
         'total_visits',
-        'vacation_days'
+        'vacation_days',
+        'daily_report_no'
     ];
 
     protected $casts = [
@@ -46,7 +47,8 @@ class CoverageReport extends Model
         'actual_visits' => 'integer',
         'call_rate' => 'float',
         'total_visits' => 'integer',
-        'vacation_days' => 'float'
+        'vacation_days' => 'float',
+        'daily_report_no' => 'integer'
     ];
 
     /**

@@ -102,6 +102,10 @@ class CoverageReportTable
                     thousandsSeparator: ',',
                 )
                 ->sortable(),
+            TextColumn::make('daily_report_no')
+                ->label('Daily Report No.')
+                ->numeric()
+                ->sortable(),
         ];
     }
 

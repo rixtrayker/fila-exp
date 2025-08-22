@@ -82,7 +82,10 @@ BEGIN
             WHEN ((v_total_working_days - COALESCE(busy_days_count, 0)) * v_daily_target) > 0 
             THEN ROUND((COALESCE(actual_visits, 0) / ((v_total_working_days - COALESCE(busy_days_count, 0)) * v_daily_target)) * 100, 2)
             ELSE 0 
-        END as sops
+        END as sops,
+        
+        -- Daily report number (distinct working dates)
+        COALESCE(daily_report_no, 0) as daily_report_no
         
     FROM users u
     LEFT JOIN area_user au ON u.id = au.user_id
@@ -233,10 +236,62 @@ BEGIN
         GROUP BY vr.user_id
     ) vacation_counts ON u.id = vacation_counts.user_id
     
+    -- Daily report number subquery (distinct working dates from visits, office work, and activities)
+    LEFT JOIN (
+        SELECT 
+            user_id,
+            COUNT(DISTINCT work_date) as daily_report_no
+        FROM (
+            -- Distinct dates from visited visits
+            SELECT 
+                CASE WHEN v.second_user_id IS NOT NULL THEN v.second_user_id ELSE v.user_id END as user_id,
+                DATE(v.visit_date) as work_date
+            FROM visits v
+            LEFT JOIN clients c ON v.client_id = c.id
+            WHERE v.status = 'visited'
+              AND DATE(v.visit_date) BETWEEN v_from_date AND v_to_date
+              AND v.deleted_at IS NULL
+              AND (p_client_type_id = 0 OR c.client_type_id = p_client_type_id)
+            
+            UNION
+            
+            SELECT 
+                v.user_id,
+                DATE(v.visit_date) as work_date
+            FROM visits v
+            LEFT JOIN clients c ON v.client_id = c.id
+            WHERE v.status = 'visited'
+              AND DATE(v.visit_date) BETWEEN v_from_date AND v_to_date
+              AND v.deleted_at IS NULL
+              AND v.second_user_id IS NOT NULL
+              AND (p_client_type_id = 0 OR c.client_type_id = p_client_type_id)
+            
+            UNION
+            
+            -- Distinct dates from office work
+            SELECT 
+                ow.user_id,
+                DATE(ow.time_from) as work_date
+            FROM office_works ow
+            WHERE DATE(ow.time_from) BETWEEN v_from_date AND v_to_date
+            
+            UNION
+            
+            -- Distinct dates from activities
+            SELECT 
+                act.user_id,
+                DATE(act.date) as work_date
+            FROM activities act
+            WHERE DATE(act.date) BETWEEN v_from_date AND v_to_date
+              AND act.deleted_at IS NULL
+        ) all_work_days
+        GROUP BY user_id
+    ) daily_report_counts ON u.id = daily_report_counts.user_id
+    
     WHERE (p_user_ids = '' OR FIND_IN_SET(u.id, p_user_ids))
     GROUP BY u.id, u.name, 
              office_work_count, activities_count, busy_days_count,
-             actual_visits, total_visits, vacation_days
+             actual_visits, total_visits, vacation_days, daily_report_no
     ORDER BY u.name ASC;
 
 END;
