@@ -96,11 +96,7 @@ class CoverageReportTable
                 ->sortable(),
             TextColumn::make('vacation_days')
                 ->label('Vacation Days')
-                ->numeric(
-                    decimalPlaces: 1,
-                    decimalSeparator: '.',
-                    thousandsSeparator: ',',
-                )
+                ->numeric()
                 ->sortable(),
             TextColumn::make('daily_report_no')
                 ->label('Daily Report No.')

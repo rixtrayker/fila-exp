@@ -215,11 +215,11 @@ BEGIN
         GROUP BY v.user_id
     ) total_visits_counts ON u.id = total_visits_counts.user_id
     
-    -- Vacation days subquery
+    -- Vacation days subquery (counting whole days as integers)
     LEFT JOIN (
         SELECT 
             vr.user_id,
-            SUM(
+            CAST(SUM(
                 CASE 
                     WHEN vd.start < v_from_date THEN 
                         CASE WHEN vd.end > v_to_date THEN DATEDIFF(v_to_date, v_from_date) + 1
@@ -227,7 +227,7 @@ BEGIN
                     WHEN vd.end > v_to_date THEN DATEDIFF(v_to_date, vd.start) + 1
                     ELSE DATEDIFF(vd.end, vd.start) + 1
                 END
-            ) as vacation_days
+            ) AS UNSIGNED) as vacation_days
         FROM vacation_durations vd
         JOIN vacation_requests vr ON vd.vacation_request_id = vr.id
         WHERE vr.approved = 1

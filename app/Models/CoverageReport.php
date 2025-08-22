@@ -47,7 +47,7 @@ class CoverageReport extends Model
         'actual_visits' => 'integer',
         'call_rate' => 'float',
         'total_visits' => 'integer',
-        'vacation_days' => 'float',
+        'vacation_days' => 'integer',
         'daily_report_no' => 'integer'
     ];
 
