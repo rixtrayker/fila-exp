@@ -149,3 +149,8 @@ Route::get('/admin/ops/link-storage', function () {
     Artisan::call('storage:link');
     return Artisan::output();
 });
+
+Route::get('/admin/ops/flush-permission-cache', function () {
+    Artisan::call('permission:cache-reset');
+    return true;
+});
