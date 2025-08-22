@@ -65,7 +65,7 @@ class RolesAndPermissionsSeeder extends Seeder
      * Report models that only need view permission
      */
     private array $reportModels = [
-        'coverage-report',
+        'sops-and-call-rate',
         'expenses-report',
         'frequency-report',
         'order-report',

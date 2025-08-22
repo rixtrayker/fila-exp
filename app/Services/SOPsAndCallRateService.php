@@ -24,8 +24,8 @@ class SOPsAndCallRateService
         // Convert results to a format that can be used with fromSub
         $sql = $this->buildResultsAsSql($results);
 
-        return \App\Models\CoverageReportRow::query()
-            ->fromSub($sql, 'coverage_report');
+        return \App\Models\SOPsAndCallRate::query()
+            ->fromSub($sql, 'sops_and_call_rate');
     }
 
     /**
@@ -72,7 +72,7 @@ class SOPsAndCallRateService
         $userIdsStr = implode(',', $userIds);
         
         // Call the optimized stored procedure
-        return DB::select("CALL GetCoverageReportData(?, ?, ?, ?)", [
+        return DB::select("CALL GetSOPsAndCallRateData(?, ?, ?, ?)", [
             $fromDate,
             $toDate, 
             $userIdsStr,
