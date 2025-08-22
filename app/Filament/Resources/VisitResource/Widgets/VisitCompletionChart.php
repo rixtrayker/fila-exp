@@ -10,7 +10,7 @@ use App\Models\User;
 
 class VisitCompletionChart extends ChartWidget
 {
-    protected static ?string $heading = 'Daily Planned Visits Completion';
+    protected static ?string $heading = 'Monthly Planned Visits Completion';
     protected static ?string $maxHeight = '250px';
 
     protected function getData(): array
@@ -20,7 +20,7 @@ class VisitCompletionChart extends ChartWidget
 
         // Single query to get all counts at once
         $visitStats = Visit::whereIn('user_id', $mineUsers)
-            ->where('visit_date', $today)
+            ->whereBetween('visit_date', DateHelper::currentMonth()['start'], DateHelper::currentMonth()['end'])
             ->whereNotNull('plan_id')
             ->selectRaw('
                 COUNT(*) as total_planned_visits,

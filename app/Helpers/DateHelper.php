@@ -6,6 +6,7 @@ use App\Models\OfficialHoliday;
 use App\Models\VacationDuration;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
+// use Illuminate\Database\Eloquent\Builder;
 class DateHelper{
     public static function getFirstOfWeek($nextWeek = false) : Carbon
     {
@@ -62,6 +63,19 @@ class DateHelper{
         }
         return today();
     }
+
+    public static function currentMonth(): array{
+        return [
+            'start' => today()->startOfMonth(),
+            'end' => today()->endOfMonth()
+        ];
+    }
+
+    // // current month Query
+    // public static function currentMonthQuery($query): Builder{
+    //     $currentMonth = self::currentMonth();
+    //     return $query->whereBetween('visit_date', $currentMonth['start'], $currentMonth['end']);
+    // }
 
     public static function dayOfWeek(bool $oneBased = false): int{
         $today = (today()->dayOfWeek + 8) % 7;
