@@ -10,6 +10,7 @@ use App\Filament\Widgets\MonthlyVisitStatsWidget;
 use App\Filament\Widgets\DailyPlanSummaryWidget;
 use App\Filament\Widgets\DailyVisitsTableWidget;
 use App\Filament\Widgets\MonthlySalesChart;
+use EightyNine\Reports\ReportsPlugin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -46,6 +47,12 @@ class AdminPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
                 Pages\Dashboard::class,
+            ])
+            ->plugins([
+                ReportsPlugin::make()
+                    ->reports([
+                        \App\Filament\Reports\SOPsAndCallRateReport::class,
+                    ])
             ])
             ->navigationGroups([
                 NavigationGroup::make()

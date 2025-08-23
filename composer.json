@@ -11,6 +11,7 @@
         "awcodes/filament-table-repeater": "^2.0",
         "blade-ui-kit/blade-heroicons": "^2.1",
         "doctrine/dbal": "^3.7",
+        "eightynine/filament-reports": "3.x-dev",
         "filament/filament": "^3.0-stable",
         "filament/notifications": "^3.0-stable",
         "filament/spatie-laravel-translatable-plugin": "^3.1",

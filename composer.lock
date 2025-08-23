@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "fc0bb04a5ee592a673ff0ca8ac23c7af",
+    "content-hash": "9c9a523091405b2a0541a50f90587ed9",
     "packages": [
         {
             "name": "althinect/filament-spatie-roles-permissions",
@@ -1419,6 +1419,84 @@
                 }
             ],
             "time": "2023-10-06T06:47:41+00:00"
+        },
+        {
+            "name": "eightynine/filament-reports",
+            "version": "3.x-dev",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/eighty9nine/filament-reports.git",
+                "reference": "86484e6c40f7093eeebba7f2b22d94e14f07b3c8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/eighty9nine/filament-reports/zipball/86484e6c40f7093eeebba7f2b22d94e14f07b3c8",
+                "reference": "86484e6c40f7093eeebba7f2b22d94e14f07b3c8",
+                "shasum": ""
+            },
+            "require": {
+                "filament/filament": "^3.0",
+                "illuminate/contracts": "^10.0|^11.0|^12.0",
+                "php": "^8.2",
+                "spatie/laravel-package-tools": "^1.15.0"
+            },
+            "require-dev": {
+                "nunomaduro/collision": "^7.9|^8.0",
+                "orchestra/testbench": "^8.0|^9.0|^10.0",
+                "pestphp/pest": "^2.0|^3.0",
+                "pestphp/pest-plugin-arch": "^2.0|^3.0",
+                "pestphp/pest-plugin-laravel": "^2.0|^3.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "Reports": "EightyNine\\Reports\\Facades\\Reports"
+                    },
+                    "providers": [
+                        "EightyNine\\Reports\\ReportsServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "files": [
+                    "src/helpers.php"
+                ],
+                "psr-4": {
+                    "EightyNine\\Reports\\": "src/",
+                    "EightyNine\\Reports\\Database\\Factories\\": "database/factories/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Eighty Nine",
+                    "email": "eighty9nine@gmail.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Elegant reports in your filament application",
+            "homepage": "https://github.com/eightynine/filament-reports",
+            "keywords": [
+                "eightynine",
+                "filament-reports",
+                "laravel"
+            ],
+            "support": {
+                "issues": "https://github.com/eightynine/filament-reports/issues",
+                "source": "https://github.com/eightynine/filament-reports"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/eightynine",
+                    "type": "github"
+                }
+            ],
+            "time": "2025-05-25T10:32:10+00:00"
         },
         {
             "name": "ezyang/htmlpurifier",
@@ -13479,7 +13557,9 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {},
+    "stability-flags": {
+        "eightynine/filament-reports": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
