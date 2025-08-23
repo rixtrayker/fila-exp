@@ -67,7 +67,7 @@ class RolesAndPermissionsSeeder extends Seeder
     private array $reportModels = [
         'sops-and-call-rate',
         'expenses-report',
-        'frequency-report',
+        'visit-coverage-report',
         'order-report',
         'sales-report',
         'vacations-report',

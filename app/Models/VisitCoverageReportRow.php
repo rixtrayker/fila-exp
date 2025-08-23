@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class FrequencyReportRow extends Model
+class VisitCoverageReportRow extends Model
 {
     public $timestamps = false;
 

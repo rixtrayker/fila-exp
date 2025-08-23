@@ -2,7 +2,7 @@
 
 namespace App\Filament\Widgets;
 
-use App\Filament\Pages\Admin\FrequencyReport;
+// Widget for coverage report filtering
 use App\Models\Client;
 use App\Models\User;
 use Filament\Forms\Components\DatePicker;
@@ -13,11 +13,11 @@ use Filament\Forms\Form;
 use Filament\Widgets\Widget;
 use Illuminate\Support\Str;
 
-class FrequencyFilterFormWidget extends Widget implements HasForms
+class CoverageFilterFormWidget extends Widget implements HasForms
 {
     use InteractsWithForms;
 
-    protected static string $view = 'filament.widgets.frequency-filter-form-widget';
+    protected static string $view = 'filament.widgets.coverage-filter-form-widget';
     public $from;
     public $to;
     public $user_id = [];

@@ -15,7 +15,7 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Support\Enums\FontWeight;
 use Illuminate\Database\Eloquent\Builder;
 
-class FrequencyReportStrategy implements VisitBreakdownStrategyInterface
+class VisitCoverageReportStrategy implements VisitBreakdownStrategyInterface
 {
     public function configureQuery(Builder $query, array $filters): Builder
     {
@@ -254,7 +254,7 @@ class FrequencyReportStrategy implements VisitBreakdownStrategyInterface
 
     public function getClientBreakdown(array $filters): array
     {
-        // For frequency report breakdown, show visits for the specific client only
+        // For visit coverage report breakdown, show visits for the specific client only
         $query = Visit::query()
             ->with(['client', 'user'])
             ->when($filters['from_date'] ?? null, fn($q) => $q->whereDate('visit_date', '>=', $filters['from_date']))
@@ -276,7 +276,7 @@ class FrequencyReportStrategy implements VisitBreakdownStrategyInterface
                 });
             });
 
-        // IMPORTANT: Filter by specific client_id for frequency report breakdown
+        // IMPORTANT: Filter by specific client_id for visit coverage report breakdown
         if ($filters['client_id'] ?? null) {
             $query->where('client_id', $filters['client_id']);
         }
@@ -297,7 +297,7 @@ class FrequencyReportStrategy implements VisitBreakdownStrategyInterface
                     'visited' => $statusCounts['visited'] ?? 0,
                     'pending' => $statusCounts['pending'] ?? 0,
                     'missed' => $statusCounts['missed'] ?? 0,
-                    'frequency_rate' => array_sum($statusCounts) > 0 
+                    'coverage_rate' => array_sum($statusCounts) > 0 
                         ? round(($statusCounts['visited'] ?? 0) / array_sum($statusCounts) * 100, 2)
                         : 0
                 ];

@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\FrequencyReportResource\Pages;
-use App\Models\FrequencyReportRow;
+use App\Filament\Resources\CoverageReportResource\Pages;
+use App\Models\VisitCoverageReportRow;
 use App\Traits\ResourceHasPermission;
 // use App\Traits\HasAreaBrickSecurity;
 use Filament\Forms;
@@ -17,18 +17,18 @@ use Illuminate\Support\Carbon;
 use Filament\Tables\Enums\FiltersLayout;
 use Illuminate\Support\Facades\DB;
 
-class FrequencyReportResource extends Resource
+class CoverageReportResource extends Resource
 {
     use ResourceHasPermission;
     // use HasAreaBrickSecurity;
 
-    protected static ?string $model = FrequencyReportRow::class;
-    protected static ?string $label = 'Frequency Report';
-    protected static ?string $navigationLabel = 'Frequency Report';
+    protected static ?string $model = VisitCoverageReportRow::class;
+    protected static ?string $label = 'Visit Coverage Report';
+    protected static ?string $navigationLabel = 'Visit Coverage';
     protected static ?string $navigationGroup = 'Reports';
     protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
-    protected static ?string $slug = 'frequency-report';
-    protected static ?string $permissionName = 'frequency-report';
+    protected static ?string $slug = 'visit-coverage-report';
+    protected static ?string $permissionName = 'visit-coverage-report';
 
     public static function table(Table $table): Table
     {
@@ -167,10 +167,10 @@ class FrequencyReportResource extends Resource
         //     'client_type_id' => $tableFilters['client_type_id'] ?? null,
         // ];
 
-        return self::buildFrequencyReportQuery($fromDate, $toDate, $filters);
+        return self::buildVisitCoverageReportQuery($fromDate, $toDate, $filters);
     }
 
-    private static function buildFrequencyReportQuery(string $fromDate, string $toDate, array $filters): Builder
+    private static function buildVisitCoverageReportQuery(string $fromDate, string $toDate, array $filters): Builder
     {
         // Build filter strings for SQL functions
         $brickFilter = null;
@@ -184,7 +184,7 @@ class FrequencyReportResource extends Resource
         //     $clientTypeFilter = implode(',', $filters['client_type_id']);
         // }
 
-        // Build SQL query for frequency report
+        // Build SQL query for visit coverage report
         $sql = "
             SELECT
                 c.id as client_id,
@@ -270,8 +270,8 @@ class FrequencyReportResource extends Resource
         $sql .= " HAVING total_visits_count > 0 AND client_id IS NOT NULL ORDER BY client_name ASC";
 
         // Return the query as Eloquent builder using fromSub with our DTO model
-        return FrequencyReportRow::query()
-            ->fromSub($sql, 'frequency_report');
+        return VisitCoverageReportRow::query()
+            ->fromSub($sql, 'visit_coverage_report');
     }
 
     public static function getRecordRouteKeyName(): string|null {
@@ -281,7 +281,7 @@ class FrequencyReportResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListFrequencyReports::route('/'),
+            'index' => Pages\ListCoverageReports::route('/'),
         ];
     }
 
