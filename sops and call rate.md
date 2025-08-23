@@ -24,25 +24,34 @@ This document describes how the SOPs And Call Rate report is built and what each
   - AM → `daily_am_target` (default 2)
   - PM → `daily_pm_target` (default 6)
   - PH → `daily_ph_target` (default 8)
-- Monthly visit target: `working_days * daily_visit_target`.
-- Office work count: number of `office_works` for the user within the range.
-- Activities count: number of `activities` for the user within the range.
-- Actual working days: number of workdays (excluding weekends/holidays) within the range on which the user had at least one of: a visit, an office work entry, or an activity.
+- Monthly visit target: `actual_working_days * daily_visit_target`.
+- Office work count: number of distinct dates with `office_works` for the user within the range where `status = 'approved'`.
+- Activities count: number of distinct dates with `activities` for the user within the range.
+- Actual working days: number of workdays (excluding weekends/holidays) within the range on which the user had NO office work, activities, or vacations. This is calculated as:
+  ```
+  actual_working_days = working_days - distinct(
+      approved_office_work_dates + 
+      activity_dates + 
+      approved_vacation_dates
+  )
+  ```
 - Actual visits: count of `visits` where `(user_id = u OR second_user_id = u)` and `status = 'visited'` within the date range; excludes soft-deleted rows.
 - Total visits: count of all `visits` where `(user_id = u OR second_user_id = u)` within the date range; excludes soft-deleted rows.
 - Call rate: `ROUND(actual_visits / NULLIF(actual_working_days, 0), 2)` with 0 fallback.
-- SOPS: `ROUND(actual_visits / NULLIF(working_days * daily_visit_target, 0), 2)` with 0 fallback.
+- SOPS: `ROUND(actual_visits / NULLIF(actual_working_days * daily_visit_target, 0) * 100, 2)` with 0 fallback.
 
 Notes:
 - All date comparisons use `DATE(...)` around timestamps to compare by day.
 - Visits tied via either `user_id` or `second_user_id` are included.
 - Soft-deleted visits are excluded in all counts.
+- Office work is only counted when `status = 'approved'`.
+- Office work dates are based on `created_at` field, not `time_from`.
 
 ### Sorting, actions, export
 
 - Default sort: `name ASC`
-- Row action “Visit Breakdown”: opens Visits index filtered by the same date range and the selected user to show underlying rows.
-- Header action “Export to Excel”: downloads the current query via `SOPsAndCallRateExport`.
+- Row action "Visit Breakdown": opens Visits index filtered by the same date range and the selected user to show underlying rows.
+- Header action "Export to Excel": downloads the current query via `SOPsAndCallRateExport`.
 
 ### Security
 

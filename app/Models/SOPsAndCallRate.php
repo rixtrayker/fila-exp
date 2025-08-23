@@ -66,11 +66,12 @@ class SOPsAndCallRate extends Model
      */
     public static function getReportDataWithFilters(array $appliedFilters): array
     {
+        // dd($appliedFilters);
         $filters = static::normalizeFilters($appliedFilters);
 
         return static::getReportData(
-            $filters['from_date'],
-            $filters['to_date'],
+            $filters['from_date'] ?? today()->startOfMonth()->toDateString(),
+            $filters['to_date'] ?? today()->toDateString(),
             $filters
         );
     }
@@ -252,15 +253,19 @@ class SOPsAndCallRate extends Model
         // Handle different filter structures
         $normalized = [];
 
-        // Date range handling
-        if (isset($appliedFilters['date_range'])) {
-            $dateRange = $appliedFilters['date_range'];
-            $normalized['from_date'] = $dateRange['from_date'] ?? today()->startOfMonth()->toDateString();
-            $normalized['to_date'] = $dateRange['to_date'] ?? today()->toDateString();
-        } else {
-            $normalized['from_date'] = $appliedFilters['from_date'] ?? today()->startOfMonth()->toDateString();
-            $normalized['to_date'] = $appliedFilters['to_date'] ?? today()->toDateString();
-        }
+        // // Date range handling
+        // if (isset($appliedFilters['date_range'])) {
+        //     $dateRange = $appliedFilters['date_range'];
+        //     $normalized['from_date'] = $dateRange['from_date'] ?? today()->startOfMonth()->toDateString();
+        //     $normalized['to_date'] = $dateRange['to_date'] ?? today()->toDateString();
+        // } else {
+        //     $normalized['from_date'] = $appliedFilters['from_date'] ?? today()->startOfMonth()->toDateString();
+        //     $normalized['to_date'] = $appliedFilters['to_date'] ?? today()->toDateString();
+        // }
+
+        // get dates directly from array
+        $normalized['from_date'] = $appliedFilters['from_date'] ?? today()->startOfMonth()->toDateString();
+        $normalized['to_date'] = $appliedFilters['to_date'] ?? today()->toDateString();
 
         // User filter normalization
         $userFilter = $appliedFilters['user_id'] ?? null;

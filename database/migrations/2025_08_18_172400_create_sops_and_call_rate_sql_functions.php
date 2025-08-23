@@ -75,11 +75,12 @@ return new class extends Migration
 
                     UNION
 
-                    -- Office work days
-                    SELECT DATE(ow.time_from) AS d
+                    -- Office work days (only approved)
+                    SELECT DATE(ow.created_at) AS d
                     FROM office_works ow
                     WHERE ow.user_id = user_id
-                      AND DATE(ow.time_from) BETWEEN start_date AND end_date
+                      AND DATE(ow.created_at) BETWEEN start_date AND end_date
+                      AND ow.status = "approved"
                 ) days_off_union;
 
                 RETURN COALESCE(days_off_count, 0);
@@ -252,10 +253,11 @@ return new class extends Migration
             BEGIN
                 DECLARE office_work_count INT DEFAULT 0;
 
-                SELECT COUNT(*) INTO office_work_count
+                SELECT COUNT(DISTINCT DATE(ow.created_at)) INTO office_work_count
                 FROM office_works ow
                 WHERE ow.user_id = user_id
-                  AND DATE(ow.time_from) BETWEEN start_date AND end_date;
+                  AND DATE(ow.created_at) BETWEEN start_date AND end_date
+                  AND ow.status = "approved";
 
                 RETURN COALESCE(office_work_count, 0);
             END
