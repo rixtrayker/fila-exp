@@ -333,4 +333,38 @@ class SOPsAndCallRate extends Model
             $filters
         );
     }
+
+    // get url for visit breakdown protected static function buildBreakdownUrl(Model $record, Table $table): string
+    public static function buildBreakdownUrl($recordId, $filters): string
+    {
+        $tableFilters = [
+            // 'id' => [
+            //     'user_id' => [$recordId]
+            // ],
+            'visit_date' => [
+                'from_date' => $filters['from_date'] ?? today()->startOfMonth()->toDateString(),
+                'to_date' => $filters['to_date'] ?? today()->toDateString()
+            ],
+            'client_type_id' => [
+                'values' => [$filters['client_type_id'] ?? ClientType::PM]
+            ]
+        ];
+        $params = [
+            'breakdown' => 'true',
+            'user_id' => [$recordId],
+            'tableFilters' => $tableFilters
+        ];
+
+        return route('filament.admin.resources.visits.index', $params);
+    }
+
+    // getdatawithbreakdownurl
+    public static function getDataWithBreakdownUrl($filters): array
+    {
+        $data = static::getReportDataWithFilters($filters);
+        foreach ($data as $item) {
+            $item->breakdown_url = static::buildBreakdownUrl($item->id, $filters);
+        }
+        return $data;
+    }
 }

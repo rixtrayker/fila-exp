@@ -24,13 +24,9 @@ class VisitTable
             ->columns(self::getColumns())
             ->filters(self::getFilters())
             ->actions(self::getActions())
-            ->bulkActions(self::getBulkActions());
-
-        if ($isBreakdown) {
-            $table = $table
-                ->paginated(false)
-                ->modifyQueryUsing(fn (Builder $query): Builder => $query->limit(1000));
-        }
+            ->bulkActions(self::getBulkActions())
+            ->paginated([50, 100, 250, 500, 1000])
+            ->defaultPaginationPageOption(50);
 
         return $table;
     }
@@ -40,8 +36,6 @@ class VisitTable
      */
     private static function getColumns(): array
     {
-        $isBreakdown = request()->get('breakdown') === 'true';
-
         $columns = [
             // User-related columns
             TextColumn::make('user.name')
@@ -60,11 +54,7 @@ class VisitTable
                 ->label('Client Type'),
             TextColumn::make('client.grade')
                 ->label('Client Grade'),
-        ];
-
-        // Add status column conditionally for breakdown mode
-        if ($isBreakdown) {
-            $columns[] = TextColumn::make('status')
+            TextColumn::make('status')
                 ->label('Status')
                 ->badge()
                 ->color(fn (string $state): string => match ($state) {
@@ -82,11 +72,8 @@ class VisitTable
                     'planned' => 'heroicon-m-calendar',
                     'missed' => 'heroicon-m-exclamation-circle',
                     default => 'heroicon-m-question-mark-circle',
-                });
-        }
+                }),
 
-        // Continue with other columns
-        $columns = array_merge($columns, [
             // label is_planned green for the visit has plan id and grey (secondary) for the visit has no plan id
             TextColumn::make('is_planned')
                 ->label('Planned')
@@ -119,7 +106,7 @@ class VisitTable
                 ->label('Bundles')
                 ->badge()
                 ->separator(','),
-        ]);
+        ];
 
         return $columns;
     }
@@ -136,6 +123,7 @@ class VisitTable
             self::getClientTypeFilter(),
             self::getBundlesFilter(),
             self::getPlannedFilter(),
+            self::getStatusFilter(),
             TrashedFilter::make(),
         ];
     }
@@ -255,14 +243,13 @@ class VisitTable
      */
     private static function getActions(): array
     {
-        $isBreakdown = request()->get('breakdown') === 'true';
 
         return [
             Tables\Actions\ViewAction::make(),
             Tables\Actions\DeleteAction::make()
-                ->hidden(fn() => auth()->user()->hasRole('medical-rep') || $isBreakdown),
+                ->hidden(fn() => auth()->user()->hasRole('medical-rep')),
             Tables\Actions\RestoreAction::make()
-                ->hidden(fn($record) => $record->deleted_at == null || $isBreakdown)
+                ->hidden(fn($record) => $record->deleted_at == null)
         ];
     }
 
@@ -288,19 +275,24 @@ class VisitTable
                 };
             });
     }
-
+    // get status filter
+    private static function getStatusFilter(): SelectFilter
+    {
+        return SelectFilter::make('status')
+            ->label('Status')
+            ->options(['visited' => 'Visited', 'pending' => 'Pending', 'cancelled' => 'Cancelled', 'planned' => 'Planned', 'missed' => 'Missed'])
+            ->query(function (Builder $query, array $data): Builder {
+                if (empty($data['values'])) {
+                    return $query;
+                }
+                return $query->whereIn('status', $data['values']);
+            });
+    }
     /**
      * Get the table bulk actions configuration.
      */
     private static function getBulkActions(): array
     {
-        $isBreakdown = request()->get('breakdown') === 'true';
-
-        // Disable bulk actions in breakdown mode
-        if ($isBreakdown) {
-            return [];
-        }
-
         return [
             Tables\Actions\DeleteBulkAction::make(),
             Tables\Actions\RestoreBulkAction::make(),

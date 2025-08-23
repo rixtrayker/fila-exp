@@ -47,21 +47,17 @@ class VisitResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery()
-            ->orderBy('visit_date','desc');
+        $query = parent::getEloquentQuery();
+            // ->orderBy('visit_date','desc');
 
         $isBreakdown = request()->get('breakdown') === 'true';
         $clientId = request()->get('client_id');
 
         if ($isBreakdown) {
-            // In breakdown mode: remove most scopes except MineScope, allow all statuses
             $query->withoutGlobalScopes([
                 SoftDeletingScope::class,
-                // Remove other scopes but keep GetMineScope for security
             ]);
-            // Don't apply the visited() scope in breakdown mode to show all statuses
 
-            // Apply Medical Rep filtering coming from table filters (Coverage/Frequency breakdown links)
             $tableFilters = request()->get('tableFilters', []);
             $userIds = (array) data_get($tableFilters, 'id.user_id', []);
             $secondUserIds = (array) data_get($tableFilters, 'id.second_user_id', []);
@@ -88,12 +84,10 @@ class VisitResource extends Resource
                 });
             }
 
-            // Add client filter for frequency report breakdown
             if ($clientId) {
                 $query->where('client_id', $clientId);
             }
         } else {
-            // Normal mode: apply visited scope and remove soft delete scope
             $query->visited()
                 ->withoutGlobalScopes([
                     SoftDeletingScope::class,

@@ -83,9 +83,16 @@ class SOPsAndCallRateReport extends Report
                             // TextColumn::make("total_visits"),
                             TextColumn::make("vacation_days"),
                             TextColumn::make("daily_report_no"),
+                            TextColumn::make("breakdown_url")
+                                ->url(fn($record) => $record['breakdown_url'])
+                                ->label("Breakdown")
+                                ->formatStateUsing(fn($state) => 'Click to view')
+                                ->color("primary")
+                                ->icon("heroicon-o-arrow-top-right-on-square")
+                                ->openUrlInNewTab(),
                         ])
                         ->data(
-                            fn(?array $filters) => collect(SOPsAndCallRate::getReportDataWithFilters($filters))
+                            fn(?array $filters) => collect(SOPsAndCallRate::getDataWithBreakdownUrl($filters))
                         ),
                         VerticalSpace::make(),
                         // Table::make()
@@ -105,11 +112,6 @@ class SOPsAndCallRateReport extends Report
                             ->schema([
                                 Text::make("Generated on: " . now()->format('Y-m-d H:i:s')),
                             ]),
-                        Footer\Layout\FooterColumn::make()
-                            ->schema([
-                                Text::make("Generated on: " . now()->format('Y-m-d H:i:s')),
-                            ])
-                            ->alignRight(),
                     ]),
             ]);
     }
