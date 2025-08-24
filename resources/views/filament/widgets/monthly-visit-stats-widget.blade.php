@@ -4,16 +4,16 @@
             <!-- Type Selection -->
             <div class="flex justify-center gap-2">
                 <button
-                    wire:click="$set('selectedType', 'AM')"
-                    class="px-6 py-2 rounded-lg font-medium transition-colors {{ $selectedType === 'AM' ? 'bg-primary-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
-                >
-                    AM
-                </button>
-                <button
                     wire:click="$set('selectedType', 'PM')"
                     class="px-6 py-2 rounded-lg font-medium transition-colors {{ $selectedType === 'PM' ? 'bg-primary-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
                 >
                     PM
+                </button>
+                <button
+                    wire:click="$set('selectedType', 'AM')"
+                    class="px-6 py-2 rounded-lg font-medium transition-colors {{ $selectedType === 'AM' ? 'bg-primary-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }}"
+                >
+                    AM
                 </button>
                 <button
                     wire:click="$set('selectedType', 'Pharmacy')"
@@ -26,17 +26,16 @@
             <!-- Debug Info -->
             @php
                 $stats = $this->getStats();
-                $chartData = $this->getChartData();
             @endphp
 
-            @if(count($chartData) === 0)
+            @if($stats['total'] === 0)
                 <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
                     <div class="text-sm text-yellow-800 dark:text-yellow-200">
-                        <strong>No chart data available for {{ $selectedType }} visits.</strong><br>
+                        <strong>No visits found for {{ $selectedType }} in the current month.</strong><br>
                         <span class="text-xs">
                             User ID: {{ auth()->id() }} |
                             Date Range: {{ now()->startOfMonth()->format('Y-m-d') }} to {{ now()->endOfMonth()->format('Y-m-d') }} |
-                            Chart Data Points: {{ count($chartData) }}
+                            Total Visits: {{ $stats['total'] }}
                         </span>
                     </div>
                 </div>

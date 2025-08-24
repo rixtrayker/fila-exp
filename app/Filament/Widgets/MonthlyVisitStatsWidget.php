@@ -2,19 +2,20 @@
 
 namespace App\Filament\Widgets;
 
-use App\Services\Stats\CoverageStatsService;
-use App\Services\VisitCacheService;
+use App\Models\Visit;
+use App\Models\ClientType;
 use Filament\Widgets\Widget;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class MonthlyVisitStatsWidget extends Widget
 {
     protected static string $view = 'filament.widgets.monthly-visit-stats-widget';
-    public ?string $selectedType = 'AM';
+    public ?string $selectedType = 'PM'; // Changed default to PM
 
     public function mount(): void
     {
-        $this->selectedType = 'AM';
+        $this->selectedType = 'PM'; // Changed default to PM
     }
 
     public function getColumnSpan(): int|string|array
@@ -26,56 +27,19 @@ class MonthlyVisitStatsWidget extends Widget
         ];
     }
 
-    public function getChartData(): array
-    {
-        $userId = auth()->id();
-        $date = now()->format('Y-m-d');
-        $type = strtolower($this->selectedType);
-
-        $cacheType = match($type) {
-            'am' => VisitCacheService::TYPE_COVERAGE_AM,
-            'pm' => VisitCacheService::TYPE_COVERAGE_PM,
-            'pharmacy' => VisitCacheService::TYPE_COVERAGE_PHARMACY,
-            default => VisitCacheService::TYPE_COVERAGE_AM,
-        };
-
-        return VisitCacheService::getCachedCoverageData($userId, $date, $cacheType, function () {
-            return $this->generateChartData();
-        });
-    }
-
-    protected function generateChartData(): array
+    public function getStats(): array
     {
         $startDate = now()->startOfMonth();
         $endDate = now()->endOfMonth();
         $type = strtolower($this->selectedType);
 
-        $data = [];
-        $currentDate = $startDate->copy();
+        // Get all visits for the month in one query
+        $visits = $this->getVisitsForMonth($startDate, $endDate, $type);
 
-        while ($currentDate <= $endDate) {
-            $visitData = CoverageStatsService::getVisitData($currentDate, $type);
-            $data[] = [
-                'date' => $currentDate->format('M d'),
-                'visits' => $visitData['total'],
-                'completed' => $visitData['data'][0], // Visited
-                'pending' => $visitData['data'][1],   // Pending
-                'cancelled' => $visitData['data'][2], // Missed
-            ];
-            $currentDate->addDay();
-        }
-
-        return $data;
-    }
-
-    public function getStats(): array
-    {
-        $data = $this->getChartData();
-
-        $totalVisits = collect($data)->sum('visits');
-        $completedVisits = collect($data)->sum('completed');
-        $pendingVisits = collect($data)->sum('pending');
-        $cancelledVisits = collect($data)->sum('cancelled');
+        $totalVisits = $visits->count();
+        $completedVisits = $visits->where('status', 'visited')->count();
+        $pendingVisits = $visits->where('status', 'pending')->count();
+        $cancelledVisits = $visits->where('status', 'cancelled')->count();
 
         $completionRate = $totalVisits > 0 ? round(($completedVisits / $totalVisits) * 100, 1) : 0;
 
@@ -88,10 +52,39 @@ class MonthlyVisitStatsWidget extends Widget
         ];
     }
 
+    protected function getVisitsForMonth(Carbon $startDate, Carbon $endDate, string $type)
+    {
+        $query = Visit::query()
+            ->whereBetween('visit_date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+            ->with('client'); // Eager load client relationship
+
+        // Filter by client type based on the selected type
+        switch ($type) {
+            case 'am':
+                $query->whereHas('client', function ($q) {
+                    $q->where('client_type_id', ClientType::AM);
+                });
+                break;
+            case 'pm':
+                $query->whereHas('client', function ($q) {
+                    $q->where('client_type_id', ClientType::PM);
+                });
+                break;
+            case 'pharmacy':
+                $query->whereHas('client', function ($q) {
+                    $q->where('client_type_id', ClientType::PH);
+                });
+                break;
+            default:
+                // If no valid type, get all visits
+                break;
+        }
+
+        return $query->get();
+    }
+
     public function updatedSelectedType(): void
     {
-        $userId = auth()->id();
-        $date = now()->format('Y-m-d');
-        app(VisitCacheService::class)->clearCacheForUserAndDate($userId, $date);
+        // No caching to clear
     }
 }
