@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\CoverageReportResource\Pages;
+use App\Models\Scopes\GetMineScope;
 use App\Models\VisitCoverageReportRow;
 use App\Traits\ResourceHasPermission;
 // use App\Traits\HasAreaBrickSecurity;
@@ -52,17 +53,35 @@ class CoverageReportResource extends Resource
                     ->label('Done Visits')
                     ->numeric()
                     ->color('success')
-                    ->sortable(),
+                    ->sortable()
+                    ->action(
+                        \Filament\Tables\Actions\Action::make('viewVisitedClients')
+                            ->label('View Visited Clients')
+                            ->url(fn ($record) => self::buildClientBreakdownUrl($record, 'visited'))
+                            ->openUrlInNewTab()
+                    ),
                 TextColumn::make('pending_visits_count')
                     ->label('Planned & Pending Visits')
                     ->numeric()
                     ->color('warning')
-                    ->sortable(),
+                    ->sortable()
+                    ->action(
+                        \Filament\Tables\Actions\Action::make('viewPendingClients')
+                            ->label('View Pending Clients')
+                            ->url(fn ($record) => self::buildClientBreakdownUrl($record, 'pending'))
+                            ->openUrlInNewTab()
+                    ),
                 TextColumn::make('missed_visits_count')
                     ->label('Missed Visits')
                     ->numeric()
                     ->color('danger')
-                    ->sortable(),
+                    ->sortable()
+                    ->action(
+                        \Filament\Tables\Actions\Action::make('viewMissedClients')
+                            ->label('View Missed Clients')
+                            ->url(fn ($record) => self::buildClientBreakdownUrl($record, 'cancelled'))
+                            ->openUrlInNewTab()
+                    ),
                 TextColumn::make('total_visits_count')
                     ->label('Total Visits')
                     ->numeric()
@@ -111,7 +130,7 @@ class CoverageReportResource extends Resource
                 //     ->multiple(),
             ])
             ->filtersLayout(FiltersLayout::AboveContent)
-            ->paginated([25, 50, 100, 250, 500, 'all'])
+            ->paginated([ 50, 100, 250, 500, 1000])
             ->defaultSort('client_name', 'asc')
             ->actions([
                 Tables\Actions\Action::make('visit_breakdown')
@@ -185,12 +204,12 @@ class CoverageReportResource extends Resource
         // }
 
         // Build SQL query for visit coverage report
+        $clientIDs = GetMineScope::getUserIds();
         $sql = "
             SELECT
                 c.id as client_id,
                 COALESCE(c.name_en, c.name_ar) as client_name,
                 ct.name as client_type_name,
-                b.name as brick_name,
                 (
                     SELECT COUNT(*)
                     FROM visits v
@@ -211,7 +230,7 @@ class CoverageReportResource extends Resource
                     SELECT COUNT(*)
                     FROM visits v
                     WHERE v.client_id = c.id
-                      AND v.status = 'missed'
+                      AND v.status = 'cancelled'
                       AND DATE(v.visit_date) BETWEEN '{$fromDate}' AND '{$toDate}'
                       AND v.deleted_at IS NULL
                 ) as missed_visits_count,
@@ -298,5 +317,39 @@ class CoverageReportResource extends Resource
     public static function canDelete(Model $record): bool
     {
         return false;
+    }
+
+    /**
+     * Build URL for client breakdown
+     */
+    protected static function buildClientBreakdownUrl(Model $record, string $status = 'all'): string
+    {
+        $tableFilters = request()->get('tableFilters', []);
+        $dateRange = $tableFilters['date_range'] ?? [];
+
+        $fromDate = isset($dateRange['from_date']) && !empty($dateRange['from_date'])
+            ? $dateRange['from_date']
+            : today()->subDays(7)->toDateString();
+
+        $toDate = isset($dateRange['to_date']) && !empty($dateRange['to_date'])
+            ? $dateRange['to_date']
+            : today()->toDateString();
+
+        // Get the first user ID from the current user's scope for the breakdown
+        $userIds = \App\Models\Scopes\GetMineScope::getUserIds();
+        $userId = !empty($userIds) ? $userIds[0] : null;
+
+        $params = [
+            'from_date' => $fromDate,
+            'to_date' => $toDate,
+            'status' => $status
+        ];
+
+        // Add user_id if available
+        if ($userId) {
+            $params['user_id'] = $userId;
+        }
+
+        return route('filament.admin.resources.client-breakdowns.index', $params);
     }
 }

@@ -169,7 +169,7 @@ class Client extends Model
             return $builder;
         }
 
-        $brickIds = self::getUserBrickIds();
+        $brickIds = self::getMyBricksIds();
 
         return $builder->whereIn("brick_id", $brickIds);
     }
@@ -184,33 +184,9 @@ class Client extends Model
         return auth()->user()->hasRole("super-admin");
     }
 
-    private static function getUserBrickIds(): array
+    public static function getMyBricksIds(): array
     {
-        $user = auth()->user();
-
-        // Start with an empty collection
-        $brickIds = collect();
-
-        // Get brick IDs from user's areas using a single query
-        if ($user->areas()->exists()) {
-            $areaBrickIds = $user
-                ->areas()
-                ->with("bricks")
-                ->get()
-                ->map(function ($area) {
-                    return $area->bricks->pluck("id");
-                })
-                ->flatten();
-
-            $brickIds = $brickIds->merge($areaBrickIds);
-        }
-
-        // If user is medical rep, add their direct brick assignments
-        if ($user->hasRole("medical-rep")) {
-            $userBrickIds = $user->bricks()->pluck("bricks.id");
-            $brickIds = $brickIds->merge($userBrickIds);
-        }
-
-        return $brickIds->unique()->values()->toArray();
+        $id = auth()?->id() ?? 0;
+        return UserBricksView::getUserBrickIds($id);
     }
 }

@@ -68,6 +68,7 @@ class RolesAndPermissionsSeeder extends Seeder
         'sops-and-call-rate',
         'expenses-report',
         'visit-coverage-report',
+        'accounts-coverage-report',
         'order-report',
         'sales-report',
         'vacations-report',

@@ -21,7 +21,6 @@ use Spatie\Permission\Traits\HasRoles;
 use \Staudenmeir\LaravelMergedRelations\Eloquent\HasMergedRelationships;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use App\Models\Traits\Reports\HasCoverageReportStatistics;
 
 class User extends Authenticatable implements FilamentUser
 {
@@ -37,7 +36,6 @@ class User extends Authenticatable implements FilamentUser
     use TwoFactorAuthenticatable;
     use HasMergedRelationships;
     use HasKpi;
-    use HasCoverageReportStatistics;
 
     /**
      * The attributes that are mass assignable.

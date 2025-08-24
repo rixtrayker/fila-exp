@@ -21,6 +21,9 @@ class SOPsAndCallRateResource extends Resource
     protected static ?string $slug = 'sops-and-call-rate';
     protected static ?string $permissionName = 'sops-and-call-rate';
 
+    // should register to navigation variable is false
+    protected static bool $shouldRegisterNavigation = false;
+
     public static function table(Table $table): Table
     {
         return SOPsAndCallRateTable::table($table);
@@ -31,6 +34,17 @@ class SOPsAndCallRateResource extends Resource
         return [
             'index' => Pages\ListSOPsAndCallRates::route('/'),
         ];
+    }
+
+    public static function canViewAny(): bool
+    {
+        return false;
+    }
+
+    public static function canView(Model $record): bool
+
+    {
+        return false;
     }
 
     public static function canCreate(): bool

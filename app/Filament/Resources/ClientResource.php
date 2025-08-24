@@ -10,6 +10,7 @@ use App\Models\City;
 use App\Models\Client;
 use App\Models\ClientType;
 use App\Models\User;
+use App\Models\UserBricksView;
 use App\Traits\ResourceHasPermission;
 use Filament\Forms;
 use Filament\Forms\Components\Section;
@@ -251,25 +252,7 @@ class ClientResource extends Resource
 
     public static function getUserBrickIds(int $userId): array
     {
-        $user = User::find($userId);
-
-        if (!$user) {
-            return [];
-        }
-
-        // Get user's areas and their bricks
-        $userAreaIds = $user->areas()->pluck('areas.id')->toArray();
-        $userBrickIds = $user->bricks()->pluck('bricks.id')->toArray();
-
-        // Get bricks from user's areas
-        $areaBrickIds = Brick::whereIn('area_id', $userAreaIds)
-            ->pluck('id')
-            ->toArray();
-
-        // Combine all brick IDs
-        $allBrickIds = array_merge($userBrickIds, $areaBrickIds);
-
-        return array_unique($allBrickIds);
+        return UserBricksView::getUserBrickIds($userId);
     }
 
     public static function captureLocation(): Action
