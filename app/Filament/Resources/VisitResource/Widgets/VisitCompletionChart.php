@@ -7,41 +7,29 @@ use App\Helpers\DateHelper;
 use Filament\Widgets\ChartWidget;
 use App\Models\User;
 use Carbon\Carbon;
-
+use App\Models\UserBricksView;
+use App\Models\Client;
+use App\Models\ClientType;
 class VisitCompletionChart extends ChartWidget
 {
-    protected static ?string $heading = 'Monthly Planned Visits Completion';
+    protected static ?string $heading = 'Monthly Covered PM Accounts';
     protected static ?string $maxHeight = '250px';
 
     protected function getData(): array
     {
-        $today = DateHelper::today();
-        $mineUsers = User::getMine()->pluck('id');
-        $startOfMonth = Carbon::today()->startOfMonth()->format('Y-m-d');
-        $endOfMonth = Carbon::today()->endOfMonth()->format('Y-m-d');
+        $visitStats = $this->getStatsNumber();
+        $totalVisits = $visitStats['total'];
+        $visitedVisits = $visitStats['visited'];
+        $unvisitedVisits = $totalVisits - $visitedVisits;
 
-        $visitStats = Visit::whereIn('user_id', $mineUsers)
-            ->whereBetween('visit_date', [$startOfMonth, $endOfMonth])
-            ->whereNotNull('plan_id')
-            ->selectRaw('
-                COUNT(*) as total_planned_visits,
-                SUM(CASE WHEN status = "visited" THEN 1 ELSE 0 END) as completed_planned_visits,
-                SUM(CASE WHEN status IN ("pending", "planned") THEN 1 ELSE 0 END) as pending_planned_visits
-            ')
-            ->first();
-
-        $totalPlannedVisits = $visitStats->total_planned_visits;
-        $completedPlannedVisits = $visitStats->completed_planned_visits;
-        $pendingPlannedVisits = $visitStats->pending_planned_visits;
-
-        if ($totalPlannedVisits === 0) {
+        if ($totalVisits === 0) {
             $data = [1];
             $colors = ['#FFEB3B'];
-            $labels = ['No Planned Visits Today'];
+            $labels = ['No PM Accounts Visited This Month'];
         } else {
-            $data = [$completedPlannedVisits, $pendingPlannedVisits];
+            $data = [$visitedVisits, $unvisitedVisits];
             $colors = ['#90EE90', '#F08080'];
-            $labels = ['Completed', 'Pending'];
+            $labels = ['Visited', 'Unvisited'];
         }
 
         return [
@@ -56,6 +44,25 @@ class VisitCompletionChart extends ChartWidget
                 ],
             ],
             'labels' => $labels,
+        ];
+    }
+
+
+
+    public function getStatsNumber(): array
+    {
+        $bricksIDs = UserBricksView::getUserBrickIds(auth()->user()->id);
+        $clientsIDs = Client::where('client_type_id',ClientType::PM)->whereIn('brick_id', $bricksIDs)->pluck('id')->toArray();
+        $from = today()->startOfMonth()->format('Y-m-d');
+        $to = today()->endOfMonth()->format('Y-m-d');
+        $coveredClientsIDs = Visit::whereIn('client_id', $clientsIDs)->where('status', 'visited')->whereBetween('visit_date', [$from, $to])->pluck('client_id')->unique()->toArray();
+        $coveredClientsIDs = Client::whereIn('id', $coveredClientsIDs)->where('client_type_id', ClientType::PM)->pluck('id')->toArray();
+        $total = count($clientsIDs);
+
+        return [
+            'total' => $total,
+            'visited' => count($coveredClientsIDs),
+            'completion_rate' => $total > 0 ? count($coveredClientsIDs) / $total * 100 : 0,
         ];
     }
 
