@@ -36,17 +36,18 @@ class EditDailyVisit extends EditRecord
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        $this->validateLocation($data);
+        $locationData = $this->validateLocation($data);
+        $data = array_merge($data, $locationData);
         $data['status'] = 'visited';
         return $data;
     }
 
-    protected function validateLocation(array $data): void
+    protected function validateLocation(array $data): array
     {
         $featureEnabled = Feature::isEnabled('location');
 
         if (!$featureEnabled) {
-            return;
+            return [];
         }
 
         $location = $this->locationService->getLocation($this->getId());
@@ -59,8 +60,13 @@ class EditDailyVisit extends EditRecord
             $this->sendLocationError('Location is too far from the client');
         }
 
-        $this->record->lat = $location->get('latitude');
-        $this->record->lng = $location->get('longitude');
+        $lat = $location->get('latitude') ?? null;
+        $lng = $location->get('longitude') ?? null;
+
+        return [
+            'lat' => $lat,
+            'lng' => $lng,
+        ];
     }
 
     protected function sendLocationError(string $message): void
@@ -72,9 +78,18 @@ class EditDailyVisit extends EditRecord
             ->send();
         throw new Halt();
     }
+    protected function beforeSave(): void
+    {
+        Log::info('beforeSave');
+        Log::info($this->record);
+    }
 
     public function afterSave(): void
     {
+        Log::info('afterSave');
+        $this->record->refresh();
+        Log::info($this->record);
+
         try {
             $this->visitService->saveProducts($this->record, $this->form->getRawState());
         } catch (\Exception $e) {
