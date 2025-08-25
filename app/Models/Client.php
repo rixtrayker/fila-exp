@@ -170,7 +170,6 @@ class Client extends Model
         }
 
         $brickIds = self::getMyBricksIds();
-
         return $builder->whereIn("brick_id", $brickIds);
     }
 
@@ -186,6 +185,10 @@ class Client extends Model
 
     public static function getMyBricksIds(): array
     {
+        if (self::isSuperAdmin()) {
+            return Brick::all()->pluck('id')->toArray();
+        }
+
         $id = auth()?->id() ?? 0;
         return UserBricksView::getUserBrickIds($id);
     }

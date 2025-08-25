@@ -26,7 +26,7 @@ class DailyVisitsTableWidget extends BaseWidget
         return Visit::query()
             ->with(['client.brick', 'client.clientType', 'user', 'callType'])
             ->whereDate('visit_date', $today)
-            ->whereIn('status', ['visited'])
+            ->whereIn('status', ['pending'])
             ->whereNotNull('plan_id');
             // ->orderBy('status', 'asc');
             // ->orderBy('client.name_en', 'asc');

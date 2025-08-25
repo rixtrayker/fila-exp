@@ -35,13 +35,15 @@ class UserBricksView extends Model
      */
     public static function getUserBrickIds(int $userId): array
     {
-        if (auth()->user()->hasRole('super-admin')) {
+        if (User::find($userId)->hasRole('super-admin')) {
             return Brick::all()->pluck('id')->toArray();
         }
 
-        return static::where('user_id', $userId)
+        $result =  static::where('user_id', $userId)
             ->pluck('brick_id')
             ->toArray();
+
+        return $result;
     }
 
     /**
