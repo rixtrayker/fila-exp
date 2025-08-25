@@ -74,7 +74,12 @@ class VisitReport extends Page
     }
     public function getReportQuery(){
         $query =  Visit::query()
-            ->select('users.name as medical_rep', 'visit_date','clients.name_en as client_name','comment', 'visits.status as status'
+            ->select(
+                DB::raw('GROUP_CONCAT(DISTINCT users.name SEPARATOR ", ") as medical_rep'),
+                DB::raw('GROUP_CONCAT(DISTINCT visit_date SEPARATOR ", ") as visit_date'),
+                DB::raw('GROUP_CONCAT(DISTINCT comment SEPARATOR ", ") as comment'),
+                DB::raw('GROUP_CONCAT(DISTINCT visits.status SEPARATOR ", ") as status'),
+                DB::raw('GROUP_CONCAT(DISTINCT clients.name_en SEPARATOR ", ") as client_name')
                 ,DB::raw('GROUP_CONCAT(products.name SEPARATOR", ") AS products_list')
             )
             ->leftJoin('users', 'visits.user_id', '=', 'users.id')
