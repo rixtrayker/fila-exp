@@ -4,37 +4,38 @@
 -- 2. Area-based brick access (area_user -> area_brick -> bricks)
 
 CREATE OR REPLACE VIEW user_bricks_view AS
-SELECT DISTINCT
-    u.id as user_id,
-    u.name as user_name,
-    b.id as brick_id,
-    b.name as brick_name,
-    a.id as area_id,
-    a.name as area_name,
-    'direct' as access_type
-FROM users u
--- Direct brick assignments
-JOIN brick_user bu ON u.id = bu.user_id
-JOIN bricks b ON bu.brick_id = b.id
-LEFT JOIN areas a ON b.area_id = a.id
-WHERE u.is_active = 1
+SELECT *
+FROM (
+    -- direct access via brick_user
+    SELECT
+        u.id   AS user_id,
+        u.name AS user_name,
+        b.id   AS brick_id,
+        b.name AS brick_name,
+        a.id   AS area_id,
+        a.name AS area_name,
+        'direct' AS access_type
+    FROM users u
+    JOIN brick_user bu ON u.id = bu.user_id
+    JOIN bricks b      ON bu.brick_id = b.id
+    LEFT JOIN areas a  ON b.area_id = a.id
+    WHERE u.is_active = 1
 
-UNION
+    UNION
 
--- Area-based brick access
-SELECT DISTINCT
-    u.id as user_id,
-    u.name as user_name,
-    b.id as brick_id,
-    b.name as brick_name,
-    a.id as area_id,
-    a.name as area_name,
-    'area_based' as access_type
-FROM users u
-JOIN area_user au ON u.id = au.user_id
-JOIN areas a ON au.area_id = a.id
-JOIN area_brick ab ON a.id = ab.area_id
-JOIN bricks b ON ab.brick_id = b.id
-WHERE u.is_active = 1
-
-ORDER BY user_id, brick_id;
+    -- indirect access via area_user
+    SELECT
+        u.id   AS user_id,
+        u.name AS user_name,
+        b.id   AS brick_id,
+        b.name AS brick_name,
+        a.id   AS area_id,
+        a.name AS area_name,
+        'area_based' AS access_type
+    FROM users u
+    JOIN area_user au   ON u.id = au.user_id
+    JOIN areas a        ON au.area_id = a.id
+    JOIN bricks b       ON b.area_id = a.id
+    WHERE u.is_active = 1
+) combined
+ORDER BY combined.user_id, combined.brick_id;
