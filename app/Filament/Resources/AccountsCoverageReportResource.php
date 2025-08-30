@@ -96,8 +96,9 @@ class AccountsCoverageReportResource extends Resource
                     ->openUrlInNewTab(),
             ])
             ->filters([
-                Tables\Filters\Filter::make('date_range')
-                    ->label('Date Range')
+                // apply two pure filters for visit_date and status
+                Tables\Filters\Filter::make('visit_date')
+                    ->label('Visit Date')
                     ->form([
                         Forms\Components\DatePicker::make('from_date')
                             ->default(today()->firstOfMonth())
@@ -105,7 +106,10 @@ class AccountsCoverageReportResource extends Resource
                         Forms\Components\DatePicker::make('to_date')
                             ->default(today())
                             ->maxDate(today()),
-                    ]),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return self::buildAccountsCoverageReportQuery($data['from_date'], $data['to_date']);
+                    }),
             ])
             ->filtersLayout(FiltersLayout::AboveContent)
             ->paginated([50, 100, 250, 500, 'all'])
@@ -145,14 +149,13 @@ class AccountsCoverageReportResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         $tableFilters = request()->get('tableFilters', []);
-        $dateRange = $tableFilters['date_range'] ?? [];
 
-        $fromDate = isset($dateRange['from_date']) && !empty($dateRange['from_date'])
-            ? $dateRange['from_date']
-            : today()->subDays(30)->toDateString();
+        $fromDate = isset($tableFilters['from_date']) && !empty($tableFilters['from_date'])
+            ? $tableFilters['from_date']
+            : today()->firstOfMonth()->toDateString();
 
-        $toDate = isset($dateRange['to_date']) && !empty($dateRange['to_date'])
-            ? $dateRange['to_date']
+        $toDate = isset($tableFilters['to_date']) && !empty($tableFilters['to_date'])
+            ? $tableFilters['to_date']
             : today()->toDateString();
 
         return self::buildAccountsCoverageReportQuery($fromDate, $toDate);

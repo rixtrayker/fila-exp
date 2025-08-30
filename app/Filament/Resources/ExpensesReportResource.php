@@ -15,7 +15,6 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Tables\Actions\Action;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\DB;
 use App\Traits\ResourceHasPermission;
 class ExpensesReportResource extends Resource
@@ -38,15 +37,7 @@ class ExpensesReportResource extends Resource
             ->select(
                 'users.id as id',
                 'users.name as medical_rep',
-                'daily_allowance',
-                DB::raw('SUM(transportation) as transportation'),
-                DB::raw('SUM(accommodation) as accommodation'),
-                DB::raw('SUM(distance) as distance'),
-                DB::raw('SUM(meal) as meal'),
-                DB::raw('SUM(telephone_postage) as telephone_postage'),
-                DB::raw('SUM(medical_expenses) as medical_expenses'),
-                DB::raw('SUM(others) as others'),
-                DB::raw('SUM(total) as total'),
+                DB::raw('COUNT(*) as total_expenses'),
             )
             ->leftJoin('users', 'users.id','=','expenses.user_id')
             ->groupBy(
@@ -65,24 +56,8 @@ class ExpensesReportResource extends Resource
             ->columns([
                 TextColumn::make('medical_rep')
                     ->label('Medical Rep'),
-                TextColumn::make('transportation')
-                    ->label('Transportation'),
-                TextColumn::make('accommodation')
-                    ->label('Accommodation'),
-                TextColumn::make('distance')
-                    ->label('Distance (km)'),
-                TextColumn::make('meal')
-                    ->label('Meal'),
-                TextColumn::make('telephone_postage')
-                    ->label('Postage/Telephone/Fax'),
-                TextColumn::make('daily_allowance')
-                    ->label('Daily Allowance'),
-                TextColumn::make('medical_expenses')
-                    ->label('Medical Expenses'),
-                TextColumn::make('others')
-                    ->label('Others'),
-                TextColumn::make('total')
-                    ->label('Total'),
+                TextColumn::make('total_expenses')
+                    ->label('Total Expenses'),
             ])
             ->filters([
                 Tables\Filters\Filter::make('dates_range')

@@ -19,22 +19,7 @@ class Expenses extends Model
         'from',
         'to',
         'description',
-        'distance',
-        'transportation',
-        'accommodation',
-        'meal',
-        'telephone_postage',
-        'daily_allowance',
-        'medical_expenses',
-        'others',
-        'others_description',
-        'total',
         'comment',
-        'approved',
-        'approved_at',
-        'is_paid',
-        'paid_at',
-        'paid_by',
     ];
 
     protected $casts = [

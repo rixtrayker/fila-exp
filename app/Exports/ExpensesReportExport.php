@@ -41,15 +41,7 @@ class ExpensesReportExport implements FromCollection, WithHeadings, WithStyles
                 return [
                     $record->id ?? '',
                     $record->medical_rep ?? '',
-                    number_format($record->transportation ?? 0, 2),
-                    number_format($record->accommodation ?? 0, 2),
-                    $record->distance ?? 0, // Distance should be whole number (km)
-                    number_format($record->meal ?? 0, 2),
-                    number_format($record->telephone_postage ?? 0, 2),
-                    number_format($record->daily_allowance ?? 0, 2),
-                    number_format($record->medical_expenses ?? 0, 2),
-                    number_format($record->others ?? 0, 2),
-                    number_format($record->total ?? 0, 2),
+                    $record->total_expenses ?? 0,
                 ];
             });
         } catch (\Exception $e) {
@@ -65,15 +57,7 @@ class ExpensesReportExport implements FromCollection, WithHeadings, WithStyles
         return [
             'ID',
             'Medical Rep',
-            'Transportation',
-            'Accommodation',
-            'Distance (km)',
-            'Meal',
-            'Postage/Telephone/Fax',
-            'Daily Allowance',
-            'Medical Expenses',
-            'Others',
-            'Total',
+            'Total Expenses',
         ];
     }
 
@@ -83,17 +67,9 @@ class ExpensesReportExport implements FromCollection, WithHeadings, WithStyles
         $sheet->getColumnDimension('A')->setWidth(5);
         $sheet->getColumnDimension('B')->setWidth(20);
         $sheet->getColumnDimension('C')->setWidth(15);
-        $sheet->getColumnDimension('D')->setWidth(15);
-        $sheet->getColumnDimension('E')->setWidth(15);
-        $sheet->getColumnDimension('F')->setWidth(12);
-        $sheet->getColumnDimension('G')->setWidth(20);
-        $sheet->getColumnDimension('H')->setWidth(15);
-        $sheet->getColumnDimension('I')->setWidth(15);
-        $sheet->getColumnDimension('J')->setWidth(12);
-        $sheet->getColumnDimension('K')->setWidth(15);
 
         // Style the header row
-        $sheet->getStyle('A1:K1')->applyFromArray([
+        $sheet->getStyle('A1:C1')->applyFromArray([
             'font' => [
                 'bold' => true,
                 'color' => ['rgb' => 'FFFFFF'],
@@ -121,7 +97,7 @@ class ExpensesReportExport implements FromCollection, WithHeadings, WithStyles
         // Style the data rows
         $lastRow = $sheet->getHighestRow();
         if ($lastRow > 1) {
-            $sheet->getStyle("A2:K{$lastRow}")->applyFromArray([
+            $sheet->getStyle("A2:C{$lastRow}")->applyFromArray([
                 'borders' => [
                     'allBorders' => [
                         'borderStyle' => Border::BORDER_THIN,
@@ -134,37 +110,37 @@ class ExpensesReportExport implements FromCollection, WithHeadings, WithStyles
                 ],
             ]);
 
-            // Apply conditional formatting for high expense totals
+            // Apply conditional formatting for expense counts
             for ($row = 2; $row <= $lastRow; $row++) {
-                $total = $sheet->getCell("K{$row}")->getValue();
-                $totalNumeric = (float) str_replace(',', '', $total);
+                $total = $sheet->getCell("C{$row}")->getValue();
+                $totalNumeric = (int) $total;
 
-                // Apply row background color based on expense total
-                if ($totalNumeric > 1000) {
-                    $sheet->getStyle("A{$row}:K{$row}")->getFill()
+                // Apply row background color based on expense count
+                if ($totalNumeric > 20) {
+                    $sheet->getStyle("A{$row}:C{$row}")->getFill()
                         ->setFillType(Fill::FILL_SOLID)
-                        ->getStartColor()->setRGB('FFE6E6'); // Light red for high expenses
-                } elseif ($totalNumeric > 500) {
-                    $sheet->getStyle("A{$row}:K{$row}")->getFill()
+                        ->getStartColor()->setRGB('FFE6E6'); // Light red for high count
+                } elseif ($totalNumeric > 10) {
+                    $sheet->getStyle("A{$row}:C{$row}")->getFill()
                         ->setFillType(Fill::FILL_SOLID)
-                        ->getStartColor()->setRGB('FFF2E6'); // Light orange for medium expenses
+                        ->getStartColor()->setRGB('FFF2E6'); // Light orange for medium count
                 } else {
-                    $sheet->getStyle("A{$row}:K{$row}")->getFill()
+                    $sheet->getStyle("A{$row}:C{$row}")->getFill()
                         ->setFillType(Fill::FILL_SOLID)
-                        ->getStartColor()->setRGB('E6FFE6'); // Light green for low expenses
+                        ->getStartColor()->setRGB('E6FFE6'); // Light green for low count
                 }
 
-                // Style total column with bold and color based on amount
-                if ($totalNumeric > 1000) {
-                    $sheet->getStyle("K{$row}")->getFont()
+                // Style total column with bold and color based on count
+                if ($totalNumeric > 20) {
+                    $sheet->getStyle("C{$row}")->getFont()
                         ->setBold(true)
                         ->setColor(new Color(Color::COLOR_RED));
-                } elseif ($totalNumeric > 500) {
-                    $sheet->getStyle("K{$row}")->getFont()
+                } elseif ($totalNumeric > 10) {
+                    $sheet->getStyle("C{$row}")->getFont()
                         ->setBold(true)
                         ->setColor(new Color(Color::COLOR_DARKYELLOW));
                 } else {
-                    $sheet->getStyle("K{$row}")->getFont()
+                    $sheet->getStyle("C{$row}")->getFont()
                         ->setBold(true)
                         ->setColor(new Color(Color::COLOR_DARKGREEN));
                 }
@@ -180,8 +156,8 @@ class ExpensesReportExport implements FromCollection, WithHeadings, WithStyles
 
             // Add summary labels
             $sheet->setCellValue("A{$summaryRow}", 'Summary');
-            $sheet->setCellValue("B{$summaryRow}", 'Total Records: ' . ($this->getRecordCount()));
-            $sheet->setCellValue("C{$summaryRow}", 'Total Amount: ' . number_format($this->getTotalSum(), 2));
+            $sheet->setCellValue("B{$summaryRow}", 'Total Medical Reps: ' . ($this->getRecordCount()));
+            $sheet->setCellValue("C{$summaryRow}", 'Total Expenses: ' . $this->getTotalSum());
 
             // Style summary row
             $sheet->getStyle("A{$summaryRow}:C{$summaryRow}")->applyFromArray([
@@ -215,9 +191,9 @@ class ExpensesReportExport implements FromCollection, WithHeadings, WithStyles
     /**
      * Get total sum of all expenses
      */
-    public function getTotalSum(): float
+    public function getTotalSum(): int
     {
-        return $this->query->sum('total') ?? 0;
+        return $this->query->sum('total_expenses') ?? 0;
     }
 
     /**
