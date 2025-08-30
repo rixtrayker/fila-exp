@@ -99,6 +99,8 @@ class VisitResource extends Resource
                 ]);
         }
 
+        $query->orderBy('id', 'desc');
+
         return $query;
     }
 
