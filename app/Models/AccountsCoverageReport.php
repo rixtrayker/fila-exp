@@ -53,12 +53,20 @@ class AccountsCoverageReport extends Model
      * Build the accounts coverage report query using the user_bricks_view
      * This view consolidates user brick access through direct assignments and area-based access
      */
-    public static function buildReportQuery(string $fromDate, string $toDate): Builder
+    public static function buildReportQuery(string $fromDate, string $toDate, ?array $medicalRepIds = null): Builder
     {
         $userIds = GetMineScope::getUserIds();
 
         if (empty($userIds)) {
             return User::query()->whereRaw('1 = 0');
+        }
+
+        // If specific medical reps are selected, filter by them
+        if (!empty($medicalRepIds)) {
+            $userIds = array_intersect($userIds, $medicalRepIds);
+            if (empty($userIds)) {
+                return User::query()->whereRaw('1 = 0');
+            }
         }
 
         $userIdsStr = implode(',', $userIds);
@@ -146,8 +154,9 @@ class AccountsCoverageReport extends Model
     {
         $fromDate = $filters['from_date'] ?? today()->firstOfMonth()->toDateString();
         $toDate = $filters['to_date'] ?? today()->toDateString();
+        $medicalRepIds = $filters['medical_rep_id'] ?? null;
 
-        $query = self::buildReportQuery($fromDate, $toDate);
+        $query = self::buildReportQuery($fromDate, $toDate, $medicalRepIds);
         $results = $query->get();
 
         $newResults = collect();

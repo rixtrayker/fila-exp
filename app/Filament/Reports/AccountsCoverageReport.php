@@ -13,6 +13,8 @@ use Filament\Forms\Form;
 use EightyNine\Reports\Components\Body\TextColumn;
 use EightyNine\Reports\Components\Body\Table;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
+use App\Models\User;
 
 class AccountsCoverageReport extends Report
 {
@@ -126,7 +128,13 @@ class AccountsCoverageReport extends Report
                 DatePicker::make('to_date')
                     ->label('To Date')
                     ->default(today()),
-            ]);
+                Select::make('medical_rep_id')
+                    ->label('Medical Rep')
+                    ->options(User::getMine()->where('is_active', 1)->pluck('name', 'id'))
+                    ->searchable()
+                    ->placeholder('All Medical Reps')
+                    ->multiple(),
+            ])->columns(2);
     }
 
     protected function prepareForValidation($attributes): array
