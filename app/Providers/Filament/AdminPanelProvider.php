@@ -52,6 +52,7 @@ class AdminPanelProvider extends PanelProvider
                 ReportsPlugin::make()
                     ->reports([
                         \App\Filament\Reports\SOPsAndCallRateReport::class,
+                        \App\Filament\Reports\AccountsCoverageReport::class,
                     ])
             ])
             ->navigationGroups([
