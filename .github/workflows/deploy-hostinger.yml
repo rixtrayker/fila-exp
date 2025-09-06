@@ -38,7 +38,7 @@ jobs:
         run: |
           if [ "${GITHUB_REF##*/}" = "master" ]; then
             echo "🚀 Deploying to PRODUCTION"
-            rsync -avz --delete -e "ssh -p ${{ secrets.SSH_PORT }}" \
+            rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }}" \
               --exclude=".git" \
               --exclude=".github" \
               ./ \
@@ -52,7 +52,7 @@ jobs:
 
           elif [ "${GITHUB_REF##*/}" = "dev" ]; then
             echo "🚀 Deploying to DEVELOPMENT"
-            rsync -avz --delete -e "ssh -p ${{ secrets.SSH_PORT }}" \
+            rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }}" \
               --exclude=".git" \
               --exclude=".github" \
               ./ \
