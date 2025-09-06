@@ -47,7 +47,18 @@ jobs:
           key: ${{ secrets.HOSTINGER_SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
           envs: DEPLOYMENT_TYPE,SUBDOMAIN,GITHUB_SHA,GITHUB_REF,SSH_USER,SSH_SERVER,SSH_PORT
-          script: scripts/rsync-deploy.sh
+          script: |
+            # First, sync the files from the GitHub runner to the server
+            rsync -avz --delete -e "ssh -p $SSH_PORT" \
+              --exclude=".git" \
+              --exclude=".github" \
+              ./ \
+              $SSH_USER@$SSH_SERVER:~/domains/$SUBDOMAIN/public_html/
+
+            # Then navigate to the deployment directory and run the scripts
+            cd ~/domains/$SUBDOMAIN/public_html
+            chmod +x scripts/deploy.sh
+            ./scripts/deploy.sh
 
       - name: Deploy to DEVELOPMENT
         if: github.ref == 'refs/heads/dev'
@@ -66,4 +77,15 @@ jobs:
           key: ${{ secrets.HOSTINGER_SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
           envs: DEPLOYMENT_TYPE,SUBDOMAIN,GITHUB_SHA,GITHUB_REF,SSH_USER,SSH_SERVER,SSH_PORT
-          script: scripts/rsync-deploy.sh
+          script: |
+            # First, sync the files from the GitHub runner to the server
+            rsync -avz --delete -e "ssh -p $SSH_PORT" \
+              --exclude=".git" \
+              --exclude=".github" \
+              ./ \
+              $SSH_USER@$SSH_SERVER:~/domains/$SUBDOMAIN/public_html/
+
+            # Then navigate to the deployment directory and run the scripts
+            cd ~/domains/$SUBDOMAIN/public_html
+            chmod +x scripts/deploy.sh
+            ./scripts/deploy.sh
