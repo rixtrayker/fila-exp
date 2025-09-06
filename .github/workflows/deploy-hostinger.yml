@@ -44,11 +44,11 @@ jobs:
               ./ \
               ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }}:~/domains/${{ vars.HOSTINGER_PROD_SUBDOMAIN }}/public_html/
 
-            ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} << 'EOF'
+            ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} << "EOF"
               cd ~/domains/${{ vars.HOSTINGER_PROD_SUBDOMAIN }}/public_html
               chmod +x scripts/deploy.sh
               ./scripts/deploy.sh
-            EOF
+EOF
 
           elif [ "${GITHUB_REF##*/}" = "dev" ]; then
             echo "🚀 Deploying to DEVELOPMENT"
@@ -58,9 +58,9 @@ jobs:
               ./ \
               ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }}:~/domains/${{ vars.HOSTINGER_DEV_SUBDOMAIN }}/public_html/
 
-            ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} << 'EOF'
+            ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} << "EOF"
               cd ~/domains/${{ vars.HOSTINGER_DEV_SUBDOMAIN }}/public_html
               chmod +x scripts/deploy.sh
               ./scripts/deploy.sh
-            EOF
+EOF
           fi
