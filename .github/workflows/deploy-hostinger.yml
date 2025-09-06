@@ -48,7 +48,7 @@ jobs:
               cd ~/domains/${{ vars.HOSTINGER_PROD_SUBDOMAIN }}/public_html
               chmod +x scripts/deploy.sh
               ./scripts/deploy.sh
-EOF
+            EOF
 
           elif [ "${GITHUB_REF##*/}" = "dev" ]; then
             echo "🚀 Deploying to DEVELOPMENT"
@@ -62,5 +62,5 @@ EOF
               cd ~/domains/${{ vars.HOSTINGER_DEV_SUBDOMAIN }}/public_html
               chmod +x scripts/deploy.sh
               ./scripts/deploy.sh
-EOF
+            EOF
           fi
