@@ -29,6 +29,9 @@ class AccountsCoverageReport extends Model
         'coverage_percentage',
         'actual_visits',
         'clinic_visits',
+        'planned_visits',
+        'random_visits',
+        'planned_random_ratio',
     ];
 
     protected $appends = [
@@ -47,6 +50,9 @@ class AccountsCoverageReport extends Model
         'coverage_percentage' => 'float',
         'actual_visits' => 'integer',
         'clinic_visits' => 'integer',
+        'planned_visits' => 'integer',
+        'random_visits' => 'integer',
+        'planned_random_ratio' => 'float',
     ];
 
     /**
@@ -86,7 +92,16 @@ class AccountsCoverageReport extends Model
                     END as coverage_percentage
                 "),
                 DB::raw('COALESCE(actual_visits.visit_count, 0) as actual_visits'),
-                DB::raw('COALESCE(clinic_visits.clinic_visit_count, 0) as clinic_visits')
+                DB::raw('COALESCE(clinic_visits.clinic_visit_count, 0) as clinic_visits'),
+                DB::raw('COALESCE(planned_visits.planned_visit_count, 0) as planned_visits'),
+                DB::raw('COALESCE(random_visits.random_visit_count, 0) as random_visits'),
+                DB::raw("
+                    CASE
+                        WHEN COALESCE(random_visits.random_visit_count, 0) > 0 THEN
+                            ROUND((COALESCE(planned_visits.planned_visit_count, 0) * 1.0) / random_visits.random_visit_count, 2)
+                        ELSE 0
+                    END as planned_random_ratio
+                ")
             ])
             ->leftJoin(DB::raw("(
                 SELECT
@@ -141,6 +156,36 @@ class AccountsCoverageReport extends Model
                   AND ubv3.user_id IN ({$userIdsStr})
                 GROUP BY v3.user_id
             ) as clinic_visits"), 'users.id', '=', 'clinic_visits.user_id')
+            ->leftJoin(DB::raw("(
+                SELECT
+                    v4.user_id,
+                    COUNT(*) as planned_visit_count
+                FROM visits v4
+                JOIN clients c4 ON v4.client_id = c4.id
+                JOIN user_bricks_view ubv4 ON c4.brick_id = ubv4.brick_id AND v4.user_id = ubv4.user_id
+                WHERE v4.status = 'visited'
+                  AND DATE(v4.visit_date) BETWEEN '{$fromDate}' AND '{$toDate}'
+                  AND v4.deleted_at IS NULL
+                  AND v4.plan_id IS NOT NULL
+                  AND c4.active = 1
+                  AND ubv4.user_id IN ({$userIdsStr})
+                GROUP BY v4.user_id
+            ) as planned_visits"), 'users.id', '=', 'planned_visits.user_id')
+            ->leftJoin(DB::raw("(
+                SELECT
+                    v5.user_id,
+                    COUNT(*) as random_visit_count
+                FROM visits v5
+                JOIN clients c5 ON v5.client_id = c5.id
+                JOIN user_bricks_view ubv5 ON c5.brick_id = ubv5.brick_id AND v5.user_id = ubv5.user_id
+                WHERE v5.status = 'visited'
+                  AND DATE(v5.visit_date) BETWEEN '{$fromDate}' AND '{$toDate}'
+                  AND v5.deleted_at IS NULL
+                  AND v5.plan_id IS NULL
+                  AND c5.active = 1
+                  AND ubv5.user_id IN ({$userIdsStr})
+                GROUP BY v5.user_id
+            ) as random_visits"), 'users.id', '=', 'random_visits.user_id')
             ->where('users.is_active', 1)
             ->whereIn('users.id', $userIds)
             ->orderBy('coverage_percentage', 'desc')
@@ -170,6 +215,9 @@ class AccountsCoverageReport extends Model
                 'coverage_percentage' => $result->coverage_percentage,
                 'actual_visits' => $result->actual_visits,
                 'clinic_visits' => $result->clinic_visits,
+                'planned_visits' => $result->planned_visits,
+                'random_visits' => $result->random_visits,
+                'planned_random_ratio' => $result->planned_random_ratio,
                 'client_breakdown_all_url' => static::buildClientBreakdownUrl($result->id, 'all', $filters ?? []),
                 'client_breakdown_visited_url' => static::buildClientBreakdownUrl($result->id, 'visited', $filters ?? []),
                 'client_breakdown_unvisited_url' => static::buildClientBreakdownUrl($result->id, 'unvisited', $filters ?? []),

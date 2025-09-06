@@ -91,6 +91,22 @@ class AccountsCoverageReport extends Report
                             ->url(fn($record) => $record->get('clinic_visit_breakdown_url'))
                             ->formatStateUsing(fn($state) => $state)
                             ->openUrlInNewTab(),
+                        TextColumn::make("planned_visits")
+                            ->label("Planned Visits")
+                            ->color('success')
+                            ->formatStateUsing(fn($state) => $state),
+                        TextColumn::make("random_visits")
+                            ->label("Random Visits")
+                            ->color('warning')
+                            ->formatStateUsing(fn($state) => $state),
+                        TextColumn::make("planned_random_ratio")
+                            ->label("Planned/Random Ratio")
+                            ->color(fn($state) => match (true) {
+                                (float) $state >= 2.0 => 'success',
+                                (float) $state >= 1.0 => 'warning',
+                                default => 'danger',
+                            })
+                            ->formatStateUsing(fn($state) => $state ? number_format($state, 2) : '0.00'),
                         TextColumn::make("client_breakdown_all_url")->visible(false),
                         TextColumn::make("client_breakdown_visited_url")->visible(false),
                         TextColumn::make("client_breakdown_unvisited_url")->visible(false),
