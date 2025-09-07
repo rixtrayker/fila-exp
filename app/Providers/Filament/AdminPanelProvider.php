@@ -38,7 +38,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('/admin')
             ->brandName('Spyro Pharma')
-            // ->domain(config('app.url'))
+            ->domain(config('app.url'))
             ->login()
             ->colors([
                 'primary' => Color::Blue,

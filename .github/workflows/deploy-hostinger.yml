@@ -1,0 +1,76 @@
+name: Deploy Laravel to Hostinger (Prod + Dev)
+
+on:
+  push:
+    branches:
+      - master
+      - dev
+  pull_request:
+    branches:
+      - master
+      - dev
+    types: [closed]
+
+jobs:
+  deploy:
+    if: github.event.pull_request.merged == true || github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, bcmath, intl, pdo_mysql
+
+      - name: Install composer dependencies
+        run: composer install --no-dev --optimize-autoloader
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.HOSTINGER_SSH_KEY }}
+
+      - name: Deploy to correct server
+        run: |
+          if [ "${GITHUB_REF##*/}" = "master" ]; then
+            echo "🚀 Deploying to PRODUCTION"
+             rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }}" \
+               --exclude=".git" \
+               --exclude=".github" \
+               --exclude=".env" \
+               --exclude=".htaccess" \
+               --exclude="index.php" \
+               --exclude="storage/logs/*" \
+               --exclude="storage/framework/cache/*" \
+               --exclude="storage/framework/sessions/*" \
+               --exclude="storage/framework/views/*" \
+               --exclude="bootstrap/cache/*" \
+               --exclude="public/storage" \
+               ./ \
+               ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }}:~/domains/${{ vars.HOSTINGER_PROD_SUBDOMAIN }}/public_html/
+
+            ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} "cd ~/domains/${{ vars.HOSTINGER_PROD_SUBDOMAIN }}/public_html && chmod +x scripts/deploy.sh && ./scripts/deploy.sh"
+
+          elif [ "${GITHUB_REF##*/}" = "dev" ]; then
+            echo "🚀 Deploying to DEVELOPMENT"
+             rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }}" \
+               --exclude=".git" \
+               --exclude=".github" \
+               --exclude=".env" \
+               --exclude=".htaccess" \
+               --exclude="index.php" \
+               --exclude="storage/logs/*" \
+               --exclude="storage/framework/cache/*" \
+               --exclude="storage/framework/sessions/*" \
+               --exclude="storage/framework/views/*" \
+               --exclude="bootstrap/cache/*" \
+               --exclude="public/storage" \
+               ./ \
+               ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }}:~/domains/${{ vars.HOSTINGER_DEV_SUBDOMAIN }}/public_html/
+
+            ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} "cd ~/domains/${{ vars.HOSTINGER_DEV_SUBDOMAIN }}/public_html && chmod +x scripts/deploy.sh && ./scripts/deploy.sh"
+          fi
