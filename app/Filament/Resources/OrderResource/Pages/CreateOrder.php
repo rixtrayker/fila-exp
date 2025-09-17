@@ -11,7 +11,7 @@ use Filament\Resources\Pages\CreateRecord;
 
 class CreateOrder extends CreateRecord
 {
-    protected static bool $canCreateAnother = false;
+    // protected static bool $canCreateAnother = false;
 
     protected static string $resource = OrderResource::class;
 
