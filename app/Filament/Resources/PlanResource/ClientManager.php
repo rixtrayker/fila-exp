@@ -85,15 +85,15 @@ class ClientManager
 
                 // Filter day-specific clients by type
                 self::$clients["{$day}-am"] = $dayClients
-                    ->whereIn("client.client_type_id", $amTypeIDs)
+                    ->whereIn("client.client_type_id", self::$clientTypes["am"])
                     ->pluck("client.name_en", "client_id")
                     ->toArray();
                 self::$clients["{$day}-pm"] = $dayClients
-                    ->whereIn("client.client_type_id", $pmTypeIDs)
+                    ->whereIn("client.client_type_id", self::$clientTypes["pm"])
                     ->pluck("client.name_en", "client_id")
                     ->toArray();
                 self::$clients["{$day}-pharmacy"] = $dayClients
-                    ->whereIn("client.client_type_id", $pharmacyTypeIDs)
+                    ->whereIn("client.client_type_id", self::$clientTypes["pharmacy"])
                     ->pluck("client.name_en", "client_id")
                     ->toArray();
             }
@@ -123,7 +123,7 @@ class ClientManager
         $typeIds = self::$clientTypes[$type];
 
         return self::searchQuery($search)
-            ->whereIn("client.client_type_id", $typeIds)
+            ->whereIn("client_type_id", $typeIds)
             ->pluck("name_en", "id");
     }
 }
