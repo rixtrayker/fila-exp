@@ -15,6 +15,7 @@ use EightyNine\Reports\Components\Body\Table;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use App\Models\User;
+use App\Models\ClientType;
 
 class AccountsCoverageReport extends Report
 {
@@ -144,6 +145,12 @@ class AccountsCoverageReport extends Report
                 DatePicker::make('to_date')
                     ->label('To Date')
                     ->default(today()),
+                Select::make('client_type_id')
+                    ->label('Client Type')
+                    ->options(ClientType::pluck('name', 'id'))
+                    ->default(ClientType::PM)
+                    ->searchable()
+                    ->placeholder('Client Type'),
                 Select::make('medical_rep_id')
                     ->label('Medical Rep')
                     ->options(User::getMine()->where('is_active', 1)->pluck('name', 'id'))

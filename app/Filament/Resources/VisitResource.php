@@ -62,6 +62,7 @@ class VisitResource extends Resource
             $userIds = (array) data_get($tableFilters, 'id.user_id', []);
             $secondUserIds = (array) data_get($tableFilters, 'id.second_user_id', []);
             $status = (array) data_get($tableFilters, 'status.value', []);
+            $clientTypeId = (array) data_get($tableFilters, 'client_type_id.value', []);
 
             // Also support direct user_id param (e.g., from alternate links)
             $directUserId = request()->get('user_id');
@@ -91,6 +92,11 @@ class VisitResource extends Resource
 
             if ($status) {
                 $query->whereIn('status', $status);
+            }
+            if ($clientTypeId) {
+                $query->whereHas('client', function (Builder $clientQuery) use ($clientTypeId) {
+                    $clientQuery->whereIn('client_type_id', $clientTypeId);
+                });
             }
         } else {
             $query->visited()

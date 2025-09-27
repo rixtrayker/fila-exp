@@ -187,6 +187,7 @@ class ClientBreakdownResource extends Resource
 
         $dateFrom = request()->get('from_date', today()->firstOfMonth()->toDateString());
         $dateTo = request()->get('to_date', today()->toDateString());
+        $clientTypeId = request()->get('client_type_id', \App\Models\ClientType::PM);
         $bricksId = UserBricksView::getUserBrickIds($userId);
 
         $filters = [
@@ -194,6 +195,7 @@ class ClientBreakdownResource extends Resource
             'date_to' => $dateTo,
             'user_id' => $userId,
             'bricks_id' => $bricksId,
+            'client_type_id' => $clientTypeId,
         ];
 
         match($status) {
@@ -225,11 +227,15 @@ class ClientBreakdownResource extends Resource
         $fromDate = request()->get('from_date', today()->firstOfMonth()->toDateString());
         $toDate = request()->get('to_date', today()->toDateString());
         $userId = request()->get('user_id');
+        $clientTypeId = request()->get('client_type_id', \App\Models\ClientType::PM);
 
         $tableFilters = [
             'visit_date' => [
                 'from_date' => $fromDate,
                 'to_date' => $toDate
+            ],
+            'client_type_id' => [
+                'value' => [$clientTypeId]
             ]
         ];
 
@@ -275,7 +281,7 @@ class ClientBreakdownResource extends Resource
     {
         $query = Client::query()
             ->whereIn('brick_id', $filters['bricks_id'])
-            ->where('active', true);
+            ->where('client_type_id', $filters['client_type_id']);
 
         $query->whereHas('visits', function ($query) use ($filters) {
             $query->where('status', 'visited')
@@ -301,9 +307,9 @@ class ClientBreakdownResource extends Resource
     {
         $query = Client::query();
 
-        // Filter by user's bricks and active status
-        $query->whereIn('clients.brick_id', $filters['bricks_id']);
-        $query->where('clients.active', true);
+        // Filter by user's bricks
+        $query->whereIn('clients.brick_id', $filters['bricks_id'])
+              ->where('clients.client_type_id', $filters['client_type_id']);
 
         // Exclude clients that have visited status visits in the date range
         $query->whereNotExists(function ($subQuery) use ($filters) {
@@ -336,12 +342,19 @@ class ClientBreakdownResource extends Resource
         $dateTo = $filters['date_to'];
 
         $query = Client::query();
-        $query->whereIn('brick_id', $bricksId);
-        $query->where('active', true);
-        $query->leftJoin('visits', 'clients.id', '=', 'visits.client_id');
+        $query->whereIn('brick_id', $bricksId)
+              ->where('client_type_id', $filters['client_type_id']);
 
         $query->select([
-            'clients.*',
+            'clients.id',
+            'clients.name_en',
+            'clients.name_ar',
+            'clients.brick_id',
+            'clients.shift',
+            'clients.client_type_id',
+            'clients.active',
+            'clients.created_at',
+            'clients.updated_at',
             DB::raw('(
                 SELECT COUNT(*)
                 FROM visits v
@@ -353,7 +366,6 @@ class ClientBreakdownResource extends Resource
             ) as visits_count'),
         ]);
         $query->with(['brick']);
-        $query->groupBy('clients.id');
         $query->orderBy('visits_count', 'desc');
 
         $query->addBinding([$userId], 'select');

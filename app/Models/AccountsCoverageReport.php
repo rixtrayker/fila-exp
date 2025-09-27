@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Scopes\GetMineScope;
 use App\Models\User;
+use App\Models\ClientType;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -59,7 +60,7 @@ class AccountsCoverageReport extends Model
      * Build the accounts coverage report query using the user_bricks_view
      * This view consolidates user brick access through direct assignments and area-based access
      */
-    public static function buildReportQuery(string $fromDate, string $toDate, ?array $medicalRepIds = null): Builder
+    public static function buildReportQuery(string $fromDate, string $toDate, ?array $medicalRepIds = null, ?int $clientTypeId = null): Builder
     {
         $userIds = GetMineScope::getUserIds();
 
@@ -76,6 +77,11 @@ class AccountsCoverageReport extends Model
         }
 
         $userIdsStr = implode(',', $userIds);
+
+        // Set default client type if not provided
+        if ($clientTypeId === null) {
+            $clientTypeId = ClientType::PM;
+        }
 
         return User::withoutGlobalScopes()
             ->select([
@@ -110,6 +116,7 @@ class AccountsCoverageReport extends Model
                 FROM user_bricks_view ubv
                 JOIN clients c ON ubv.brick_id = c.brick_id
                 WHERE c.active = 1
+                  AND c.client_type_id = {$clientTypeId}
                   AND ubv.user_id IN ({$userIdsStr})
                 GROUP BY ubv.user_id
             ) as area_clients"), 'users.id', '=', 'area_clients.user_id')
@@ -124,6 +131,7 @@ class AccountsCoverageReport extends Model
                   AND DATE(v.visit_date) BETWEEN '{$fromDate}' AND '{$toDate}'
                   AND v.deleted_at IS NULL
                   AND c.active = 1
+                  AND c.client_type_id = {$clientTypeId}
                   AND ubv.user_id IN ({$userIdsStr})
                 GROUP BY v.user_id
             ) as visited_clients"), 'users.id', '=', 'visited_clients.user_id')
@@ -138,6 +146,7 @@ class AccountsCoverageReport extends Model
                   AND DATE(v2.visit_date) BETWEEN '{$fromDate}' AND '{$toDate}'
                   AND v2.deleted_at IS NULL
                   AND c2.active = 1
+                  AND c2.client_type_id = {$clientTypeId}
                   AND ubv2.user_id IN ({$userIdsStr})
                 GROUP BY v2.user_id
             ) as actual_visits"), 'users.id', '=', 'actual_visits.user_id')
@@ -151,7 +160,7 @@ class AccountsCoverageReport extends Model
                 WHERE v3.status = 'visited'
                   AND DATE(v3.visit_date) BETWEEN '{$fromDate}' AND '{$toDate}'
                   AND v3.deleted_at IS NULL
-                  AND c3.client_type_id = 1
+                  AND c3.client_type_id = {$clientTypeId}
                   AND c3.active = 1
                   AND ubv3.user_id IN ({$userIdsStr})
                 GROUP BY v3.user_id
@@ -168,6 +177,7 @@ class AccountsCoverageReport extends Model
                   AND v4.deleted_at IS NULL
                   AND v4.plan_id IS NOT NULL
                   AND c4.active = 1
+                  AND c4.client_type_id = {$clientTypeId}
                   AND ubv4.user_id IN ({$userIdsStr})
                 GROUP BY v4.user_id
             ) as planned_visits"), 'users.id', '=', 'planned_visits.user_id')
@@ -183,6 +193,7 @@ class AccountsCoverageReport extends Model
                   AND v5.deleted_at IS NULL
                   AND v5.plan_id IS NULL
                   AND c5.active = 1
+                  AND c5.client_type_id = {$clientTypeId}
                   AND ubv5.user_id IN ({$userIdsStr})
                 GROUP BY v5.user_id
             ) as random_visits"), 'users.id', '=', 'random_visits.user_id')
@@ -200,8 +211,9 @@ class AccountsCoverageReport extends Model
         $fromDate = $filters['from_date'] ?? today()->firstOfMonth()->toDateString();
         $toDate = $filters['to_date'] ?? today()->toDateString();
         $medicalRepIds = $filters['medical_rep_id'] ?? null;
+        $clientTypeId = $filters['client_type_id'] ?? ClientType::PM;
 
-        $query = self::buildReportQuery($fromDate, $toDate, $medicalRepIds);
+        $query = self::buildReportQuery($fromDate, $toDate, $medicalRepIds, $clientTypeId);
         $results = $query->get();
 
         $newResults = collect();
@@ -279,12 +291,14 @@ class AccountsCoverageReport extends Model
     {
         $fromDate = $filters['from_date'] ?? today()->firstOfMonth()->toDateString();
         $toDate = $filters['to_date'] ?? today()->toDateString();
+        $clientTypeId = $filters['client_type_id'] ?? ClientType::PM;
 
         $params = [
             'from_date' => $fromDate,
             'to_date' => $toDate,
             'status' => $status,
-            'user_id' => $recordId
+            'user_id' => $recordId,
+            'client_type_id' => $clientTypeId
         ];
 
         return route('filament.admin.resources.client-breakdowns.index', $params);
@@ -297,6 +311,7 @@ class AccountsCoverageReport extends Model
     {
         $fromDate = $filters['from_date'] ?? today()->firstOfMonth()->toDateString();
         $toDate = $filters['to_date'] ?? today()->toDateString();
+        $clientTypeId = $filters['client_type_id'] ?? ClientType::PM;
 
         $tableFilters = [
             'visit_date' => [
@@ -305,6 +320,9 @@ class AccountsCoverageReport extends Model
             ],
             'status' => [
                 'value' => 'visited'
+            ],
+            'client_type_id' => [
+                'value' => [$clientTypeId]
             ]
         ];
 
@@ -324,10 +342,11 @@ class AccountsCoverageReport extends Model
     {
         $fromDate = $filters['from_date'] ?? today()->firstOfMonth()->toDateString();
         $toDate = $filters['to_date'] ?? today()->toDateString();
+        $clientTypeId = $filters['client_type_id'] ?? ClientType::PM;
 
         $tableFilters = [
             'client_type_id' => [
-                'value' => [1]
+                'value' => [$clientTypeId]
             ],
             'visit_date' => [
                 'from_date' => $fromDate,
