@@ -33,7 +33,7 @@ class ClientManager
             self::prepareData();
         }
 
-        if (auth()->user()->hasRole('district_manager') && $day) {
+        if (auth()->user()->hasRole('district-manager') && $day) {
             $key = $type ? "{$day}-{$type}" : $day;
             return self::$clients[$key] ?? [];
         }
@@ -66,7 +66,7 @@ class ClientManager
             ->pluck("name_en", "id")
             ->toArray();
 
-        if (auth()->user()->hasRole("district_manager")) {
+        if (auth()->user()->hasRole("district-manager")) {
             $dates = DateHelper::calculateVisitDates();
             $days = array_map(
                 fn($date) => Str::lower(Carbon::parse($date)->format("D")),
