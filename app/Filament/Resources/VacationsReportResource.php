@@ -38,7 +38,7 @@ class VacationsReportResource extends Resource
                 TextColumn::make('spent_days')
                     ->label('Spent Days'),
                 TextColumn::make('remaning_days')
-                    ->state(fn($record) => 21 - $record->spent_days)
+                    ->state(fn($record) => $record->annual_vacation_days - $record->spent_days)
                     ->label('Remaining Days'),
 
                 // TextColumn::make('start_date')
@@ -88,6 +88,7 @@ class VacationsReportResource extends Resource
         return VacationRequest::select(
             'users.id as id',
             'users.name as medical_rep',
+            'users.annual_vacation_days as annual_vacation_days',
             'vacation_requests.approved as approved',
             DB::raw('GROUP_CONCAT( vacation_types.name SEPARATOR ", ") AS vacation_types'),
             DB::raw('SUM(

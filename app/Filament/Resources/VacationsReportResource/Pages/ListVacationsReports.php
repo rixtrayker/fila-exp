@@ -108,7 +108,7 @@ class ListVacationsReports extends ListRecords implements HasInfolists
         $vacation_types = $records->pluck('vacation_types')->map(fn($item) => explode(', ',$item))->flatten()->map(fn($item) => trim($item))->unique();
         $summary['vacation_types'] = $vacation_types->implode(', ');
         $summary['total_spent_days'] = $records->sum('spent_days');
-        $summary['total_remaining_days'] = 21 *  $summary['medical_reps_count'] - $summary['total_spent_days'];
+        $summary['total_remaining_days'] = $records->sum('annual_vacation_days') - $summary['total_spent_days'];
         $model = new ReportSummary();
         $model->fill($summary);
         return $model;

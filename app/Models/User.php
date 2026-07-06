@@ -48,6 +48,7 @@ class User extends Authenticatable implements FilamentUser
         'password',
         'parent_id',
         'is_active',
+        'annual_vacation_days',
     ];
 
     /**
@@ -70,6 +71,7 @@ class User extends Authenticatable implements FilamentUser
     protected $casts = [
         'email_verified_at' => 'datetime',
         'is_active' => 'boolean',
+        'annual_vacation_days' => 'float',
     ];
 
     /**
