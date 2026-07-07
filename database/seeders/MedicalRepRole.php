@@ -27,6 +27,7 @@ class MedicalRepRole extends Seeder
             'visit-coverage-report' => ['view-any', 'view'],
             'accounts-coverage-report' => ['view-any', 'view'],
             'message' => ['view', 'create', 'update', 'delete'],
+            'my-client-list' => ['view', 'view-any', 'create', 'update', 'delete'],
             'official-holiday' => ['view'],
             'order-report' => ['view'],
             'order' => ['view', 'create', 'update', 'delete'],
