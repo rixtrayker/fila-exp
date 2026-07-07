@@ -50,6 +50,7 @@ class RolesAndPermissionsSeeder extends Seeder
         'product-visit',
         'region',
         'role',
+        'role-visit-target',
         'setting',
         'speciality',
         'template-file',
@@ -66,6 +67,7 @@ class RolesAndPermissionsSeeder extends Seeder
      */
     private array $reportModels = [
         'sops-and-call-rate',
+        'all-activity-sops-report',
         'expenses-report',
         'visit-coverage-report',
         'accounts-coverage-report',
