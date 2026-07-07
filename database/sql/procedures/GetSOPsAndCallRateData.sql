@@ -35,13 +35,14 @@ BEGIN
       );
 
     -- Get daily target based on client type with fallback to settings
+    -- Client type ids must match App\Models\ClientType: PM = 1, PH = 2, AM = 3
     CASE p_client_type_id
-        WHEN 1 THEN -- AM
-            SELECT COALESCE(CAST(value AS UNSIGNED), 2) INTO v_daily_target
-            FROM settings WHERE `key` = 'daily_am_target' LIMIT 1;
-        WHEN 3 THEN -- PH
+        WHEN 2 THEN -- PH
             SELECT COALESCE(CAST(value AS UNSIGNED), 8) INTO v_daily_target
             FROM settings WHERE `key` = 'daily_ph_target' LIMIT 1;
+        WHEN 3 THEN -- AM
+            SELECT COALESCE(CAST(value AS UNSIGNED), 2) INTO v_daily_target
+            FROM settings WHERE `key` = 'daily_am_target' LIMIT 1;
         ELSE -- PM (default)
             SELECT COALESCE(CAST(value AS UNSIGNED), 6) INTO v_daily_target
             FROM settings WHERE `key` = 'daily_pm_target' LIMIT 1;
