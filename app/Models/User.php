@@ -102,6 +102,11 @@ class User extends Authenticatable implements FilamentUser
         return $query->where('id', $id);
     }
 
+    public function scopeManagers($query)
+    {
+        return $query->role(['district-manager', 'area-manager', 'country-manager']);
+    }
+
     public function areas()
     {
         return $this->belongsToMany(Area::class);

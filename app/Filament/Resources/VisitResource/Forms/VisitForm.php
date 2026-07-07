@@ -98,7 +98,7 @@ class VisitForm
             ])
             ->required(fn($get) => $get('call_type_id') == CallType::where('name', 'Double')->value('id'))
             ->placeholder('Search name')
-            ->options(options: User::myDistrictManager()->pluck('name', 'id'))
+            ->options(options: User::managers()->orderBy('name')->pluck('name', 'id'))
             ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
             ->preload();
     }
