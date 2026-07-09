@@ -6,6 +6,7 @@ use App\Traits\HasEditRequest;
 use Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
 class Client extends Model
@@ -171,6 +172,79 @@ class Client extends Model
 
         $brickIds = self::getMyBricksIds();
         return $builder->whereIn("brick_id", $brickIds);
+    }
+
+    /**
+     * Users who have added this client to their personal client list.
+     */
+    public function users()
+    {
+        return $this->belongsToMany(User::class)->withTimestamps();
+    }
+
+    /**
+     * Scope: clients on the authenticated user's personal client list.
+     */
+    public function scopeInMyList($builder)
+    {
+        if (!self::isAuthenticated()) {
+            return;
+        }
+
+        return self::applyPersonalListConstraint($builder, auth()->id());
+    }
+
+    /**
+     * Scope: the "accountable pool" of clients for a user.
+     *
+     * This is the fallback rule used by coverage reporting:
+     * - When the user maintains a personal client list (client_user rows),
+     *   the pool is exactly that list.
+     * - When the user has no personal list, the pool falls back to the
+     *   shared area-derived client base (all clients in the user's bricks,
+     *   as resolved by user_bricks_view — same source as scopeInMyAreas).
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $builder
+     * @param  int|null  $userId  Defaults to the authenticated user.
+     */
+    public function scopeAccountablePool($builder, ?int $userId = null)
+    {
+        $userId = $userId ?? auth()->id();
+
+        if (!$userId) {
+            return;
+        }
+
+        if (self::userHasPersonalList($userId)) {
+            return self::applyPersonalListConstraint($builder, $userId);
+        }
+
+        return $builder->whereIn(
+            "brick_id",
+            UserBricksView::getUserBrickIds($userId),
+        );
+    }
+
+    /**
+     * Whether the given user maintains a personal client list.
+     */
+    public static function userHasPersonalList(int $userId): bool
+    {
+        return DB::table("client_user")->where("user_id", $userId)->exists();
+    }
+
+    /**
+     * Constrain the query to clients on the given user's personal list.
+     */
+    private static function applyPersonalListConstraint($builder, int $userId)
+    {
+        return $builder->whereExists(function ($query) use ($userId) {
+            $query
+                ->select(DB::raw(1))
+                ->from("client_user")
+                ->whereColumn("client_user.client_id", "clients.id")
+                ->where("client_user.user_id", $userId);
+        });
     }
 
     private static function isAuthenticated(): bool

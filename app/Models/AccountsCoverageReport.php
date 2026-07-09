@@ -57,8 +57,88 @@ class AccountsCoverageReport extends Model
     ];
 
     /**
+     * SQL for the per-user accountable client pool (user_id, client_id rows).
+     *
+     * Users WITH a personal client list (client_user rows) are evaluated
+     * against that list; users WITHOUT one keep the legacy area-derived pool
+     * from user_bricks_view. Both branches respect the active flag and the
+     * client type filter. See Client::scopeAccountablePool for the same rule
+     * on the Eloquent side.
+     */
+    private static function buildAccountableClientsPoolSql(int $clientTypeId, string $userIdsStr): string
+    {
+        return "
+                    SELECT
+                        cu.user_id,
+                        cu.client_id
+                    FROM client_user cu
+                    JOIN clients c ON cu.client_id = c.id
+                    WHERE c.active = 1
+                      AND c.client_type_id = {$clientTypeId}
+                      AND cu.user_id IN ({$userIdsStr})
+                    UNION ALL
+                    SELECT
+                        ubv.user_id,
+                        c.id as client_id
+                    FROM user_bricks_view ubv
+                    JOIN clients c ON ubv.brick_id = c.brick_id
+                    WHERE c.active = 1
+                      AND c.client_type_id = {$clientTypeId}
+                      AND ubv.user_id IN ({$userIdsStr})
+                      AND NOT EXISTS (SELECT 1 FROM client_user cux WHERE cux.user_id = ubv.user_id)
+        ";
+    }
+
+    /**
+     * SQL for visits restricted to each user's accountable client pool
+     * (personal list when present, legacy area-derived pool otherwise).
+     *
+     * @param string $select        Columns to select from the visits alias `v`
+     * @param string $extraCondition Additional WHERE fragment (e.g. plan filter)
+     */
+    private static function buildAccountableVisitsPoolSql(
+        string $select,
+        string $extraCondition,
+        string $fromDate,
+        string $toDate,
+        int $clientTypeId,
+        string $userIdsStr
+    ): string {
+        return "
+                    SELECT {$select}
+                    FROM visits v
+                    JOIN clients c ON v.client_id = c.id
+                    JOIN client_user cu ON cu.client_id = c.id AND cu.user_id = v.user_id
+                    WHERE v.status = 'visited'
+                      AND DATE(v.visit_date) BETWEEN '{$fromDate}' AND '{$toDate}'
+                      AND v.deleted_at IS NULL
+                      AND c.active = 1
+                      AND c.client_type_id = {$clientTypeId}
+                      {$extraCondition}
+                      AND cu.user_id IN ({$userIdsStr})
+                    UNION ALL
+                    SELECT {$select}
+                    FROM visits v
+                    JOIN clients c ON v.client_id = c.id
+                    JOIN user_bricks_view ubv ON c.brick_id = ubv.brick_id AND v.user_id = ubv.user_id
+                    WHERE v.status = 'visited'
+                      AND DATE(v.visit_date) BETWEEN '{$fromDate}' AND '{$toDate}'
+                      AND v.deleted_at IS NULL
+                      AND c.active = 1
+                      AND c.client_type_id = {$clientTypeId}
+                      {$extraCondition}
+                      AND ubv.user_id IN ({$userIdsStr})
+                      AND NOT EXISTS (SELECT 1 FROM client_user cux WHERE cux.user_id = v.user_id)
+        ";
+    }
+
+    /**
      * Build the accounts coverage report query using the user_bricks_view
-     * This view consolidates user brick access through direct assignments and area-based access
+     * This view consolidates user brick access through direct assignments and area-based access.
+     *
+     * Users who maintain a personal client list (client_user rows) have their
+     * denominators and coverage counts computed over that list instead of the
+     * area-derived pool; users without one keep the legacy behavior.
      */
     public static function buildReportQuery(string $fromDate, string $toDate, ?array $medicalRepIds = null, ?int $clientTypeId = null): Builder
     {
@@ -111,91 +191,45 @@ class AccountsCoverageReport extends Model
             ])
             ->leftJoin(DB::raw("(
                 SELECT
-                    ubv.user_id,
-                    COUNT(DISTINCT c.id) as total_clients
-                FROM user_bricks_view ubv
-                JOIN clients c ON ubv.brick_id = c.brick_id
-                WHERE c.active = 1
-                  AND c.client_type_id = {$clientTypeId}
-                  AND ubv.user_id IN ({$userIdsStr})
-                GROUP BY ubv.user_id
+                    pool.user_id,
+                    COUNT(DISTINCT pool.client_id) as total_clients
+                FROM (" . self::buildAccountableClientsPoolSql($clientTypeId, $userIdsStr) . ") as pool
+                GROUP BY pool.user_id
             ) as area_clients"), 'users.id', '=', 'area_clients.user_id')
             ->leftJoin(DB::raw("(
                 SELECT
-                    v.user_id,
-                    COUNT(DISTINCT v.client_id) as visited_count
-                FROM visits v
-                JOIN clients c ON v.client_id = c.id
-                JOIN user_bricks_view ubv ON c.brick_id = ubv.brick_id AND v.user_id = ubv.user_id
-                WHERE v.status = 'visited'
-                  AND DATE(v.visit_date) BETWEEN '{$fromDate}' AND '{$toDate}'
-                  AND v.deleted_at IS NULL
-                  AND c.active = 1
-                  AND c.client_type_id = {$clientTypeId}
-                  AND ubv.user_id IN ({$userIdsStr})
-                GROUP BY v.user_id
+                    pool.user_id,
+                    COUNT(DISTINCT pool.client_id) as visited_count
+                FROM (" . self::buildAccountableVisitsPoolSql('v.user_id, v.client_id', '', $fromDate, $toDate, $clientTypeId, $userIdsStr) . ") as pool
+                GROUP BY pool.user_id
             ) as visited_clients"), 'users.id', '=', 'visited_clients.user_id')
             ->leftJoin(DB::raw("(
                 SELECT
-                    v2.user_id,
+                    pool.user_id,
                     COUNT(*) as visit_count
-                FROM visits v2
-                JOIN clients c2 ON v2.client_id = c2.id
-                JOIN user_bricks_view ubv2 ON c2.brick_id = ubv2.brick_id AND v2.user_id = ubv2.user_id
-                WHERE v2.status = 'visited'
-                  AND DATE(v2.visit_date) BETWEEN '{$fromDate}' AND '{$toDate}'
-                  AND v2.deleted_at IS NULL
-                  AND c2.active = 1
-                  AND c2.client_type_id = {$clientTypeId}
-                  AND ubv2.user_id IN ({$userIdsStr})
-                GROUP BY v2.user_id
+                FROM (" . self::buildAccountableVisitsPoolSql('v.user_id', '', $fromDate, $toDate, $clientTypeId, $userIdsStr) . ") as pool
+                GROUP BY pool.user_id
             ) as actual_visits"), 'users.id', '=', 'actual_visits.user_id')
             ->leftJoin(DB::raw("(
                 SELECT
-                    v3.user_id,
+                    pool.user_id,
                     COUNT(*) as clinic_visit_count
-                FROM visits v3
-                JOIN clients c3 ON v3.client_id = c3.id
-                JOIN user_bricks_view ubv3 ON c3.brick_id = ubv3.brick_id AND v3.user_id = ubv3.user_id
-                WHERE v3.status = 'visited'
-                  AND DATE(v3.visit_date) BETWEEN '{$fromDate}' AND '{$toDate}'
-                  AND v3.deleted_at IS NULL
-                  AND c3.client_type_id = {$clientTypeId}
-                  AND c3.active = 1
-                  AND ubv3.user_id IN ({$userIdsStr})
-                GROUP BY v3.user_id
+                FROM (" . self::buildAccountableVisitsPoolSql('v.user_id', '', $fromDate, $toDate, $clientTypeId, $userIdsStr) . ") as pool
+                GROUP BY pool.user_id
             ) as clinic_visits"), 'users.id', '=', 'clinic_visits.user_id')
             ->leftJoin(DB::raw("(
                 SELECT
-                    v4.user_id,
+                    pool.user_id,
                     COUNT(*) as planned_visit_count
-                FROM visits v4
-                JOIN clients c4 ON v4.client_id = c4.id
-                JOIN user_bricks_view ubv4 ON c4.brick_id = ubv4.brick_id AND v4.user_id = ubv4.user_id
-                WHERE v4.status = 'visited'
-                  AND DATE(v4.visit_date) BETWEEN '{$fromDate}' AND '{$toDate}'
-                  AND v4.deleted_at IS NULL
-                  AND v4.plan_id IS NOT NULL
-                  AND c4.active = 1
-                  AND c4.client_type_id = {$clientTypeId}
-                  AND ubv4.user_id IN ({$userIdsStr})
-                GROUP BY v4.user_id
+                FROM (" . self::buildAccountableVisitsPoolSql('v.user_id', 'AND v.plan_id IS NOT NULL', $fromDate, $toDate, $clientTypeId, $userIdsStr) . ") as pool
+                GROUP BY pool.user_id
             ) as planned_visits"), 'users.id', '=', 'planned_visits.user_id')
             ->leftJoin(DB::raw("(
                 SELECT
-                    v5.user_id,
+                    pool.user_id,
                     COUNT(*) as random_visit_count
-                FROM visits v5
-                JOIN clients c5 ON v5.client_id = c5.id
-                JOIN user_bricks_view ubv5 ON c5.brick_id = ubv5.brick_id AND v5.user_id = ubv5.user_id
-                WHERE v5.status = 'visited'
-                  AND DATE(v5.visit_date) BETWEEN '{$fromDate}' AND '{$toDate}'
-                  AND v5.deleted_at IS NULL
-                  AND v5.plan_id IS NULL
-                  AND c5.active = 1
-                  AND c5.client_type_id = {$clientTypeId}
-                  AND ubv5.user_id IN ({$userIdsStr})
-                GROUP BY v5.user_id
+                FROM (" . self::buildAccountableVisitsPoolSql('v.user_id', 'AND v.plan_id IS NULL', $fromDate, $toDate, $clientTypeId, $userIdsStr) . ") as pool
+                GROUP BY pool.user_id
             ) as random_visits"), 'users.id', '=', 'random_visits.user_id')
             ->where('users.is_active', 1)
             ->whereIn('users.id', $userIds)

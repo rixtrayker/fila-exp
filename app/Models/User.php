@@ -93,6 +93,14 @@ class User extends Authenticatable implements FilamentUser
         return $this->belongsToMany(Brick::class);
     }
 
+    /**
+     * The user's personal client list, selected from their area-derived pool.
+     */
+    public function clients()
+    {
+        return $this->belongsToMany(Client::class)->withTimestamps();
+    }
+
     public function myManager()
     {
         return $this->belongsTo(User::class, 'parent_id');
