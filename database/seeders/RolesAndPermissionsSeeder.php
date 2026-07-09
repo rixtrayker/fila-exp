@@ -73,6 +73,7 @@ class RolesAndPermissionsSeeder extends Seeder
         'sales-report',
         'vacations-report',
         'visit-report',
+        'samples-report',
     ];
 
     /**

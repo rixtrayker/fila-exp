@@ -109,7 +109,8 @@ class Visit extends Model
     }
     public function products()
     {
-        return $this->belongsToMany(Product::class,'product_visits');
+        return $this->belongsToMany(Product::class,'product_visits')
+            ->withPivot('count');
     }
 
     public function bundles()
