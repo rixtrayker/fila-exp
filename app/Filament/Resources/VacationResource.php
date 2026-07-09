@@ -6,14 +6,17 @@ use App\Filament\Resources\VacationResource\Pages;
 use App\Filament\Resources\VacationResource\RelationManagers;
 use App\Models\User;
 use App\Models\Vacation;
+use App\Models\VacationDuration;
 use App\Models\VacationRequest;
 use App\Models\VacationType;
+use App\Services\VacationCalculator;
 use App\Traits\ResourceHasPermission;
 use Awcodes\FilamentTableRepeater\Components\TableRepeater;
 use Carbon\Carbon;
 use Closure;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Form;
@@ -101,12 +104,66 @@ class VacationResource extends Resource
                         ])->disableItemMovement()
                         ->defaultItems(1),
                     ])->compact(),
+                Placeholder::make('balance_summary')
+                    ->label('Vacation Balance')
+                    ->content(function ($get, $record) {
+                        $calculator = app(VacationCalculator::class);
+
+                        $requestedDays = 0;
+                        foreach ($get('vacationDurations') ?? [] as $duration) {
+                            if (blank($duration['start'] ?? null) || blank($duration['end'] ?? null))
+                                continue;
+
+                            $requestedDays += $calculator->calculateTotalDuration(
+                                $duration['start'],
+                                $duration['end'],
+                                $duration['start_shift'] ?? 'AM',
+                                $duration['end_shift'] ?? 'PM'
+                            );
+                        }
+
+                        $user = $record?->repUser ?? auth()->user();
+
+                        if (!$user)
+                            return 'Requesting '.$requestedDays.' day(s)';
+
+                        $remainingDays = self::getRemainingBalance($user, $record?->id);
+
+                        return 'Requesting '.$requestedDays.' day(s), '.$user->name.' has '.$remainingDays.' remaining day(s) this year';
+                    }),
             ]);
+    }
+
+    /**
+     * Remaining annual balance for a user: entitlement minus approved
+     * vacation days spent in the current year.
+     */
+    public static function getRemainingBalance(User $user, ?int $excludeRequestId = null): float
+    {
+        $spentDays = VacationDuration::query()
+            ->join('vacation_requests as vr', 'vr.id', '=', 'vacation_durations.vacation_request_id')
+            ->where('vr.user_id', $user->id)
+            ->where('vr.approved', '>', 0)
+            ->when($excludeRequestId, fn($query) => $query->where('vr.id', '!=', $excludeRequestId))
+            ->whereYear('vacation_durations.start', now()->year)
+            ->sum('vacation_durations.duration');
+
+        return (float) ($user->annual_vacation_days ?? 21) - (float) $spentDays;
     }
 
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query) => $query
+                ->withSum('vacationDurations as requested_days', 'duration')
+                ->addSelect([
+                    'approved_spent_days' => VacationDuration::query()
+                        ->join('vacation_requests as vr', 'vr.id', '=', 'vacation_durations.vacation_request_id')
+                        ->whereColumn('vr.user_id', 'vacation_requests.user_id')
+                        ->where('vr.approved', '>', 0)
+                        ->whereYear('vacation_durations.start', now()->year)
+                        ->selectRaw('COALESCE(SUM(vacation_durations.duration), 0)'),
+                ]))
             ->columns([
                 TextColumn::make('repUser.name')
                     ->label('Medical Rep')
@@ -122,6 +179,15 @@ class VacationResource extends Resource
                     ->dateTime('d-M-Y')
                     ->sortable()
                     ->searchable(),
+                TextColumn::make('requested_days')
+                    ->label('Requested Days')
+                    ->state(fn($record) => $record->requested_days ?? $record->duration)
+                    ->sortable(),
+                TextColumn::make('remaining_balance')
+                    ->label('Remaining Balance')
+                    ->state(fn($record) => $record->repUser
+                        ? $record->repUser->annual_vacation_days - $record->approved_spent_days
+                        : null),
                 IconColumn::make('approved')
                     ->colors(function($record){
                         if($record->approved > 0)
