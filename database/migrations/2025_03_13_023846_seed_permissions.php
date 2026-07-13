@@ -26,7 +26,7 @@ return new class extends Migration
         ];
 
         foreach ($seeders as $seeder) {
-            Artisan::call('db:seed', ['--class' => $seeder]);
+            Artisan::call('db:seed', ['--class' => $seeder, '--force' => true]);
         }
 
     }
