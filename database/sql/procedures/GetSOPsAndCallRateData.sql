@@ -140,19 +140,19 @@ BEGIN
             -- Vacation days
             SELECT
                 vr.user_id,
-                DATE(vd.start + INTERVAL offset_days.offset DAY) as busy_date
+                DATE(vd.start + INTERVAL offset_days.`offset` DAY) as busy_date
             FROM vacation_durations vd
             JOIN vacation_requests vr ON vd.vacation_request_id = vr.id
             CROSS JOIN (
-                SELECT 0 as offset UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6
+                SELECT 0 as `offset` UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6
                 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 UNION SELECT 10 UNION SELECT 11 UNION SELECT 12 UNION SELECT 13
                 UNION SELECT 14 UNION SELECT 15 UNION SELECT 16 UNION SELECT 17 UNION SELECT 18 UNION SELECT 19 UNION SELECT 20
                 UNION SELECT 21 UNION SELECT 22 UNION SELECT 23 UNION SELECT 24 UNION SELECT 25 UNION SELECT 26 UNION SELECT 27
                 UNION SELECT 28 UNION SELECT 29 UNION SELECT 30
             ) offset_days
             WHERE vr.approved = 1
-              AND DATE(vd.start + INTERVAL offset_days.offset DAY) <= vd.end
-              AND DATE(vd.start + INTERVAL offset_days.offset DAY) BETWEEN v_from_date AND v_to_date
+              AND DATE(vd.start + INTERVAL offset_days.`offset` DAY) <= vd.end
+              AND DATE(vd.start + INTERVAL offset_days.`offset` DAY) BETWEEN v_from_date AND v_to_date
         ) all_busy_days
         GROUP BY user_id
     ) busy_days ON u.id = busy_days.user_id
@@ -200,11 +200,11 @@ BEGIN
               )
               AND cal_date NOT IN (
                   -- Exclude vacation dates
-                  SELECT DISTINCT DATE(vd.start + INTERVAL offset_days.offset DAY)
+                  SELECT DISTINCT DATE(vd.start + INTERVAL offset_days.`offset` DAY)
                   FROM vacation_durations vd
                   JOIN vacation_requests vr ON vd.vacation_request_id = vr.id
                   CROSS JOIN (
-                      SELECT 0 as offset UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6
+                      SELECT 0 as `offset` UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6
                       UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 UNION SELECT 10 UNION SELECT 11 UNION SELECT 12 UNION SELECT 13
                       UNION SELECT 14 UNION SELECT 15 UNION SELECT 16 UNION SELECT 17 UNION SELECT 18 UNION SELECT 19 UNION SELECT 20
                       UNION SELECT 21 UNION SELECT 22 UNION SELECT 23 UNION SELECT 24 UNION SELECT 25 UNION SELECT 26 UNION SELECT 27
@@ -212,8 +212,8 @@ BEGIN
                   ) offset_days
                   WHERE vr.user_id = u.id
                     AND vr.approved = 1
-                    AND DATE(vd.start + INTERVAL offset_days.offset DAY) <= vd.end
-                    AND DATE(vd.start + INTERVAL offset_days.offset DAY) BETWEEN v_from_date AND v_to_date
+                    AND DATE(vd.start + INTERVAL offset_days.`offset` DAY) <= vd.end
+                    AND DATE(vd.start + INTERVAL offset_days.`offset` DAY) BETWEEN v_from_date AND v_to_date
               )
         ) available_work_days
         GROUP BY user_id
