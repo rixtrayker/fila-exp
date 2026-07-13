@@ -251,6 +251,10 @@ class RolesAndPermissionsSeeder extends Seeder
             'super-admin'
         );
 
+        // Convenience and bulk test accounts must never reach production
+        if (app()->environment('production')) {
+            return;
+        }
 
         // Create developer user
         $this->createUserWithRole(
