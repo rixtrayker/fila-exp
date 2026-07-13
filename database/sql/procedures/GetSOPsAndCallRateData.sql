@@ -11,6 +11,9 @@ BEGIN
     DECLARE v_total_working_days INT DEFAULT 0;
     DECLARE v_daily_target INT DEFAULT 6;
 
+    -- NULL means all users, same as the empty string the app passes
+    SET p_user_ids = IFNULL(p_user_ids, '');
+
     -- Set default date range (current month if not provided)
     SET v_from_date = IFNULL(p_from_date, DATE_FORMAT(CURDATE(), '%Y-%m-01'));
     SET v_to_date = IFNULL(p_to_date, CURDATE());
