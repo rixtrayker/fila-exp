@@ -224,56 +224,67 @@ BEGIN
 
     -- Actual visits subquery
     LEFT JOIN (
-        SELECT
-            CASE WHEN v.second_user_id IS NOT NULL THEN v.second_user_id ELSE v.user_id END as user_id,
-            COUNT(*) as actual_visits
-        FROM visits v
-        LEFT JOIN clients c ON v.client_id = c.id
-        WHERE v.status = 'visited'
-          AND DATE(v.visit_date) BETWEEN v_from_date AND v_to_date
-          AND v.deleted_at IS NULL
-          AND (p_client_type_id = 0 OR c.client_type_id = p_client_type_id)
-        GROUP BY CASE WHEN v.second_user_id IS NOT NULL THEN v.second_user_id ELSE v.user_id END
+        -- One row per user: both branches summed, otherwise a user present
+        -- in both (own visits + accompanied doubles) duplicates report rows
+        SELECT user_id, SUM(actual_visits) as actual_visits
+        FROM (
+            SELECT
+                CASE WHEN v.second_user_id IS NOT NULL THEN v.second_user_id ELSE v.user_id END as user_id,
+                COUNT(*) as actual_visits
+            FROM visits v
+            LEFT JOIN clients c ON v.client_id = c.id
+            WHERE v.status = 'visited'
+              AND DATE(v.visit_date) BETWEEN v_from_date AND v_to_date
+              AND v.deleted_at IS NULL
+              AND (p_client_type_id = 0 OR c.client_type_id = p_client_type_id)
+            GROUP BY CASE WHEN v.second_user_id IS NOT NULL THEN v.second_user_id ELSE v.user_id END
 
-        UNION ALL
+            UNION ALL
 
-        SELECT
-            v.user_id,
-            COUNT(*) as actual_visits
-        FROM visits v
-        LEFT JOIN clients c ON v.client_id = c.id
-        WHERE v.status = 'visited'
-          AND DATE(v.visit_date) BETWEEN v_from_date AND v_to_date
-          AND v.deleted_at IS NULL
-          AND v.second_user_id IS NOT NULL
-          AND (p_client_type_id = 0 OR c.client_type_id = p_client_type_id)
-        GROUP BY v.user_id
+            SELECT
+                v.user_id,
+                COUNT(*) as actual_visits
+            FROM visits v
+            LEFT JOIN clients c ON v.client_id = c.id
+            WHERE v.status = 'visited'
+              AND DATE(v.visit_date) BETWEEN v_from_date AND v_to_date
+              AND v.deleted_at IS NULL
+              AND v.second_user_id IS NOT NULL
+              AND (p_client_type_id = 0 OR c.client_type_id = p_client_type_id)
+            GROUP BY v.user_id
+        ) actual_visits_branches
+        GROUP BY user_id
     ) actual_visits_counts ON u.id = actual_visits_counts.user_id
 
     -- Total visits subquery
     LEFT JOIN (
-        SELECT
-            CASE WHEN v.second_user_id IS NOT NULL THEN v.second_user_id ELSE v.user_id END as user_id,
-            COUNT(*) as total_visits
-        FROM visits v
-        LEFT JOIN clients c ON v.client_id = c.id
-        WHERE DATE(v.visit_date) BETWEEN v_from_date AND v_to_date
-          AND v.deleted_at IS NULL
-          AND (p_client_type_id = 0 OR c.client_type_id = p_client_type_id)
-        GROUP BY CASE WHEN v.second_user_id IS NOT NULL THEN v.second_user_id ELSE v.user_id END
+        -- One row per user, same reason as actual_visits_counts above
+        SELECT user_id, SUM(total_visits) as total_visits
+        FROM (
+            SELECT
+                CASE WHEN v.second_user_id IS NOT NULL THEN v.second_user_id ELSE v.user_id END as user_id,
+                COUNT(*) as total_visits
+            FROM visits v
+            LEFT JOIN clients c ON v.client_id = c.id
+            WHERE DATE(v.visit_date) BETWEEN v_from_date AND v_to_date
+              AND v.deleted_at IS NULL
+              AND (p_client_type_id = 0 OR c.client_type_id = p_client_type_id)
+            GROUP BY CASE WHEN v.second_user_id IS NOT NULL THEN v.second_user_id ELSE v.user_id END
 
-        UNION ALL
+            UNION ALL
 
-        SELECT
-            v.user_id,
-            COUNT(*) as total_visits
-        FROM visits v
-        LEFT JOIN clients c ON v.client_id = c.id
-        WHERE DATE(v.visit_date) BETWEEN v_from_date AND v_to_date
-          AND v.deleted_at IS NULL
-          AND v.second_user_id IS NOT NULL
-          AND (p_client_type_id = 0 OR c.client_type_id = p_client_type_id)
-        GROUP BY v.user_id
+            SELECT
+                v.user_id,
+                COUNT(*) as total_visits
+            FROM visits v
+            LEFT JOIN clients c ON v.client_id = c.id
+            WHERE DATE(v.visit_date) BETWEEN v_from_date AND v_to_date
+              AND v.deleted_at IS NULL
+              AND v.second_user_id IS NOT NULL
+              AND (p_client_type_id = 0 OR c.client_type_id = p_client_type_id)
+            GROUP BY v.user_id
+        ) total_visits_branches
+        GROUP BY user_id
     ) total_visits_counts ON u.id = total_visits_counts.user_id
 
     -- Vacation days subquery (counting whole days as integers)
