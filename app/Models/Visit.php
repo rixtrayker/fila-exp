@@ -84,6 +84,25 @@ class Visit extends Model
         return $query->where(column:'status',operator:'!=',value:'planned');
     }
 
+    public function scopeWithinAccountablePool(Builder $query): Builder
+    {
+        // Client::scopeAccountablePool applied per visit owner: when the
+        // owner keeps a personal client list the visit must target a client
+        // on it; owners without a list keep the area-derived pool untouched.
+        return $query->where(function (Builder $q) {
+            $q->whereNotExists(function ($sub) {
+                $sub->selectRaw('1')
+                    ->from('client_user')
+                    ->whereColumn('client_user.user_id', 'visits.user_id');
+            })->orWhereExists(function ($sub) {
+                $sub->selectRaw('1')
+                    ->from('client_user')
+                    ->whereColumn('client_user.user_id', 'visits.user_id')
+                    ->whereColumn('client_user.client_id', 'visits.client_id');
+            });
+        });
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);
