@@ -99,7 +99,7 @@ Dev evidence for the same representative/search:
 
 - `/admin/ops/*` routes require authentication and the super-admin role.
 - Inactive users are denied panel access.
-- Added MySQL-backed pull-request CI and made deployment depend on the reusable CI job.
+- Automatic CI and branch deployment are disabled by operator decision; the Hostinger workflow is manual-dispatch only and CI is deferred.
 - SOP replacement SQL is compile-tested under a temporary procedure name before the active procedure is dropped.
 
 ### 14. Geolocation auditability
