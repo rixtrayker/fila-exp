@@ -12,26 +12,30 @@ if [ ! -x "$PHP_BIN" ]; then
     exit 1
 fi
 
+artisan() {
+    "$PHP_BIN" -d memory_limit=512M -d display_errors=1 artisan "$@"
+}
+
 echo "🚀 Starting Laravel deployment tasks..."
 
 # Run database migrations
 echo "📊 Running database migrations..."
-if ! "$PHP_BIN" artisan migrate --force; then
+if ! artisan migrate --force; then
     echo "⚠️ Migration command failed immediately after sync; retrying once..."
     sleep 3
-    "$PHP_BIN" artisan migrate --force
+    artisan migrate --force
 fi
 
 # Clear and cache configuration
 echo "⚙️ Clearing and caching configuration..."
-"$PHP_BIN" artisan config:clear
-"$PHP_BIN" artisan config:cache
+artisan config:clear
+artisan config:cache
 
 # Closure-based operations routes cannot be cached.
 echo "🛣️ Clearing route cache..."
-"$PHP_BIN" artisan route:clear
+artisan route:clear
 
 echo "👁️ Caching views..."
-"$PHP_BIN" artisan view:cache
+artisan view:cache
 
 echo "✅ Laravel deployment tasks completed successfully!"
