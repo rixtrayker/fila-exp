@@ -55,9 +55,9 @@ jobs:
                --exclude="bootstrap/cache/*" \
                --exclude="public/storage" \
                ./ \
-               ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }}:~/domains/${{ vars.HOSTINGER_PROD_SUBDOMAIN }}/public_html/
+               ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }}:~/${{ vars.HOSTINGER_PROD_PROJECT_PATH }}
 
-            ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} "cd ~/domains/${{ vars.HOSTINGER_PROD_SUBDOMAIN }}/public_html && chmod +x scripts/deploy.sh && ./scripts/deploy.sh"
+            ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} "cd ~/${{ vars.HOSTINGER_PROD_PROJECT_PATH }} && chmod +x scripts/deploy.sh && ./scripts/deploy.sh"
 
           elif [ "${GITHUB_REF##*/}" = "dev" ]; then
             echo "🚀 Deploying to DEVELOPMENT"
@@ -74,9 +74,9 @@ jobs:
                --exclude="bootstrap/cache/*" \
                --exclude="public/storage" \
                ./ \
-               ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }}:~/domains/${{ vars.HOSTINGER_DEV_SUBDOMAIN }}/public_html/
+               ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }}:~/${{ vars.HOSTINGER_DEV_PROJECT_PATH }}
 
-            ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} "cd ~/domains/${{ vars.HOSTINGER_DEV_SUBDOMAIN }}/public_html && chmod +x scripts/deploy.sh && ./scripts/deploy.sh"
+            ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} "cd ~/${{ vars.HOSTINGER_DEV_PROJECT_PATH }} && chmod +x scripts/deploy.sh && ./scripts/deploy.sh"
 
           elif [[ "${GITHUB_REF}" =~ ^refs/tags/ ]]; then
             echo "🚀 Deploying SPECIFIC DIRECTORIES via TAG: ${GITHUB_REF##*/}"
