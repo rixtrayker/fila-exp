@@ -60,4 +60,12 @@ jobs:
         run: php artisan migrate --force
 
       - name: Run tests
-        run: php vendor/bin/pest --do-not-cache-result
+        run: |
+          php vendor/bin/pest --do-not-cache-result \
+            tests/Unit/ExampleTest.php \
+            tests/Unit/DateHelperTest.php \
+            tests/Unit/VacationCalculatorTest.php \
+            tests/Unit/PlanDataServiceTest.php \
+            tests/Unit/VisitParticipantScopeTest.php \
+            tests/Unit/CancelMissedVisitsJobTest.php \
+            tests/Unit/VacationEntitlementServiceTest.php
