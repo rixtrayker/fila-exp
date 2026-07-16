@@ -107,6 +107,14 @@ Dev evidence for the same representative/search:
 - Missing client coordinates no longer bypass silently; the user/client IDs are logged for audit.
 - Strict blocking is deferred because 1,778 of 1,951 active clients (91.13%) currently lack coordinates.
 
+### 15. PR #10 all-activity SOP report
+
+- Rebased the feature onto audited dev and integrated it manually.
+- Role-target defaults are idempotent and never overwrite administrator edits.
+- Evaluation role is explicitly selected and validated against every evaluated user.
+- Operational report and role-target management permissions are installed non-destructively.
+- Dev verification passed: 10 tests / 50 assertions, Evaluation Role filtering, report rows, export action, and Role Visit Targets matrix.
+
 ## Changed files
 
 - `app/Models/Visit.php`
@@ -149,6 +157,8 @@ Dev evidence for the same representative/search:
   `/home/u530702363/backups/dev-crm-dashboard-fix-20260717-015512.tar.gz`
 - Full audit-batch rollback archive:
   `/home/u530702363/backups/dev-crm-audit-batch-20260717-015901.tar.gz`
+- PR #10 rollback archive:
+  `/home/u530702363/backups/dev-crm-pr10-20260717-024930.tar.gz`
 - Latest targeted suite: 29 passed, 40 assertions; 3 existing data-provider deprecations.
 - Deployment script: completed successfully.
 - Migrations: nothing pending.
@@ -179,6 +189,11 @@ Dev evidence for the same representative/search:
 - Coverage reconciliation passed:
   - Summary, accountable scope, and drilldown counts matched for PM, PH, and AM.
   - Browser example: total 98 clients and exactly 98 client-breakdown rows.
+- Corrected-vs-legacy dev reconciliation:
+  - 5 user/client-type coverage rows changed; their combined denominator changed from 1,157 area clients to 16 accountable clients.
+  - 1 user's 2026 annual vacation usage changed from 2.0 to 3.0 days after correct cross-year overlap.
+  - Samples report contains 16 product IDs but only 14 distinct names; ID-based counting prevents name collisions.
+  - These aggregate discrepancies require authorized business review before any production rollout.
 
 ## Test-suite limitations found
 
@@ -197,7 +212,6 @@ Dev evidence for the same representative/search:
   - Historical pending-plan reconciliation is deferred to a separate controlled operation: dev has 7,189 stale pending visits dating to 2023 across 23 users. The scheduled fix processes new missed visits only and does not rewrite those rows.
   - Configure which future vacation types do not deduct annual entitlement.
   - Populate missing client coordinates before strict geolocation enforcement.
-  - Rebase and remediate open PR #10 (`feat/all-activity-sop-report`) before merging it.
 - Personal client lists are mutable and not effective-dated; changing a list can still change historical coverage results. Do not treat historical list-based reports as immutable audit evidence.
 
 ## Rollback

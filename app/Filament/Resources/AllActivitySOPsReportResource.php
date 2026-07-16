@@ -108,7 +108,6 @@ class AllActivitySOPsReportResource extends Resource
                     ->pluck('display_name', 'id')
                     ->toArray())
                 ->default(fn () => Role::query()->where('name', 'medical-rep')->value('id'))
-                ->selectablePlaceholder(false)
                 ->searchable()
                 ->preload(),
             Tables\Filters\Filter::make('date_range')

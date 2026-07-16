@@ -17,9 +17,10 @@ class AllActivitySOPsReportExport implements FromCollection, WithHeadings, WithS
     use Exportable;
 
     private Collection $rows;
+
     private ?string $dateRange;
 
-    public function __construct(Collection $rows, ?string $dateRange = null)
+    public function __construct(Collection $rows, string $dateRange = null)
     {
         $this->rows = $rows;
         $this->dateRange = $dateRange;
@@ -150,6 +151,6 @@ class AllActivitySOPsReportExport implements FromCollection, WithHeadings, WithS
     {
         $dateRange = $this->dateRange ?? now()->format('Y-m-d_H-i-s');
 
-        return 'all_activity_sops_report_' . $dateRange . '.xlsx';
+        return 'all_activity_sops_report_'.$dateRange.'.xlsx';
     }
 }
