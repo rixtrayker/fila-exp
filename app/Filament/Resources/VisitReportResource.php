@@ -7,34 +7,41 @@ use App\Models\Client;
 use App\Models\ClientType;
 use App\Models\User;
 use App\Models\Visit;
+use App\Traits\ResourceHasPermission;
 use Filament\Forms;
 use Filament\Forms\Components\Select;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\FontWeight;
 use Filament\Support\Enums\IconPosition;
-use Filament\Tables\Table;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
-use App\Traits\ResourceHasPermission;
 
 class VisitReportResource extends Resource
 {
     use ResourceHasPermission;
+
     protected static ?string $model = Client::class;
+
     protected static ?string $label = 'Visit report';
 
     protected static ?string $navigationLabel = 'Visit report';
+
     protected static ?string $navigationGroup = 'Reports';
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
-    protected static ?string $slug = 'visits-report';
-    protected static $avgGrade;
-    protected static $clientTypes;
-    protected static $medicalReps;
-    protected static $districtManager;
 
+    protected static ?string $slug = 'visits-report';
+
+    protected static $avgGrade;
+
+    protected static $clientTypes;
+
+    protected static $medicalReps;
+
+    protected static $districtManager;
 
     public static function table(Table $table): Table
     {
@@ -55,12 +62,12 @@ class VisitReportResource extends Resource
                     ->weight(FontWeight::Bold)
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                            'cancelled' => 'danger',
-                            'planned' => 'warning',
-                            'pending' => 'gray',
-                            'visited' => 'success',
-                            default => null,
-                        })
+                        'cancelled' => 'danger',
+                        'planned' => 'warning',
+                        'pending' => 'gray',
+                        'visited' => 'success',
+                        default => null,
+                    })
                     ->icon(fn (string $state): string => match ($state) {
                         'cancelled' => 'heroicon-m-x-circle',
                         'planned' => 'heroicon-s-clock',
@@ -92,23 +99,23 @@ class VisitReportResource extends Resource
                         }
 
                         return $query->where(function (Builder $participants) use ($userIds, $secondUserIds) {
-                            if (!empty($userIds)) {
+                            if (! empty($userIds)) {
                                 $participants->whereIn('user_id', $userIds);
                             }
 
-                            if (!empty($secondUserIds)) {
-                                $method = !empty($userIds) ? 'orWhereIn' : 'whereIn';
+                            if (! empty($secondUserIds)) {
+                                $method = ! empty($userIds) ? 'orWhereIn' : 'whereIn';
                                 $participants->{$method}('second_user_id', $secondUserIds);
                             }
                         });
                     }),
                 Tables\Filters\Filter::make('visit_date')
                     ->form([
-                            Forms\Components\DatePicker::make('from_date')
-                                ->default(today()->subDays(7)),
-                            Forms\Components\DatePicker::make('to_date')
-                                ->default(today()),
-                        ])->columns(2)
+                        Forms\Components\DatePicker::make('from_date')
+                            ->default(today()->subDays(7)),
+                        Forms\Components\DatePicker::make('to_date')
+                            ->default(today()),
+                    ])->columns(2)
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
                             ->when(
@@ -124,39 +131,41 @@ class VisitReportResource extends Resource
                         Select::make('grade')
                             ->label('Grade')
                             // ->multiple()
-                            ->options(['A'=>'A','B'=>'B','C'=>'C','N'=>'N','PH'=>'PH']),
+                            ->options(['A' => 'A', 'B' => 'B', 'C' => 'C', 'N' => 'N', 'PH' => 'PH']),
                         Select::make('status')
                             ->label('Status')
                             // ->multiple()
                             ->options([
-                                'cancelled' => 'Cancelled',
+                                'cancelled' => 'Missed',
                                 'planned' => 'Planned',
                                 'pending' => 'Pending',
-                                'visited' => 'Visited'
+                                'visited' => 'Visited',
                             ]),
-                        ])->columns(2)
-                        ->query(function (Builder $query, array $data): Builder {
-                            return $query
-                                ->when(
-                                    $data['grade'],
-                                    fn (Builder $query, $data): Builder => $query->where('clients.grade', $data)
-                                )
-                                ->when(
-                                    $data['status'],
-                                    fn (Builder $query, $data): Builder => $query->where('status', $data)
-                                );}),
+                    ])->columns(2)
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['grade'],
+                                fn (Builder $query, $data): Builder => $query->where('clients.grade', $data)
+                            )
+                            ->when(
+                                $data['status'],
+                                fn (Builder $query, $data): Builder => $query->where('status', $data)
+                            );
+                    }),
                 Tables\Filters\Filter::make('client_types')
                     ->form([
                         Select::make('client_type_id')
                             ->label('Client Type')
-                            ->options(self::getClientTypes())
-                        ])->columns(2)
-                        ->query(function (Builder $query, array $data): Builder {
-                            return $query
-                                ->when(
-                                    $data['client_type_id'],
-                                    fn (Builder $query, $data): Builder => $query->where('clients.client_type_id', $data)
-                                );}),
+                            ->options(self::getClientTypes()),
+                    ])->columns(2)
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['client_type_id'],
+                                fn (Builder $query, $data): Builder => $query->where('clients.client_type_id', $data)
+                            );
+                    }),
             ])
             ->paginated([10, 25, 50, 100, 1000, 'all'])
             ->actions([
@@ -170,27 +179,33 @@ class VisitReportResource extends Resource
 
     private static function getMedicalReps(): array
     {
-        if(self::$medicalReps)
+        if (self::$medicalReps) {
             return self::$medicalReps;
+        }
 
-        self::$medicalReps = User::allMine()->pluck('name','id')->toArray();
+        self::$medicalReps = User::allMine()->pluck('name', 'id')->toArray();
+
         return self::$medicalReps;
     }
+
     private static function getDistrictManagers(): array
     {
-        if(self::$districtManager)
+        if (self::$districtManager) {
             return self::$districtManager;
+        }
 
-        self::$districtManager = User::allWithRole('district-manager')->pluck('name','id')->toArray();
+        self::$districtManager = User::allWithRole('district-manager')->pluck('name', 'id')->toArray();
+
         return self::$districtManager;
     }
 
-    private static function getClientTypes() : array {
-        if(self::$clientTypes){
+    private static function getClientTypes(): array
+    {
+        if (self::$clientTypes) {
             return self::$clientTypes;
-        }
-        else{
-            self::$clientTypes = ClientType::pluck('name','id')->toArray();
+        } else {
+            self::$clientTypes = ClientType::pluck('name', 'id')->toArray();
+
             return self::$clientTypes;
         }
     }
@@ -198,6 +213,7 @@ class VisitReportResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         DB::statement("SET SESSION sql_mode=''");
+
         return Visit::select(
             'visits.id as id',
             'visits.client_id as client_id',
@@ -232,12 +248,14 @@ class VisitReportResource extends Resource
             'view' => Pages\ViewVist::route('/{record}'),
         ];
     }
+
     public static function canCreate(): bool
     {
         return false;
     }
 
-    public static function getRecordRouteKeyName(): string|null {
+    public static function getRecordRouteKeyName(): ?string
+    {
         return 'visits.id';
     }
 }

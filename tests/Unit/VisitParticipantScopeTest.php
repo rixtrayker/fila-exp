@@ -27,8 +27,26 @@ class VisitParticipantScopeTest extends TestCase
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('second_user_id')->nullable();
+            $table->unsignedBigInteger('client_id')->nullable();
             $table->date('visit_date');
             $table->softDeletes();
+        });
+
+        $this->database->schema()->create('clients', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('brick_id');
+            $table->unsignedBigInteger('client_type_id');
+            $table->boolean('active')->default(true);
+        });
+
+        $this->database->schema()->create('user_bricks_view', function (Blueprint $table) {
+            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('brick_id');
+        });
+
+        $this->database->schema()->create('client_user', function (Blueprint $table) {
+            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('client_id');
         });
     }
 
@@ -55,5 +73,36 @@ class VisitParticipantScopeTest extends TestCase
             ->all();
 
         self::assertSame([1, 2], $ids);
+    }
+
+    public function test_accountable_pool_uses_personal_lists_per_type_and_current_territory(): void
+    {
+        $this->database->table('user_bricks_view')->insert([
+            ['user_id' => 10, 'brick_id' => 1],
+        ]);
+        $this->database->table('clients')->insert([
+            ['id' => 1, 'brick_id' => 1, 'client_type_id' => 1, 'active' => true],
+            ['id' => 2, 'brick_id' => 1, 'client_type_id' => 1, 'active' => true],
+            ['id' => 3, 'brick_id' => 1, 'client_type_id' => 2, 'active' => true],
+            ['id' => 4, 'brick_id' => 2, 'client_type_id' => 2, 'active' => true],
+        ]);
+        $this->database->table('client_user')->insert([
+            ['user_id' => 10, 'client_id' => 1],
+            ['user_id' => 10, 'client_id' => 4],
+        ]);
+        $this->database->table('visits')->insert([
+            ['id' => 10, 'user_id' => 10, 'client_id' => 1, 'visit_date' => '2026-07-17'],
+            ['id' => 11, 'user_id' => 10, 'client_id' => 2, 'visit_date' => '2026-07-17'],
+            ['id' => 12, 'user_id' => 10, 'client_id' => 3, 'visit_date' => '2026-07-17'],
+            ['id' => 13, 'user_id' => 10, 'client_id' => 4, 'visit_date' => '2026-07-17'],
+        ]);
+
+        $ids = Visit::withoutGlobalScopes()
+            ->withinAccountablePool()
+            ->orderBy('id')
+            ->pluck('id')
+            ->all();
+
+        self::assertSame([10, 12], $ids);
     }
 }

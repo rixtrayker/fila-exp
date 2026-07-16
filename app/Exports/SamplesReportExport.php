@@ -2,21 +2,23 @@
 
 namespace App\Exports;
 
+use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\WithStyles;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class SamplesReportExport implements FromCollection, WithHeadings, WithStyles
 {
     use Exportable;
 
     private $query;
+
     private $dateRange;
+
     private $records;
 
     public function __construct($query, $dateRange = null)
@@ -32,7 +34,7 @@ class SamplesReportExport implements FromCollection, WithHeadings, WithStyles
 
             if ($data->isEmpty()) {
                 return collect([
-                    ['No data available for the selected criteria']
+                    ['No data available for the selected criteria'],
                 ]);
             }
 
@@ -48,7 +50,7 @@ class SamplesReportExport implements FromCollection, WithHeadings, WithStyles
         } catch (\Exception $e) {
             // Return error message if data collection fails
             return collect([
-                ['Error collecting data: ' . $e->getMessage()]
+                ['Error collecting data: '.$e->getMessage()],
             ]);
         }
     }
@@ -128,10 +130,10 @@ class SamplesReportExport implements FromCollection, WithHeadings, WithStyles
 
             // Add summary labels
             $sheet->setCellValue("A{$summaryRow}", 'Summary');
-            $sheet->setCellValue("B{$summaryRow}", 'Medical Reps: ' . $this->getMedicalRepsCount());
-            $sheet->setCellValue("C{$summaryRow}", 'Records: ' . $this->getRecordCount());
-            $sheet->setCellValue("D{$summaryRow}", 'Products: ' . $this->getProductsCount());
-            $sheet->setCellValue("E{$summaryRow}", 'Total Samples: ' . $this->getTotalSum());
+            $sheet->setCellValue("B{$summaryRow}", 'Medical Reps: '.$this->getMedicalRepsCount());
+            $sheet->setCellValue("C{$summaryRow}", 'Records: '.$this->getRecordCount());
+            $sheet->setCellValue("D{$summaryRow}", 'Products: '.$this->getProductsCount());
+            $sheet->setCellValue("E{$summaryRow}", 'Total Samples: '.$this->getTotalSum());
 
             // Style summary row
             $sheet->getStyle("A{$summaryRow}:E{$summaryRow}")->applyFromArray([
@@ -159,7 +161,8 @@ class SamplesReportExport implements FromCollection, WithHeadings, WithStyles
     public function getFilename(): string
     {
         $dateRange = $this->dateRange ?? 'all_dates';
-        return 'samples_report_' . $dateRange . '_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
+
+        return 'samples_report_'.$dateRange.'_'.now()->format('Y-m-d_H-i-s').'.xlsx';
     }
 
     /**
@@ -191,7 +194,7 @@ class SamplesReportExport implements FromCollection, WithHeadings, WithStyles
      */
     public function getProductsCount(): int
     {
-        return $this->getRecords()->pluck('product_name')->unique()->count();
+        return $this->getRecords()->pluck('product_id')->unique()->count();
     }
 
     /**

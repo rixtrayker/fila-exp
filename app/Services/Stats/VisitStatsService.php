@@ -3,12 +3,14 @@
 namespace App\Services\Stats;
 
 use App\Helpers\DateHelper;
+use App\Models\Client;
+use App\Models\ClientType;
+use App\Models\Scopes\GetMineScope;
 use App\Models\Visit;
-use Illuminate\Support\Collection;
+use App\Services\VisitCacheService;
 use App\Traits\StatsHelperTrait;
 use Illuminate\Database\Eloquent\Builder;
-use App\Models\Client;
-use App\Services\VisitCacheService;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
 class VisitStatsService
@@ -40,6 +42,7 @@ class VisitStatsService
 
         $visitCacheService = app(VisitCacheService::class);
         $fullCacheKey = $visitCacheService->makePublicCacheKey('visit_stats_visits', $userId, $date);
+
         return $visitCacheService->getPublicCached($fullCacheKey, function () {
             return $this->getVisitsQuery()->get();
         }, 1800);
@@ -54,22 +57,17 @@ class VisitStatsService
         $date = DateHelper::today()->format('Y-m-d');
 
         $visitCacheService = app(VisitCacheService::class);
-        $fullCacheKey = $visitCacheService->makePublicCacheKey('visit_stats_daily_plan', $userId, $date);
-        $clientIds = $visitCacheService->getPublicCached($fullCacheKey, function () {
-            return $this->getVisitsQuery()
-                ->whereNotNull('plan_id')
-                ->select('client_id')
-                ->distinct()
-                ->get();
-        }, 1800);
+        $fullCacheKey = $visitCacheService->makePublicCacheKey('visit_stats_daily_plan_v2', $userId, $date);
 
-        // it's not a query, it's a collection, pluck the client_id won't work
-        // so we need to iterate over the collection and get the client_id
-        $clientIds = $clientIds->map(function ($item) {
-            return $item->client_id;
-        });
-        $clients = Client::whereIn('id', $clientIds)->where('client_type_id', 1)->count();
-        return $clients;
+        return $visitCacheService->getPublicCached($fullCacheKey, function () {
+            return $this->getVisitsQuery()
+                ->withinAccountablePool()
+                ->whereNotNull('plan_id')
+                ->whereHas('client', fn (Builder $query) => $query
+                    ->where('client_type_id', ClientType::PM))
+                ->distinct('client_id')
+                ->count('client_id');
+        }, 1800);
     }
 
     /**
@@ -81,9 +79,16 @@ class VisitStatsService
         $date = DateHelper::today()->format('Y-m-d');
 
         $visitCacheService = app(VisitCacheService::class);
-        $fullCacheKey = $visitCacheService->makePublicCacheKey('visit_stats_pm_clients_count', $userId, $date);
+        $fullCacheKey = $visitCacheService->makePublicCacheKey('visit_stats_pm_clients_count_v2', $userId, $date);
+
         return $visitCacheService->getPublicCached($fullCacheKey, function () {
-            return Client::where('client_type_id', 1)->count();
+            return collect(GetMineScope::getUserIds())
+                ->flatMap(fn (int $visibleUserId) => Client::query()
+                    ->accountablePool($visibleUserId, ClientType::PM)
+                    ->where('client_type_id', ClientType::PM)
+                    ->pluck('id'))
+                ->unique()
+                ->count();
         }, 1800);
     }
 
@@ -97,6 +102,7 @@ class VisitStatsService
 
         $visitCacheService = app(VisitCacheService::class);
         $fullCacheKey = $visitCacheService->makePublicCacheKey('visit_stats_achieved', $userId, $date);
+
         return $visitCacheService->getPublicCached($fullCacheKey, function () {
             $totalVisits = $this->getVisitsQuery()
                 ->whereNotNull('plan_id')
@@ -114,6 +120,7 @@ class VisitStatsService
             }
 
             $percentage = $this->calculatePercentage($planDoneVisits, $totalVisits);
+
             return "$percentage %";
         }, 1800);
     }
@@ -128,6 +135,7 @@ class VisitStatsService
 
         $visitCacheService = app(VisitCacheService::class);
         $fullCacheKey = $visitCacheService->makePublicCacheKey('visit_stats_planned_vs_actual', $userId, $date);
+
         return $visitCacheService->getPublicCached($fullCacheKey, function () {
             $plannedVisits = $this->getVisitsQuery()
                 ->whereIn('status', ['pending', 'visited'])
@@ -145,7 +153,7 @@ class VisitStatsService
             return [
                 'plannedVisits' => $plannedVisits,
                 'actualVisits' => $actualVisits,
-                'percentage' => $percentage
+                'percentage' => $percentage,
             ];
         }, 1800);
     }
@@ -160,6 +168,7 @@ class VisitStatsService
 
         $visitCacheService = app(VisitCacheService::class);
         $fullCacheKey = $visitCacheService->makePublicCacheKey('visit_stats_done_plan', $userId, $date);
+
         return $visitCacheService->getPublicCached($fullCacheKey, function () {
             return $this->getVisitsQuery()
                 ->where('status', 'visited')
@@ -177,6 +186,7 @@ class VisitStatsService
 
         $visitCacheService = app(VisitCacheService::class);
         $fullCacheKey = $visitCacheService->makePublicCacheKey('visit_stats_overview', $userId, $date);
+
         return $visitCacheService->getPublicCached($fullCacheKey, function () {
             $actualVisits = $this->getVisitsQuery()
                 ->where('status', 'visited')
@@ -192,10 +202,10 @@ class VisitStatsService
             if ($plannedVisits === 0) {
                 return [
                     'achievedRatio' => 0,
-                    'descriptionMessage' => "No planned visits",
+                    'descriptionMessage' => 'No planned visits',
                     'color' => 'info',
                     'actualVisits' => 0,
-                    'plannedVisits' => 0
+                    'plannedVisits' => 0,
                 ];
             }
 
@@ -206,7 +216,7 @@ class VisitStatsService
                 'descriptionMessage' => "$actualVisits / $plannedVisits Done ($achievedRatio % of planned visits done)",
                 'color' => $this->getStatsColor($achievedRatio),
                 'actualVisits' => $actualVisits,
-                'plannedVisits' => $plannedVisits
+                'plannedVisits' => $plannedVisits,
             ];
         }, 1800);
     }

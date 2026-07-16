@@ -9,5 +9,12 @@ class VacationType extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name'];
+    protected $fillable = [
+        'name',
+        'consumes_annual_entitlement',
+    ];
+
+    protected $casts = [
+        'consumes_annual_entitlement' => 'boolean',
+    ];
 }

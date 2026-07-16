@@ -2,15 +2,15 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\Visit;
 use App\Models\ClientType;
+use App\Models\Visit;
 use Filament\Widgets\Widget;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 
 class MonthlyVisitStatsWidget extends Widget
 {
     protected static string $view = 'filament.widgets.monthly-visit-stats-widget';
+
     public ?string $selectedType = 'PM'; // Changed default to PM
 
     public function mount(): void
@@ -55,6 +55,7 @@ class MonthlyVisitStatsWidget extends Widget
     protected function getVisitsForMonth(Carbon $startDate, Carbon $endDate, string $type)
     {
         $query = Visit::query()
+            ->withinAccountablePool()
             ->whereBetween('visit_date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
             ->with('client'); // Eager load client relationship
 

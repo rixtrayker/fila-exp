@@ -62,7 +62,6 @@ class VisitTable
                     'pending' => 'warning',
                     'cancelled' => 'danger',
                     'planned' => 'info',
-                    'missed' => 'gray',
                     default => 'gray',
                 })
                 ->icon(fn (string $state): string => match ($state) {
@@ -70,7 +69,6 @@ class VisitTable
                     'pending' => 'heroicon-m-clock',
                     'cancelled' => 'heroicon-m-x-circle',
                     'planned' => 'heroicon-m-calendar',
-                    'missed' => 'heroicon-m-exclamation-circle',
                     default => 'heroicon-m-question-mark-circle',
                 }),
 
@@ -89,7 +87,7 @@ class VisitTable
                 ->label('Last Updated')
                 ->date('d-m-Y h:i A')
                 // ->description('date format is 31-12-2025 10:00 AM')
-                ->tooltip(fn($record) => $record->updated_at->format('d-M-Y'))
+                ->tooltip(fn ($record) => $record->updated_at->format('d-M-Y'))
                 // ->copyable()
                 // ->copyMessage('Copied!')
                 // ->copyMessageDuration(500)
@@ -148,14 +146,14 @@ class VisitTable
                 $userIds = $data['user_id'] ?? [];
                 $secondUserIds = $data['second_user_id'] ?? [];
 
-                if (!empty($userIds) || !empty($secondUserIds)) {
+                if (! empty($userIds) || ! empty($secondUserIds)) {
                     $query->where(function (Builder $nested) use ($userIds, $secondUserIds) {
-                        if (!empty($userIds)) {
+                        if (! empty($userIds)) {
                             $nested->participatedBy($userIds);
                         }
 
-                        if (!empty($secondUserIds)) {
-                            $method = !empty($userIds) ? 'orWhereIn' : 'whereIn';
+                        if (! empty($secondUserIds)) {
+                            $method = ! empty($userIds) ? 'orWhereIn' : 'whereIn';
                             $nested->{$method}('second_user_id', $secondUserIds);
                         }
                     });
@@ -203,6 +201,7 @@ class VisitTable
                         $q->whereIn('grade', $data['values']);
                     });
                 }
+
                 return $query;
             });
     }
@@ -222,6 +221,7 @@ class VisitTable
                         $q->whereIn('client_type_id', $data['values']);
                     });
                 }
+
                 return $query;
             });
     }
@@ -241,6 +241,7 @@ class VisitTable
                         $q->whereIn('bundles.id', $data['values']);
                     });
                 }
+
                 return $query;
             });
     }
@@ -254,9 +255,9 @@ class VisitTable
         return [
             Tables\Actions\ViewAction::make(),
             Tables\Actions\DeleteAction::make()
-                ->hidden(fn() => auth()->user()->hasRole('medical-rep')),
+                ->hidden(fn () => auth()->user()->hasRole('medical-rep')),
             Tables\Actions\RestoreAction::make()
-                ->hidden(fn($record) => $record->deleted_at == null)
+                ->hidden(fn ($record) => $record->deleted_at == null),
         ];
     }
 
@@ -282,19 +283,22 @@ class VisitTable
                 };
             });
     }
+
     // get status filter
     private static function getStatusFilter(): SelectFilter
     {
         return SelectFilter::make('status')
             ->label('Status')
-            ->options(['visited' => 'Visited', 'pending' => 'Pending', 'cancelled' => 'Cancelled', 'planned' => 'Planned', 'missed' => 'Missed'])
+            ->options(['visited' => 'Visited', 'pending' => 'Pending', 'cancelled' => 'Missed', 'planned' => 'Planned'])
             ->query(function (Builder $query, array $data): Builder {
                 if (empty($data['values'])) {
                     return $query;
                 }
+
                 return $query->whereIn('status', $data['values']);
             });
     }
+
     /**
      * Get the table bulk actions configuration.
      */

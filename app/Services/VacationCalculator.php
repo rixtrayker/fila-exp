@@ -2,23 +2,23 @@
 
 namespace App\Services;
 
-use App\Models\User;
-use Carbon\Carbon;
-use DateTime;
 use App\Helpers\DateHelper;
+use App\Helpers\SortedStringSet;
 use App\Models\Activity;
 use App\Models\OfficeWork;
 use App\Models\OfficialHoliday;
-use App\Helpers\SortedStringSet;
+use App\Models\User;
+use Carbon\Carbon;
+use DateTime;
 
 class VacationCalculator
 {
     /**
      * Calculate the total vacation days for a user within a date range
      *
-     * @param User $user The user to calculate vacation days for
-     * @param Carbon $fromDate Start date of the range
-     * @param Carbon $toDate End date of the range
+     * @param  User  $user The user to calculate vacation days for
+     * @param  Carbon  $fromDate Start date of the range
+     * @param  Carbon  $toDate End date of the range
      * @return float Total vacation days in the specified range
      */
     public function calculateTotalVacationDaysInRange(User $user, Carbon $fromDate, Carbon $toDate): float
@@ -38,18 +38,18 @@ class VacationCalculator
     /**
      * Get approved vacation requests that intersect with the date range
      *
-     * @param User $user The user to get vacation requests for
-     * @param Carbon $fromDate Start date of the range
-     * @param Carbon $toDate End date of the range
+     * @param  User  $user The user to get vacation requests for
+     * @param  Carbon  $fromDate Start date of the range
+     * @param  Carbon  $toDate End date of the range
      * @return \Illuminate\Database\Eloquent\Collection Collection of vacation requests
      */
     private function getVacationRequestsInRange(User $user, Carbon $fromDate, Carbon $toDate)
     {
         return $user->vacationRequests()
             ->approved()
-            ->whereHas('vacationDurations', function($query) use ($fromDate, $toDate) {
+            ->whereHas('vacationDurations', function ($query) use ($fromDate, $toDate) {
                 $query->whereDate('start', '<=', $toDate)
-                      ->whereDate('end', '>=', $fromDate);
+                    ->whereDate('end', '>=', $fromDate);
             })
             ->with('vacationDurations')
             ->get();
@@ -58,12 +58,12 @@ class VacationCalculator
     /**
      * Calculate vacation days for a duration that may fully or partially overlap with the date range
      *
-     * @param object $duration Vacation duration object
-     * @param Carbon $fromDate Start date of the range
-     * @param Carbon $toDate End date of the range
+     * @param  object  $duration Vacation duration object
+     * @param  Carbon  $fromDate Start date of the range
+     * @param  Carbon  $toDate End date of the range
      * @return float Number of vacation days in the range
      */
-    private function calculateDurationDaysInRange($duration, Carbon $fromDate, Carbon $toDate): float
+    public function calculateDurationDaysInRange($duration, Carbon $fromDate, Carbon $toDate): float
     {
         // Convert string dates to Carbon if needed
         $durationStart = $duration->start instanceof Carbon ? $duration->start : Carbon::parse($duration->start);
@@ -86,9 +86,9 @@ class VacationCalculator
     /**
      * Calculate vacation days for a duration that partially overlaps with the date range
      *
-     * @param object $duration Vacation duration object
-     * @param Carbon $fromDate Start date of the range
-     * @param Carbon $toDate End date of the range
+     * @param  object  $duration Vacation duration object
+     * @param  Carbon  $fromDate Start date of the range
+     * @param  Carbon  $toDate End date of the range
      * @return float Number of overlapping vacation days
      */
     public function calculateOverlappingVacationDays($duration, Carbon $fromDate, Carbon $toDate): float
@@ -129,8 +129,8 @@ class VacationCalculator
     /**
      * Calculate the difference in days between two dates
      *
-     * @param mixed $start Start date
-     * @param mixed $end End date
+     * @param  mixed  $start Start date
+     * @param  mixed  $end End date
      * @return int Number of days difference
      */
     private function calculateDaysDifference($start, $end): int
@@ -144,8 +144,8 @@ class VacationCalculator
     /**
      * Calculate shift adjustment based on start and end shifts
      *
-     * @param string $startShift AM or PM shift for start
-     * @param string $endShift AM or PM shift for end
+     * @param  string  $startShift AM or PM shift for start
+     * @param  string  $endShift AM or PM shift for end
      * @return float Shift adjustment value (0.5 or 1.0)
      */
     private function calculateShiftAdjustment(string $startShift, string $endShift): float
@@ -162,15 +162,16 @@ class VacationCalculator
     /**
      * Calculate the total duration of a vacation period including shift considerations
      *
-     * @param string|Carbon $start Start date
-     * @param string|Carbon $end End date
-     * @param string $startShift AM or PM shift for start
-     * @param string $endShift AM or PM shift for end
+     * @param  string|Carbon  $start Start date
+     * @param  string|Carbon  $end End date
+     * @param  string  $startShift AM or PM shift for start
+     * @param  string  $endShift AM or PM shift for end
      * @return float Total duration in days
      */
     public function calculateTotalDuration($start, $end, $startShift, $endShift): float
     {
         $diffInDays = $this->calculateDaysDifference($start, $end);
+
         return $diffInDays + $this->calculateShiftAdjustment($startShift, $endShift);
     }
 
@@ -178,9 +179,9 @@ class VacationCalculator
     {
         $vacationRequests = $user->vacationRequests()
             ->approved()
-            ->whereHas('vacationDurations', function($query) use ($startDate, $endDate) {
+            ->whereHas('vacationDurations', function ($query) use ($startDate, $endDate) {
                 $query->whereBetween('start', [$startDate, $endDate])
-                      ->orWhereBetween('end', [$startDate, $endDate]);
+                    ->orWhereBetween('end', [$startDate, $endDate]);
             })
             ->with('vacationDurations')
             ->get();
@@ -217,7 +218,6 @@ class VacationCalculator
         $officialHolidaysSet = OfficialHoliday::getSetOfOfficialHolidaysInRange($startDate, $endDate);
 
         $offDays = $officialHolidaysSet->union($weekendsSet)->union($vacationSet);
-
 
         return $datesSet->difference($offDays);
     }

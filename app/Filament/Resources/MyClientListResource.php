@@ -37,12 +37,19 @@ class MyClientListResource extends Resource
     use ResourceHasPermission;
 
     protected static ?string $model = Client::class;
+
     protected static ?string $permissionName = 'my-client-list';
+
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-check';
+
     protected static ?string $navigationGroup = 'Admin management';
+
     protected static ?string $navigationLabel = 'My Client List';
+
     protected static ?string $pluralModelLabel = 'My Client List';
+
     protected static ?string $slug = 'my-client-list';
+
     protected static ?int $navigationSort = 2;
 
     protected static ?array $manageableUsers = null;
@@ -98,7 +105,7 @@ class MyClientListResource extends Resource
                     ->query(function (Builder $query, array $data) {
                         $userId = $data['value'] ?? null;
 
-                        if (!empty($userId) && self::canManageUser((int) $userId)) {
+                        if (! empty($userId) && self::canManageUser((int) $userId)) {
                             // Show the selected team member's eligible pool
                             // (their bricks) instead of the viewer's own.
                             $query->whereIn(
@@ -157,8 +164,36 @@ class MyClientListResource extends Resource
                         } catch (\Exception $e) {
                             return redirect()
                                 ->back()
-                                ->with('error', 'Export failed: ' . $e->getMessage());
+                                ->with('error', 'Export failed: '.$e->getMessage());
                         }
+                    }),
+                Tables\Actions\Action::make('removeStaleMemberships')
+                    ->label('Remove Stale Memberships')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalDescription(
+                        fn ($livewire) => self::staleMembershipCount($livewire)
+                            .' inactive or out-of-territory list membership(s) will be removed.',
+                    )
+                    ->visible(fn ($livewire) => self::staleMembershipCount($livewire) > 0)
+                    ->action(function ($livewire) {
+                        $userId = self::getDisplayedUserId($livewire);
+                        $eligibleClientIds = Client::query()
+                            ->whereIn(
+                                'brick_id',
+                                UserBricksView::getUserBrickIds($userId),
+                            )
+                            ->pluck('id');
+                        $removed = DB::table('client_user')
+                            ->where('user_id', $userId)
+                            ->whereNotIn('client_id', $eligibleClientIds)
+                            ->delete();
+
+                        Notification::make()
+                            ->title("Removed {$removed} stale membership(s)")
+                            ->success()
+                            ->send();
                     }),
             ])
             ->actions([
@@ -167,7 +202,7 @@ class MyClientListResource extends Resource
                     ->icon('heroicon-o-plus-circle')
                     ->color('success')
                     ->visible(
-                        fn (Client $record, $livewire): bool => !self::isInList($record, $livewire),
+                        fn (Client $record, $livewire): bool => ! self::isInList($record, $livewire),
                     )
                     ->action(function (Client $record, $livewire) {
                         $userId = self::getDisplayedUserId($livewire);
@@ -303,7 +338,7 @@ class MyClientListResource extends Resource
             $userId = request()->input('tableFilters.user.value');
         }
 
-        if (!empty($userId) && self::canManageUser((int) $userId)) {
+        if (! empty($userId) && self::canManageUser((int) $userId)) {
             return (int) $userId;
         }
 
@@ -346,5 +381,21 @@ class MyClientListResource extends Resource
                 ->whereColumn('client_user.client_id', 'clients.id')
                 ->where('client_user.user_id', $userId);
         });
+    }
+
+    protected static function staleMembershipCount($livewire = null): int
+    {
+        $userId = self::getDisplayedUserId($livewire);
+        $eligibleClientIds = Client::query()
+            ->whereIn(
+                'brick_id',
+                UserBricksView::getUserBrickIds($userId),
+            )
+            ->pluck('id');
+
+        return DB::table('client_user')
+            ->where('user_id', $userId)
+            ->whereNotIn('client_id', $eligibleClientIds)
+            ->count();
     }
 }

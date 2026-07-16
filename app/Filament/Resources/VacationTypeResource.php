@@ -3,25 +3,24 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\VacationTypeResource\Pages;
-use App\Filament\Resources\VacationTypeResource\RelationManagers;
 use App\Models\VacationType;
 use App\Traits\ResourceHasPermission;
 use Filament\Forms;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Tables\Table;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Tables\Table;
 
 class VacationTypeResource extends Resource
 {
     use ResourceHasPermission;
+
     protected static ?string $model = VacationType::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-tag';
+
     protected static ?string $navigationGroup = 'Types management';
 
     public static function form(Form $form): Form
@@ -30,7 +29,11 @@ class VacationTypeResource extends Resource
             ->schema([
                 TextInput::make('name')
                     ->unique()
-                    ->required()
+                    ->required(),
+                Forms\Components\Toggle::make('consumes_annual_entitlement')
+                    ->label('Deducts from annual balance')
+                    ->default(true)
+                    ->required(),
             ]);
     }
 
@@ -39,7 +42,10 @@ class VacationTypeResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')
-                ->label('Name'),
+                    ->label('Name'),
+                Tables\Columns\IconColumn::make('consumes_annual_entitlement')
+                    ->label('Deducts Annual Balance')
+                    ->boolean(),
             ])
             ->filters([
                 //

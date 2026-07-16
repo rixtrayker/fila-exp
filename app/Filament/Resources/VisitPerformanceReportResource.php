@@ -3,30 +3,35 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\VisitPerformanceReportResource\Pages;
+use App\Models\Scopes\GetMineScope;
 use App\Models\Visit;
 use App\Traits\ResourceHasPermission;
 use Filament\Forms;
 use Filament\Resources\Resource;
-use Filament\Tables\Table;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\FiltersLayout;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Carbon;
-use Filament\Tables\Enums\FiltersLayout;
 use Illuminate\Support\Facades\DB;
-use App\Models\Scopes\GetMineScope;
 
 class VisitPerformanceReportResource extends Resource
 {
     use ResourceHasPermission;
 
     protected static ?string $model = Visit::class;
+
     protected static ?string $label = 'Visit Performance Report';
+
     protected static ?string $navigationLabel = 'Visit Performance';
+
     protected static ?string $navigationGroup = 'Reports';
+
     protected static ?string $navigationIcon = 'heroicon-o-presentation-chart-line';
+
     protected static ?string $slug = 'visit-performance-report';
+
     protected static ?string $permissionName = 'visit-performance-report';
 
     public static function table(Table $table): Table
@@ -38,7 +43,7 @@ class VisitPerformanceReportResource extends Resource
                     ->label('Medical Representative')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('client.area.name')
+                TextColumn::make('client.brick.area.name')
                     ->label('Area')
                     ->searchable()
                     ->sortable(),
@@ -61,7 +66,7 @@ class VisitPerformanceReportResource extends Resource
                         'PH' => 'gray',
                         default => 'gray',
                     }),
-                TextColumn::make('client.client_type.name')
+                TextColumn::make('client.clientType.name')
                     ->label('Client Type')
                     ->searchable()
                     ->sortable(),
@@ -76,14 +81,14 @@ class VisitPerformanceReportResource extends Resource
                         'visited' => 'success',
                         'planned' => 'info',
                         'pending' => 'warning',
-                        'missed' => 'danger',
+                        'cancelled' => 'danger',
                         default => 'gray',
                     }),
-                TextColumn::make('visit_type')
+                TextColumn::make('callType.name')
                     ->label('Visit Type')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('notes')
+                TextColumn::make('comment')
                     ->label('Notes')
                     ->limit(50)
                     ->searchable(),
@@ -105,7 +110,7 @@ class VisitPerformanceReportResource extends Resource
                         'visited' => 'Visited',
                         'planned' => 'Planned',
                         'pending' => 'Pending',
-                        'missed' => 'Missed',
+                        'cancelled' => 'Missed',
                     ])
                     ->multiple(),
                 Tables\Filters\SelectFilter::make('area_id')
@@ -156,45 +161,45 @@ class VisitPerformanceReportResource extends Resource
         $tableFilters = request()->get('tableFilters', []);
         $dateRange = $tableFilters['date_range'] ?? [];
 
-        $fromDate = isset($dateRange['from_date']) && !empty($dateRange['from_date'])
+        $fromDate = isset($dateRange['from_date']) && ! empty($dateRange['from_date'])
             ? $dateRange['from_date']
             : today()->startOfMonth()->toDateString();
 
-        $toDate = isset($dateRange['to_date']) && !empty($dateRange['to_date'])
+        $toDate = isset($dateRange['to_date']) && ! empty($dateRange['to_date'])
             ? $dateRange['to_date']
             : today()->toDateString();
 
         $query = Visit::query()
-            ->with(['user', 'client.area', 'client.brick', 'client.client_type'])
+            ->with(['user', 'client.brick.area', 'client.clientType', 'callType'])
             ->whereBetween('visit_date', [$fromDate, $toDate])
             ->whereIn('user_id', GetMineScope::getUserIds());
 
         // Apply status filter
-        if (isset($tableFilters['status']) && !empty($tableFilters['status'])) {
+        if (isset($tableFilters['status']) && ! empty($tableFilters['status'])) {
             $query->whereIn('status', $tableFilters['status']);
         }
 
         // Apply area filter
-        if (isset($tableFilters['area_id']) && !empty($tableFilters['area_id'])) {
-            $query->whereHas('client.area', function ($q) use ($tableFilters) {
+        if (isset($tableFilters['area_id']) && ! empty($tableFilters['area_id'])) {
+            $query->whereHas('client.brick.area', function ($q) use ($tableFilters) {
                 $q->whereIn('areas.id', $tableFilters['area_id']);
             });
         }
 
         // Apply user filter
-        if (isset($tableFilters['user_id']) && !empty($tableFilters['user_id'])) {
+        if (isset($tableFilters['user_id']) && ! empty($tableFilters['user_id'])) {
             $query->whereIn('user_id', $tableFilters['user_id']);
         }
 
         // Apply grade filter
-        if (isset($tableFilters['grade']) && !empty($tableFilters['grade'])) {
+        if (isset($tableFilters['grade']) && ! empty($tableFilters['grade'])) {
             $query->whereHas('client', function ($q) use ($tableFilters) {
                 $q->whereIn('grade', $tableFilters['grade']);
             });
         }
 
         // Apply client type filter
-        if (isset($tableFilters['client_type_id']) && !empty($tableFilters['client_type_id'])) {
+        if (isset($tableFilters['client_type_id']) && ! empty($tableFilters['client_type_id'])) {
             $query->whereHas('client', function ($q) use ($tableFilters) {
                 $q->whereIn('client_type_id', $tableFilters['client_type_id']);
             });

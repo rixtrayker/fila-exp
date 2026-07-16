@@ -6,7 +6,7 @@ Last updated: 2026-07-17 (UTC+3)
 
 - Fixes are deployed to the development service only.
 - Production was not changed.
-- No Git commit or push has been created.
+- The master-to-dev conflict resolution was committed and pushed; the latest audit batch remains uncommitted.
 - The requested `HANDOVER.md` was absent from the current branch and server. A prior audit was recovered from commit `980dafa`; this file records the fixes actually deployed and the remaining risks.
 
 ## Confirmed and fixed defects
@@ -71,6 +71,42 @@ Dev evidence for the same representative/search:
 - Only active personal-list clients still inside the user's current territory disable area fallback.
 - Coverage summaries and all/visited/unvisited client drilldowns now use the same accountable client pool.
 
+### 9. Missed-visit lifecycle and labels
+
+- The database stores `cancelled`; report code incorrectly queried the nonexistent `missed` value.
+- Reports and widgets now store/query `cancelled` while consistently displaying “Missed”.
+- The daily job now processes the previous day's pending plan visits. Historical rows are intentionally deferred.
+
+### 10. Samples and operational report integrity
+
+- Samples report rows now use unique product-visit IDs and group/count by user/product IDs rather than names.
+- Samples, Visit Performance, and Client Coverage permissions are granted to operational roles without destructive role re-seeding.
+- Visit, expense, sample, and vacation report row keys are unique.
+- Visit Performance and Client Coverage relation/sort/date-scope failures were fixed and browser verified.
+
+### 11. Vacation entitlement consistency
+
+- Added a per-vacation-type “Deducts from annual balance” flag with a safe default of enabled.
+- One shared entitlement service now handles cross-year overlap, half days, non-annual leave, and edit exclusion.
+- Vacation request, type, and report screens now reconcile “Spent Days in Period” with “Remaining (This Year)”.
+
+### 12. Dashboard accountable pools
+
+- Dashboard visit/client counts now apply the same per-user, per-client-type personal-list fallback and territory rules as coverage reporting.
+- Daily and monthly visit widgets no longer include clients outside the accountable pool.
+
+### 13. Access and deployment safeguards
+
+- `/admin/ops/*` routes require authentication and the super-admin role.
+- Inactive users are denied panel access.
+- Added MySQL-backed pull-request CI and made deployment depend on the reusable CI job.
+- SOP replacement SQL is compile-tested under a temporary procedure name before the active procedure is dropped.
+
+### 14. Geolocation auditability
+
+- Missing client coordinates no longer bypass silently; the user/client IDs are logged for audit.
+- Strict blocking is deferred because 1,778 of 1,951 active clients (91.13%) currently lack coordinates.
+
 ## Changed files
 
 - `app/Models/Visit.php`
@@ -103,7 +139,17 @@ Dev evidence for the same representative/search:
   `/home/u530702363/backups/dev-crm-plan-fix-20260717-004724.tar.gz`
 - Coverage-fix rollback archive:
   `/home/u530702363/backups/dev-crm-coverage-fix-20260717-005448.tar.gz`
-- Server regression tests: 5 passed.
+- Status-fix rollback archive:
+  `/home/u530702363/backups/dev-crm-status-fix-20260717-014257.tar.gz`
+- Samples-fix rollback archive:
+  `/home/u530702363/backups/dev-crm-samples-fix-20260717-014413.tar.gz`
+- Vacation-fix rollback archive:
+  `/home/u530702363/backups/dev-crm-vacation-fix-20260717-014800.tar.gz`
+- Dashboard-fix rollback archive:
+  `/home/u530702363/backups/dev-crm-dashboard-fix-20260717-015512.tar.gz`
+- Full audit-batch rollback archive:
+  `/home/u530702363/backups/dev-crm-audit-batch-20260717-015901.tar.gz`
+- Latest targeted suite: 29 passed, 40 assertions; 3 existing data-provider deprecations.
 - Deployment script: completed successfully.
 - Migrations: nothing pending.
 - Configuration: cached successfully.
@@ -121,6 +167,8 @@ Dev evidence for the same representative/search:
   - Weekly Plan create form and all seven day tabs
   - Tuesday, Wednesday, and Thursday shift/time/client controls
   - Accounts Coverage report and client breakdown
+  - Vacation Types, Requests, and Vacation Report
+  - Samples, Expenses, Visit, Visit Performance, and Client Coverage reports
 - No browser console, SQL, or server errors were observed in those paths.
 - Transactional dev checks (all rolled back) passed:
   - Plan create persisted Tuesday clients, shift client, and `09:30` time.
@@ -143,15 +191,13 @@ Dev evidence for the same representative/search:
 
 - The development environment reports `APP_ENV=production` with debug mode enabled.
 - Default seeded administrator credentials are still accepted on development.
-- Several `/admin/ops/*` routes execute sensitive Artisan/system operations without an explicit authorization middleware.
 - Rotate the SSH password shared during this incident and the development administrator password.
 - Create a dedicated test database (or isolated SQLite-compatible test configuration) before relying on the full suite.
 - Remaining correctness work from the recovered audit:
-  - Standardize `cancelled` versus nonexistent `missed` visit status and repair stale pending-plan cancellation.
-  - Correct dashboard statistics that bypass personal lists/user scope.
-  - Correct cross-year and non-annual vacation balance calculations.
-  - Review geolocation bypass for clients without coordinates.
-  - Correct permission naming/role seeding and add pre-merge CI.
+  - Historical pending-plan reconciliation is deferred to a separate controlled operation: dev has 7,189 stale pending visits dating to 2023 across 23 users. The scheduled fix processes new missed visits only and does not rewrite those rows.
+  - Configure which future vacation types do not deduct annual entitlement.
+  - Populate missing client coordinates before strict geolocation enforcement.
+  - Rebase and remediate open PR #10 (`feat/all-activity-sop-report`) before merging it.
 - Personal client lists are mutable and not effective-dated; changing a list can still change historical coverage results. Do not treat historical list-based reports as immutable audit evidence.
 
 ## Rollback

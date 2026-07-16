@@ -56,7 +56,7 @@
                     <div class="text-3xl font-extrabold text-yellow-600 dark:text-yellow-400">{{ $stats['pending'] }}</div>
                 </div>
                 <div class="flex flex-col items-center justify-center bg-white dark:bg-gray-800 rounded-xl shadow border dark:border-gray-700 py-6">
-                    <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Cancelled</div>
+                    <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Missed</div>
                     <div class="text-3xl font-extrabold text-red-600 dark:text-red-400">{{ $stats['cancelled'] }}</div>
                 </div>
                 <div class="flex flex-col items-center justify-center bg-white dark:bg-gray-800 rounded-xl shadow border dark:border-gray-700 py-6">
@@ -127,7 +127,7 @@
                                     tension: 0.1
                                 },
                                 {
-                                    label: 'Cancelled',
+                                    label: 'Missed',
                                     data: @json($cancelledData),
                                     borderColor: 'rgb(239, 68, 68)',
                                     backgroundColor: 'rgba(239, 68, 68, 0.1)',

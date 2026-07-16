@@ -4,14 +4,12 @@ namespace App\Filament\Resources\VisitReportResource\Pages;
 
 use App\Filament\Resources\VisitReportResource;
 use App\Models\Reports\ReportSummary;
-use App\Models\Visit;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Concerns\InteractsWithInfolists;
 use Filament\Infolists\Contracts\HasInfolists;
 use Filament\Infolists\Infolist;
 use Filament\Pages\Actions;
 use Filament\Resources\Pages\ListRecords;
-use Filament\Support\Enums\FontWeight;
 use Filament\Support\Enums\IconPosition;
 use Illuminate\Database\Eloquent\Model;
 
@@ -20,6 +18,7 @@ class ListVisitReports extends ListRecords implements HasInfolists
     use InteractsWithInfolists;
 
     protected static string $resource = VisitReportResource::class;
+
     protected static string $view = 'filament.admin.pages.list-report-with-summary';
 
     protected function getHeaderActions(): array
@@ -34,9 +33,9 @@ class ListVisitReports extends ListRecords implements HasInfolists
         return [];
     }
 
-    public function getTableRecordKey(Model $model):string
+    public function getTableRecordKey(Model $model): string
     {
-        return 'id';
+        return (string) $model->getAttribute('id');
     }
 
     public function summaryInfolist(Infolist $infolist): Infolist
@@ -107,10 +106,11 @@ class ListVisitReports extends ListRecords implements HasInfolists
             ]);
     }
 
-    private function getSummary(): Model{
+    private function getSummary(): Model
+    {
         $query = self::$resource::getEloquentQuery();
         $records = $this->applyFiltersToTableQuery($query)->get();
-        $summary['medical_reps_count'] =  count(array_unique($records->pluck('user_id')->toArray()));
+        $summary['medical_reps_count'] = count(array_unique($records->pluck('user_id')->toArray()));
         $summary['doctors_count'] = count(array_unique($records->pluck('client_id')->toArray()));
         $summary['grade'] = implode(', ', array_unique($records->pluck('grade')->toArray()));
         $summary['bricks_count'] = count(array_unique($records->pluck('brick_id')->toArray()));
@@ -124,6 +124,7 @@ class ListVisitReports extends ListRecords implements HasInfolists
         $summary['distinct_rep_visits_count'] = count(array_unique($records->pluck('user_id')->toArray()));
         $model = new ReportSummary();
         $model->fill($summary);
+
         //write raw sql query to get distinct client_id form table visits where user_id
         // ex. select distinct client_id from visits where user_id = 1;
         return $model;

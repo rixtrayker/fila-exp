@@ -21,16 +21,23 @@ use Illuminate\Database\Eloquent\Builder;
 class SamplesReportResource extends Resource
 {
     use ResourceHasPermission;
+
     protected static ?string $model = Visit::class;
+
     protected static ?string $permissionName = 'samples-report';
+
     protected static ?string $label = 'Samples report';
 
     protected static ?string $navigationGroup = 'Reports';
+
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
+
     protected static ?string $navigationLabel = 'Samples Report';
+
     protected static ?string $slug = 'samples-report';
 
     protected static $medicalReps;
+
     protected static $products;
 
     public static function getEloquentQuery(): Builder
@@ -43,6 +50,7 @@ class SamplesReportResource extends Resource
                 'visits.visit_date as visit_date',
                 'users.name as medical_rep',
                 'clients.name_en as client_name',
+                'products.id as product_id',
                 'products.name as product_name',
                 'product_visits.count as samples_count',
             )
@@ -55,8 +63,9 @@ class SamplesReportResource extends Resource
             ->orderBy('visits.visit_date', 'DESC');
     }
 
-    public static function getRecordRouteKeyName(): string|null {
-        return 'product_visits.id';
+    public static function getRecordRouteKeyName(): ?string
+    {
+        return 'id';
     }
 
     public static function table(Table $table): Table
@@ -77,50 +86,51 @@ class SamplesReportResource extends Resource
                     ->summarize(Sum::make()->label('Total')),
             ])
             ->groups([
-                Group::make('medical_rep')
-                    ->label('Medical Rep'),
+                Group::make('user_id')
+                    ->label('Medical Rep')
+                    ->getTitleFromRecordUsing(fn ($record): string => $record->medical_rep),
             ])
-            ->defaultGroup('medical_rep')
+            ->defaultGroup('user_id')
             ->filters([
                 Tables\Filters\Filter::make('dates_range')
-                ->form([
+                    ->form([
                         DatePicker::make('from_date')
                             ->default(today()->startOfMonth()),
                         DatePicker::make('to_date')
                             ->default(today()->endOfMonth()),
                     ])->columns(2)
-                ->query(function (Builder $query, array $data): Builder {
-                    return $query
-                        ->when(
-                            $data['from_date'],
-                            fn (Builder $query, $date): Builder => $query->whereDate('visits.visit_date', '>=', $date)
-                        )
-                        ->when(
-                            $data['to_date'],
-                            fn (Builder $query, $date): Builder => $query->whereDate('visits.visit_date', '<=', $date));
-                }),
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['from_date'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('visits.visit_date', '>=', $date)
+                            )
+                            ->when(
+                                $data['to_date'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('visits.visit_date', '<=', $date));
+                    }),
                 Tables\Filters\SelectFilter::make('user_id')
                     ->label('Medical Rep')
                     ->multiple()
                     ->options(self::getMedicalReps())
                     ->query(function (Builder $query, array $data): Builder {
-                        if(count($data['values'])){
+                        if (count($data['values'])) {
                             return $query->whereIn('visits.user_id', $data['values']);
-                        }
-                        else
+                        } else {
                             return $query;
-                        }),
+                        }
+                    }),
                 Tables\Filters\SelectFilter::make('product_id')
                     ->label('Product')
                     ->multiple()
                     ->options(self::getProducts())
                     ->query(function (Builder $query, array $data): Builder {
-                        if(count($data['values'])){
+                        if (count($data['values'])) {
                             return $query->whereIn('product_visits.product_id', $data['values']);
-                        }
-                        else
+                        } else {
                             return $query;
-                        }),
+                        }
+                    }),
             ])
             ->headerActions([
                 Action::make('export')
@@ -142,20 +152,21 @@ class SamplesReportResource extends Resource
 
                             $dateRangeString = '';
                             if ($fromDate && $toDate) {
-                                $dateRangeString = $fromDate . '_to_' . $toDate;
+                                $dateRangeString = $fromDate.'_to_'.$toDate;
                             } elseif ($fromDate) {
-                                $dateRangeString = 'from_' . $fromDate;
+                                $dateRangeString = 'from_'.$fromDate;
                             } elseif ($toDate) {
-                                $dateRangeString = 'until_' . $toDate;
+                                $dateRangeString = 'until_'.$toDate;
                             }
 
                             $export = new SamplesReportExport($query, $dateRangeString);
+
                             return $export->download($export->getFilename());
                         } catch (\Exception $e) {
                             // Handle export errors gracefully
-                            return redirect()->back()->with('error', 'Export failed: ' . $e->getMessage());
+                            return redirect()->back()->with('error', 'Export failed: '.$e->getMessage());
                         }
-                    })
+                    }),
             ])
             ->actions([
             ])
@@ -165,19 +176,23 @@ class SamplesReportResource extends Resource
 
     private static function getMedicalReps(): array
     {
-        if(self::$medicalReps)
+        if (self::$medicalReps) {
             return self::$medicalReps;
+        }
 
-        self::$medicalReps = User::allMine()->pluck('name','id')->toArray();
+        self::$medicalReps = User::allMine()->pluck('name', 'id')->toArray();
+
         return self::$medicalReps;
     }
 
     private static function getProducts(): array
     {
-        if(self::$products)
+        if (self::$products) {
             return self::$products;
+        }
 
-        self::$products = Product::pluck('name','id')->toArray();
+        self::$products = Product::pluck('name', 'id')->toArray();
+
         return self::$products;
     }
 

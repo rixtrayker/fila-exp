@@ -2,16 +2,16 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\Visit;
 use App\Helpers\DateHelper;
+use App\Models\Visit;
 use Filament\Tables;
-use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
 use Illuminate\Database\Eloquent\Builder;
 
 class DailyVisitsTableWidget extends BaseWidget
 {
     protected static ?string $heading = 'Daily Visits ( Pending Plan visits )';
+
     protected static ?int $sort = 2;
 
     public function getColumnSpan(): int|string|array
@@ -25,11 +25,12 @@ class DailyVisitsTableWidget extends BaseWidget
 
         return Visit::query()
             ->with(['client.brick', 'client.clientType', 'user', 'callType'])
+            ->withinAccountablePool()
             ->whereDate('visit_date', $today)
             ->whereIn('status', ['pending'])
             ->whereNotNull('plan_id');
-            // ->orderBy('status', 'asc');
-            // ->orderBy('client.name_en', 'asc');
+        // ->orderBy('status', 'asc');
+        // ->orderBy('client.name_en', 'asc');
     }
 
     protected function getTableColumns(): array

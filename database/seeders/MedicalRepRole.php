@@ -3,8 +3,8 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class MedicalRepRole extends Seeder
 {
@@ -25,6 +25,8 @@ class MedicalRepRole extends Seeder
             'edit-request' => ['view', 'create', 'update', 'delete'],
             'expenses' => ['view', 'create', 'update', 'delete'],
             'visit-coverage-report' => ['view-any', 'view'],
+            'visit-performance-report' => ['view-any', 'view'],
+            'client-coverage-report' => ['view-any', 'view'],
             'accounts-coverage-report' => ['view-any', 'view'],
             'message' => ['view', 'create', 'update', 'delete'],
             'my-client-list' => ['view', 'view-any', 'create', 'update', 'delete'],
@@ -34,6 +36,7 @@ class MedicalRepRole extends Seeder
             'plan' => ['view', 'create', 'update', 'delete'],
             'product' => ['view', 'create', 'update', 'delete'],
             'sales-report' => ['view'],
+            'samples-report' => ['view-any', 'view'],
             'vacations-report' => ['view'],
             'visit-report' => ['view'],
             'sops-and-call-rate' => ['view-any', 'view'],
@@ -43,8 +46,9 @@ class MedicalRepRole extends Seeder
 
         $role = Role::where('name', 'medical-rep')->first();
 
-        if (!$role) {
+        if (! $role) {
             $this->command->error('Medical Rep role not found. Please run RolesAndPermissionsSeeder first.');
+
             return;
         }
 
@@ -52,7 +56,7 @@ class MedicalRepRole extends Seeder
 
         foreach ($resources as $resource => $actions) {
             foreach ($actions as $action) {
-                $permissionName = $action . ' ' . $resource;
+                $permissionName = $action.' '.$resource;
                 $permission = Permission::firstOrCreate(['name' => $permissionName]);
                 $permissionsToAttach[] = $permission;
             }

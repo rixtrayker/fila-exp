@@ -2,17 +2,16 @@
 
 namespace App\Filament\Resources\VisitResource\Widgets;
 
-use App\Models\Visit;
-use App\Helpers\DateHelper;
-use Filament\Widgets\ChartWidget;
-use App\Models\User;
-use Carbon\Carbon;
-use App\Models\UserBricksView;
 use App\Models\Client;
 use App\Models\ClientType;
+use App\Models\Scopes\GetMineScope;
+use App\Models\Visit;
+use Filament\Widgets\ChartWidget;
+
 class VisitCompletionChart extends ChartWidget
 {
     protected static ?string $heading = 'Monthly Covered PM Accounts';
+
     protected static ?string $maxHeight = '250px';
 
     protected function getData(): array
@@ -47,22 +46,30 @@ class VisitCompletionChart extends ChartWidget
         ];
     }
 
-
-
     public function getStatsNumber(): array
     {
-        $bricksIDs = UserBricksView::getUserBrickIds(auth()->user()->id);
-        $clientsIDs = Client::where('client_type_id',ClientType::PM)->whereIn('brick_id', $bricksIDs)->pluck('id')->toArray();
+        $clientsIDs = collect(GetMineScope::getUserIds())
+            ->flatMap(fn (int $userId) => Client::query()
+                ->accountablePool($userId, ClientType::PM)
+                ->where('client_type_id', ClientType::PM)
+                ->pluck('id'))
+            ->unique()
+            ->values();
         $from = today()->startOfMonth()->format('Y-m-d');
         $to = today()->endOfMonth()->format('Y-m-d');
-        $coveredClientsIDs = Visit::whereIn('client_id', $clientsIDs)->where('status', 'visited')->whereBetween('visit_date', [$from, $to])->pluck('client_id')->unique()->toArray();
-        $coveredClientsIDs = Client::whereIn('id', $coveredClientsIDs)->where('client_type_id', ClientType::PM)->pluck('id')->toArray();
-        $total = count($clientsIDs);
+        $coveredClientsIDs = Visit::query()
+            ->withinAccountablePool()
+            ->whereIn('client_id', $clientsIDs)
+            ->where('status', 'visited')
+            ->whereBetween('visit_date', [$from, $to])
+            ->pluck('client_id')
+            ->unique();
+        $total = $clientsIDs->count();
 
         return [
             'total' => $total,
-            'visited' => count($coveredClientsIDs),
-            'completion_rate' => $total > 0 ? count($coveredClientsIDs) / $total * 100 : 0,
+            'visited' => $coveredClientsIDs->count(),
+            'completion_rate' => $total > 0 ? $coveredClientsIDs->count() / $total * 100 : 0,
         ];
     }
 
