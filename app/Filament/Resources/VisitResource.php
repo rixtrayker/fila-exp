@@ -74,14 +74,11 @@ class VisitResource extends Resource
             if (!empty($userIds) || !empty($secondUserIds)) {
                 $query->where(function (Builder $subQuery) use ($userIds, $secondUserIds) {
                     if (!empty($userIds)) {
-                        $subQuery->whereIn('user_id', $userIds);
+                        $subQuery->participatedBy($userIds);
                     }
                     if (!empty($secondUserIds)) {
-                        if (!empty($userIds)) {
-                            $subQuery->orWhereIn('second_user_id', $secondUserIds);
-                        } else {
-                            $subQuery->whereIn('second_user_id', $secondUserIds);
-                        }
+                        $method = !empty($userIds) ? 'orWhereIn' : 'whereIn';
+                        $subQuery->{$method}('second_user_id', $secondUserIds);
                     }
                 });
             }

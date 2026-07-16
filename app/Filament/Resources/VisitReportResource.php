@@ -84,15 +84,23 @@ class VisitReportResource extends Resource
                             ->multiple()
                             ->options(self::getDistrictManagers()),
                     ])->query(function (Builder $query, array $data): Builder {
-                        return $query
-                            ->when(
-                                $data['user_id'],
-                                fn (Builder $query, $userIds): Builder => $query->whereIn('user_id', $userIds)
-                            )
-                            ->when(
-                                $data['second_user_id'],
-                                fn (Builder $query, $secondIds): Builder => $query->orWhereIn('second_user_id', $secondIds)
-                            );
+                        $userIds = $data['user_id'] ?? [];
+                        $secondUserIds = $data['second_user_id'] ?? [];
+
+                        if (empty($userIds) && empty($secondUserIds)) {
+                            return $query;
+                        }
+
+                        return $query->where(function (Builder $participants) use ($userIds, $secondUserIds) {
+                            if (!empty($userIds)) {
+                                $participants->whereIn('user_id', $userIds);
+                            }
+
+                            if (!empty($secondUserIds)) {
+                                $method = !empty($userIds) ? 'orWhereIn' : 'whereIn';
+                                $participants->{$method}('second_user_id', $secondUserIds);
+                            }
+                        });
                     }),
                 Tables\Filters\Filter::make('visit_date')
                     ->form([

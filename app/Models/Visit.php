@@ -84,6 +84,21 @@ class Visit extends Model
         return $query->where(column:'status',operator:'!=',value:'planned');
     }
 
+    public function scopeParticipatedBy(Builder $query, int|array $userIds): Builder
+    {
+        $userIds = array_values(array_filter((array) $userIds));
+
+        if ($userIds === []) {
+            return $query;
+        }
+
+        return $query->where(function (Builder $participantQuery) use ($userIds) {
+            $participantQuery
+                ->whereIn('user_id', $userIds)
+                ->orWhereIn('second_user_id', $userIds);
+        });
+    }
+
     public function scopeWithinAccountablePool(Builder $query): Builder
     {
         // Client::scopeAccountablePool applied per visit owner: when the

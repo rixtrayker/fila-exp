@@ -4,17 +4,17 @@ namespace App\Services;
 
 use App\Models\ProductVisit;
 use App\Models\Visit;
-use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class VisitService
 {
     public function findExistingVisit(array $data): ?Visit
     {
-        if (!isset($data['client_id'])) {
+        if (! isset($data['client_id'])) {
             return null;
         }
 
-        if (!isset($data['user_id']) || !isset($data['visit_date'])) {
+        if (! isset($data['user_id']) || ! isset($data['visit_date'])) {
             return null;
         }
 
@@ -37,6 +37,7 @@ class VisitService
             if ($visit->deleted_at) {
                 $visit->restore();
             }
+
             return;
         }
 
@@ -46,7 +47,7 @@ class VisitService
 
     public function saveProducts(Visit $visit, array $data): void
     {
-        if (!isset($data['products'])) {
+        if (! isset($data['products'])) {
             return;
         }
 
@@ -57,13 +58,13 @@ class VisitService
         $insertData = [];
 
         foreach ($products as $product) {
-            if (!isset($product['product_id']) || !$product['product_id']) {
+            if (! isset($product['product_id']) || ! $product['product_id']) {
                 continue;
             }
 
             $count = $product['count'] ?? 0;
 
-            $insertData[] = [
+            $insertData[$product['product_id']] = [
                 'visit_id' => $visitId,
                 'product_id' => $product['product_id'],
                 'count' => $count,
@@ -72,6 +73,12 @@ class VisitService
             ];
         }
 
-        ProductVisit::insert($insertData);
+        DB::transaction(function () use ($visitId, $insertData) {
+            ProductVisit::where('visit_id', $visitId)->delete();
+
+            if ($insertData !== []) {
+                ProductVisit::insert(array_values($insertData));
+            }
+        });
     }
 }

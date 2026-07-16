@@ -5,12 +5,12 @@ namespace App\Observers;
 use App\Models\Plan;
 use App\Models\PlanShift;
 use App\Models\Visit;
-use Illuminate\Support\Arr;
+use App\Services\PlanDataService;
 
 class PlanObserver
 {
-    private $days = ['sat', 'sun', 'mon', 'tues', 'wednes', 'thurs', 'fri'];
     private $plan;
+
     /**
      * Handle the Plan "created" event.
      */
@@ -57,19 +57,21 @@ class PlanObserver
         //
     }
 
-    private function upsertVisits(array $planData){
+    private function upsertVisits(array $planData)
+    {
         $arr = [];
         $now = now();
         $userId = $this->plan->user_id;
 
         for ($i = 0; $i < 7; $i++) {
-            $visitDate = $this->plan->start_at->addDays($i);
-            $key = $this->days[$i] . '_clients';
+            $visitDate = $this->plan->start_at->copy()->addDays($i);
+            $key = PlanDataService::DAYS[$i].'_clients';
 
-            if(!isset($planData[$key]))
+            if (! isset($planData[$key])) {
                 continue;
+            }
 
-            foreach($planData[$key] as $client){
+            foreach ($planData[$key] as $client) {
                 $arr[] = [
                     'user_id' => $userId,
                     'visit_date' => $visitDate,
@@ -82,8 +84,13 @@ class PlanObserver
             }
         }
 
-        Visit::where('plan_id', $this->plan->id)->delete();
-        Visit::upsert($arr, ['plan_id', 'client_id', 'visit_date']);
+        Visit::withoutGlobalScopes()
+            ->where('plan_id', $this->plan->id)
+            ->forceDelete();
+
+        if ($arr !== []) {
+            Visit::insert($arr);
+        }
         // $visitIds = $this->plan->visits()->pluck('visits.id')->toArray();
         // $insertedVistis = collect($arr);
         // $deletingVists = [];
@@ -94,28 +101,34 @@ class PlanObserver
         // Visit::whereIn('id', $deletingVists)->delete();
     }
 
-    private function upsertShifts(array $planData){
+    private function upsertShifts(array $planData)
+    {
         $arr = [];
 
         for ($i = 0; $i < 7; $i++) {
-            $inputs = ['am_shift','pm_shift','am_time','pm_time'];
-            $temp = [];
-            for ($j = 0; $j < 4; $j++) {
-                $key = $this->days[$i] .'_'. $inputs[$j];
-                if(isset($planData[$key]))
-                    $temp[$inputs[$j]] = $planData[$key];
+            $inputs = ['am_shift', 'pm_shift', 'am_time', 'pm_time'];
+            $shiftData = [];
+
+            foreach ($inputs as $input) {
+                $key = PlanDataService::DAYS[$i].'_'.$input;
+                $shiftData[$input] = $planData[$key] ?? null;
             }
 
-            $temp = array_filter($temp);
-            if($temp){
-                $arr[] = [
+            if (array_filter($shiftData, fn ($value) => $value !== null && $value !== '')) {
+                $arr[] = array_merge($shiftData, [
                     'day' => $i + 1,
                     'plan_id' => $this->plan->id,
-                ];
+                ]);
             }
         }
 
-        PlanShift::upsert($arr, ['plan_id', 'day']);
+        PlanShift::where('plan_id', $this->plan->id)->delete();
+
+        if ($arr !== []) {
+            PlanShift::upsert($arr, ['plan_id', 'day']);
+        }
+
+        $this->plan->unsetRelation('shifts');
         $this->plan->createShiftVisits();
     }
 }

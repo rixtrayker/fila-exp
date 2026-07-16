@@ -21,7 +21,7 @@ class SOPsAndCallRateStrategy implements VisitBreakdownStrategyInterface
             ->with(['client', 'user'])
             ->when($filters['from_date'] ?? null, fn($q) => $q->whereDate('visit_date', '>=', $filters['from_date']))
             ->when($filters['to_date'] ?? null, fn($q) => $q->whereDate('visit_date', '<=', $filters['to_date']))
-            ->when($filters['user_id'] ?? null, fn($q) => $q->where('user_id', $filters['user_id']))
+            ->when($filters['user_id'] ?? null, fn($q) => $q->participatedBy($filters['user_id']))
             ->when($filters['client_id'] ?? null, fn($q) => $q->where('client_id', $filters['client_id']))
             ->when($filters['status'] ?? null, fn($q) => $q->where('status', $filters['status']))
             ->when($filters['area'] ?? null, function($q) use ($filters) {
@@ -165,7 +165,7 @@ class SOPsAndCallRateStrategy implements VisitBreakdownStrategyInterface
         $query = Visit::query()
             ->when($filters['from_date'] ?? null, fn($q) => $q->whereDate('visit_date', '>=', $filters['from_date']))
             ->when($filters['to_date'] ?? null, fn($q) => $q->whereDate('visit_date', '<=', $filters['to_date']))
-            ->when($filters['user_id'] ?? null, fn($q) => $q->where('user_id', $filters['user_id']))
+            ->when($filters['user_id'] ?? null, fn($q) => $q->participatedBy($filters['user_id']))
             ->when($filters['client_id'] ?? null, fn($q) => $q->where('client_id', $filters['client_id']))
             ->when($filters['area'] ?? null, function($q) use ($filters) {
                 $q->whereHas('user', function($userQuery) use ($filters) {
@@ -231,10 +231,10 @@ class SOPsAndCallRateStrategy implements VisitBreakdownStrategyInterface
                 });
             });
 
-        // IMPORTANT: Filter by specific user_id for coverage report breakdown
+        // Include visits where the selected user was either the owner or the
+        // accompanying participant, while keeping all prior filters grouped.
         if ($filters['user_id'] ?? null) {
-            $query->where('user_id', $filters['user_id']);
-            $query->orWhere('second_id', $filters['user_id']);
+            $query->participatedBy($filters['user_id']);
         }
 
         return $query

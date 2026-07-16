@@ -146,11 +146,18 @@ class VisitTable
             ])
             ->query(function (Builder $query, array $data): Builder {
                 $userIds = $data['user_id'] ?? [];
+                $secondUserIds = $data['second_user_id'] ?? [];
 
-                if (!empty($userIds)) {
-                    $query->where(function (Builder $nested) use ($userIds) {
-                        $nested->whereIn('user_id', $userIds);
-                        $nested->orWhereIn('second_user_id', $userIds);
+                if (!empty($userIds) || !empty($secondUserIds)) {
+                    $query->where(function (Builder $nested) use ($userIds, $secondUserIds) {
+                        if (!empty($userIds)) {
+                            $nested->participatedBy($userIds);
+                        }
+
+                        if (!empty($secondUserIds)) {
+                            $method = !empty($userIds) ? 'orWhereIn' : 'whereIn';
+                            $nested->{$method}('second_user_id', $secondUserIds);
+                        }
                     });
                 }
 
