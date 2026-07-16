@@ -49,11 +49,7 @@ class AdminPanelProvider extends PanelProvider
                 Pages\Dashboard::class,
             ])
             ->plugins([
-                ReportsPlugin::make()
-                    ->reports([
-                        \App\Filament\Reports\SOPsAndCallRateReport::class,
-                        \App\Filament\Reports\AccountsCoverageReport::class,
-                    ])
+                ReportsPlugin::make(),
             ])
             ->navigationGroups([
                 NavigationGroup::make()
