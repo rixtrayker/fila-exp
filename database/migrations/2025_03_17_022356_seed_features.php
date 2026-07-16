@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Artisan::call('db:seed', ['--class' => FeaturesConfigSeeder::class]);
+        Artisan::call('db:seed', ['--class' => FeaturesConfigSeeder::class, '--force' => true]);
     }
 
     /**

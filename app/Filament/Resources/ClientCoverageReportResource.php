@@ -4,29 +4,34 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ClientCoverageReportResource\Pages;
 use App\Models\Client;
+use App\Models\Scopes\GetMineScope;
 use App\Traits\ResourceHasPermission;
 use Filament\Forms;
 use Filament\Resources\Resource;
-use Filament\Tables\Table;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\FiltersLayout;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Carbon;
-use Filament\Tables\Enums\FiltersLayout;
 use Illuminate\Support\Facades\DB;
-use App\Models\Scopes\GetMineScope;
 
 class ClientCoverageReportResource extends Resource
 {
     use ResourceHasPermission;
 
     protected static ?string $model = Client::class;
+
     protected static ?string $label = 'Client Coverage Report';
+
     protected static ?string $navigationLabel = 'Client Coverage';
+
     protected static ?string $navigationGroup = 'Reports';
+
     protected static ?string $navigationIcon = 'heroicon-o-users';
+
     protected static ?string $slug = 'client-coverage-report';
+
     protected static ?string $permissionName = 'client-coverage-report';
 
     public static function table(Table $table): Table
@@ -34,7 +39,7 @@ class ClientCoverageReportResource extends Resource
         return $table
             ->defaultPaginationPageOption(25)
             ->columns([
-                TextColumn::make('name')
+                TextColumn::make('name_en')
                     ->label('Client Name')
                     ->searchable()
                     ->sortable(),
@@ -49,7 +54,7 @@ class ClientCoverageReportResource extends Resource
                         'PH' => 'gray',
                         default => 'gray',
                     }),
-                TextColumn::make('client_type.name')
+                TextColumn::make('clientType.name')
                     ->label('Client Type')
                     ->searchable()
                     ->sortable(),
@@ -57,7 +62,7 @@ class ClientCoverageReportResource extends Resource
                     ->label('Brick')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('area.name')
+                TextColumn::make('brick.area.name')
                     ->label('Area')
                     ->searchable()
                     ->sortable(),
@@ -66,17 +71,16 @@ class ClientCoverageReportResource extends Resource
                     ->date()
                     ->sortable()
                     ->getStateUsing(function (Model $record) {
-                        return $record->visits()
+                        return $record->visits
                             ->where('status', 'visited')
-                            ->latest('visit_date')
-                            ->value('visit_date');
+                            ->max('visit_date');
                     }),
                 TextColumn::make('total_visits')
                     ->label('Total Visits')
                     ->numeric()
                     ->sortable()
                     ->getStateUsing(function (Model $record) {
-                        return $record->visits()->count();
+                        return $record->visits->count();
                     }),
                 TextColumn::make('visited_count')
                     ->label('Visited')
@@ -84,7 +88,7 @@ class ClientCoverageReportResource extends Resource
                     ->color('success')
                     ->sortable()
                     ->getStateUsing(function (Model $record) {
-                        return $record->visits()->where('status', 'visited')->count();
+                        return $record->visits->where('status', 'visited')->count();
                     }),
                 TextColumn::make('planned_count')
                     ->label('Planned')
@@ -92,7 +96,7 @@ class ClientCoverageReportResource extends Resource
                     ->color('info')
                     ->sortable()
                     ->getStateUsing(function (Model $record) {
-                        return $record->visits()->where('status', 'planned')->count();
+                        return $record->visits->where('status', 'planned')->count();
                     }),
                 TextColumn::make('pending_count')
                     ->label('Pending')
@@ -100,7 +104,7 @@ class ClientCoverageReportResource extends Resource
                     ->color('warning')
                     ->sortable()
                     ->getStateUsing(function (Model $record) {
-                        return $record->visits()->where('status', 'pending')->count();
+                        return $record->visits->where('status', 'pending')->count();
                     }),
                 TextColumn::make('missed_count')
                     ->label('Missed')
@@ -108,7 +112,7 @@ class ClientCoverageReportResource extends Resource
                     ->color('danger')
                     ->sortable()
                     ->getStateUsing(function (Model $record) {
-                        return $record->visits()->where('status', 'missed')->count();
+                        return $record->visits->where('status', 'cancelled')->count();
                     }),
                 TextColumn::make('coverage_percentage')
                     ->label('Coverage %')
@@ -124,10 +128,13 @@ class ClientCoverageReportResource extends Resource
                     })
                     ->sortable()
                     ->getStateUsing(function (Model $record) {
-                        $totalVisits = $record->visits()->count();
-                        if ($totalVisits === 0) return 0;
+                        $totalVisits = $record->visits->count();
+                        if ($totalVisits === 0) {
+                            return 0;
+                        }
 
-                        $visitedCount = $record->visits()->where('status', 'visited')->count();
+                        $visitedCount = $record->visits->where('status', 'visited')->count();
+
                         return round(($visitedCount / $totalVisits) * 100, 2);
                     }),
             ])
@@ -187,7 +194,7 @@ class ClientCoverageReportResource extends Resource
             ])
             ->filtersLayout(FiltersLayout::AboveContent)
             ->paginated([25, 50, 100, 250, 500, 'all'])
-            ->defaultSort('name', 'asc')
+            ->defaultSort('name_en', 'asc')
             ->bulkActions([]);
     }
 
@@ -196,45 +203,47 @@ class ClientCoverageReportResource extends Resource
         $tableFilters = request()->get('tableFilters', []);
         $dateRange = $tableFilters['date_range'] ?? [];
 
-        $fromDate = isset($dateRange['from_date']) && !empty($dateRange['from_date'])
+        $fromDate = isset($dateRange['from_date']) && ! empty($dateRange['from_date'])
             ? $dateRange['from_date']
             : today()->startOfMonth()->toDateString();
 
-        $toDate = isset($dateRange['to_date']) && !empty($dateRange['to_date'])
+        $toDate = isset($dateRange['to_date']) && ! empty($dateRange['to_date'])
             ? $dateRange['to_date']
             : today()->toDateString();
 
         $query = Client::query()
-            ->with(['area', 'brick', 'client_type', 'visits' => function ($q) use ($fromDate, $toDate) {
+            ->with(['brick.area', 'clientType', 'visits' => function ($q) use ($fromDate, $toDate) {
                 $q->whereBetween('visit_date', [$fromDate, $toDate]);
             }])
             ->whereHas('visits', function ($q) use ($fromDate, $toDate) {
                 $q->whereBetween('visit_date', [$fromDate, $toDate])
-                  ->whereIn('user_id', GetMineScope::getUserIds());
+                    ->whereIn('user_id', GetMineScope::getUserIds());
             });
 
         // Apply area filter
-        if (isset($tableFilters['area_id']) && !empty($tableFilters['area_id'])) {
-            $query->whereIn('area_id', $tableFilters['area_id']);
+        if (isset($tableFilters['area_id']) && ! empty($tableFilters['area_id'])) {
+            $query->whereHas('brick.area', function ($areaQuery) use ($tableFilters) {
+                $areaQuery->whereIn('areas.id', $tableFilters['area_id']);
+            });
         }
 
         // Apply brick filter
-        if (isset($tableFilters['brick_id']) && !empty($tableFilters['brick_id'])) {
+        if (isset($tableFilters['brick_id']) && ! empty($tableFilters['brick_id'])) {
             $query->whereIn('brick_id', $tableFilters['brick_id']);
         }
 
         // Apply grade filter
-        if (isset($tableFilters['grade']) && !empty($tableFilters['grade'])) {
+        if (isset($tableFilters['grade']) && ! empty($tableFilters['grade'])) {
             $query->whereIn('grade', $tableFilters['grade']);
         }
 
         // Apply client type filter
-        if (isset($tableFilters['client_type_id']) && !empty($tableFilters['client_type_id'])) {
+        if (isset($tableFilters['client_type_id']) && ! empty($tableFilters['client_type_id'])) {
             $query->whereIn('client_type_id', $tableFilters['client_type_id']);
         }
 
         // Apply coverage status filter
-        if (isset($tableFilters['coverage_status']) && !empty($tableFilters['coverage_status'])) {
+        if (isset($tableFilters['coverage_status']) && ! empty($tableFilters['coverage_status'])) {
             $query->where(function ($q) use ($tableFilters, $fromDate, $toDate) {
                 foreach ($tableFilters['coverage_status'] as $status) {
                     switch ($status) {
@@ -252,7 +261,7 @@ class ClientCoverageReportResource extends Resource
                                 AND visits.user_id IN (?)
                             ) >= 80', [
                                 $fromDate, $toDate, GetMineScope::getUserIds(),
-                                $fromDate, $toDate, GetMineScope::getUserIds()
+                                $fromDate, $toDate, GetMineScope::getUserIds(),
                             ]);
                             break;
                         case 'medium':
@@ -269,7 +278,7 @@ class ClientCoverageReportResource extends Resource
                                 AND visits.user_id IN (?)
                             ) BETWEEN 60 AND 79', [
                                 $fromDate, $toDate, GetMineScope::getUserIds(),
-                                $fromDate, $toDate, GetMineScope::getUserIds()
+                                $fromDate, $toDate, GetMineScope::getUserIds(),
                             ]);
                             break;
                         case 'low':
@@ -286,7 +295,7 @@ class ClientCoverageReportResource extends Resource
                                 AND visits.user_id IN (?)
                             ) < 60', [
                                 $fromDate, $toDate, GetMineScope::getUserIds(),
-                                $fromDate, $toDate, GetMineScope::getUserIds()
+                                $fromDate, $toDate, GetMineScope::getUserIds(),
                             ]);
                             break;
                         case 'no_visits':
@@ -296,7 +305,7 @@ class ClientCoverageReportResource extends Resource
                                 AND visits.visit_date BETWEEN ? AND ?
                                 AND visits.user_id IN (?)
                             ) = 0', [
-                                $fromDate, $toDate, GetMineScope::getUserIds()
+                                $fromDate, $toDate, GetMineScope::getUserIds(),
                             ]);
                             break;
                     }

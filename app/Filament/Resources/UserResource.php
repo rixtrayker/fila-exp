@@ -70,6 +70,13 @@ class UserResource extends Resource
                     ->dehydrated(static fn(null|string $state): bool => filled($state))
                     ->label(static fn(Page $livewire): string => ($livewire instanceof Pages\EditUser) ? 'New Password' : 'Password')
                     ->maxLength(32),
+                TextInput::make('annual_vacation_days')
+                    ->label('Annual Vacation Days')
+                    ->numeric()
+                    ->default(21)
+                    ->minValue(0)
+                    ->step(0.5)
+                    ->required(),
                 CheckboxList::make('roles')
                     ->relationship('roles','display_name')
                     ->columns(2)

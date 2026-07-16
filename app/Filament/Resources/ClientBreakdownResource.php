@@ -4,32 +4,34 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ClientBreakdownResource\Pages;
 use App\Models\Client;
-use App\Models\UserBricksView;
-use App\Models\Visit;
-use App\Traits\ResourceHasPermission;
+use App\Models\User;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Tables\Table;
-use Filament\Tables;
-use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Actions\Action;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
-use App\Models\User;
 
 class ClientBreakdownResource extends Resource
 {
     // use ResourceHasPermission;
 
     protected static ?string $model = Client::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
+
     protected static ?string $navigationLabel = 'Client Breakdown';
+
     protected static ?string $navigationGroup = 'Reports';
+
     protected static ?int $navigationSort = 999; // High number to place at end
+
     protected static bool $shouldRegisterNavigation = false;
     // protected static ?string $slug = 'reports/breakdown/clients';
 
-    public static function getRecordRouteKeyName(): string|null {
+    public static function getRecordRouteKeyName(): ?string
+    {
         return 'id';
     }
 
@@ -38,7 +40,7 @@ class ClientBreakdownResource extends Resource
     {
         $status = request()->get('status', 'all');
 
-        $statusLabel = match($status) {
+        $statusLabel = match ($status) {
             'visited' => 'Visited',
             'pending' => 'Pending',
             'cancelled' => 'Missed',
@@ -59,7 +61,6 @@ class ClientBreakdownResource extends Resource
 
         return "Date Range: {$fromDate} to {$toDate} | User: {$userName}";
     }
-
 
     public static function form(Form $form): Form
     {
@@ -98,13 +99,13 @@ class ClientBreakdownResource extends Resource
                         $state > 0 => 'success',
                         default => 'danger',
                     }),
-                    // ->sortable()
-                    // ->action(
-                    //     Action::make('viewVisitedVisits')
-                    //         ->label('View Visited Visits')
-                    //         ->url(fn ($record) => self::buildVisitBreakdownUrl($record, 'visited'))
-                    //         ->openUrlInNewTab()
-                    // ),
+                // ->sortable()
+                // ->action(
+                //     Action::make('viewVisitedVisits')
+                //         ->label('View Visited Visits')
+                //         ->url(fn ($record) => self::buildVisitBreakdownUrl($record, 'visited'))
+                //         ->openUrlInNewTab()
+                // ),
                 // TextColumn::make('pending_visits_count')
                 //     ->label('Pending')
                 //     ->numeric()
@@ -160,7 +161,7 @@ class ClientBreakdownResource extends Resource
                 Action::make('breakdownVisits')
                     ->label('Breakdown Visits')
                     ->url(fn ($record) => self::buildVisitBreakdownUrl($record, 'visited'))
-                    ->openUrlInNewTab()
+                    ->openUrlInNewTab(),
             ])
             ->bulkActions([
                 // No bulk actions as requested
@@ -173,13 +174,13 @@ class ClientBreakdownResource extends Resource
     {
         $userId = request()->get('user_id');
 
-        if (!$userId) {
+        if (! $userId) {
             // Return empty query if no user_id provided
             return parent::getEloquentQuery()->whereRaw('1 = 0');
         }
 
         $myUsers = User::descendantsAndSelf(auth()->user())->pluck('id')->toArray();
-        if (!in_array($userId, $myUsers)) {
+        if (! in_array($userId, $myUsers)) {
             return parent::getEloquentQuery()->whereRaw('1 = 0');
         }
 
@@ -187,16 +188,15 @@ class ClientBreakdownResource extends Resource
 
         $dateFrom = request()->get('from_date', today()->firstOfMonth()->toDateString());
         $dateTo = request()->get('to_date', today()->toDateString());
-        $bricksId = UserBricksView::getUserBrickIds($userId);
-
+        $clientTypeId = request()->get('client_type_id', \App\Models\ClientType::PM);
         $filters = [
             'date_from' => $dateFrom,
             'date_to' => $dateTo,
             'user_id' => $userId,
-            'bricks_id' => $bricksId,
+            'client_type_id' => $clientTypeId,
         ];
 
-        match($status) {
+        match ($status) {
             'visited' => $query = self::getVisitedClientsQuery($filters),
             'unvisited' => $query = self::getUnvisitedClientsQuery($filters),
             'all' => $query = self::getAllClientsQuery($filters),
@@ -225,24 +225,28 @@ class ClientBreakdownResource extends Resource
         $fromDate = request()->get('from_date', today()->firstOfMonth()->toDateString());
         $toDate = request()->get('to_date', today()->toDateString());
         $userId = request()->get('user_id');
+        $clientTypeId = request()->get('client_type_id', \App\Models\ClientType::PM);
 
         $tableFilters = [
             'visit_date' => [
                 'from_date' => $fromDate,
-                'to_date' => $toDate
-            ]
+                'to_date' => $toDate,
+            ],
+            'client_type_id' => [
+                'value' => [$clientTypeId],
+            ],
         ];
 
         // Add status filter if not 'all'
         if ($status !== 'all') {
             $tableFilters['status'] = [
-                'value' => $status
+                'value' => $status,
             ];
         }
 
         $params = [
             'breakdown' => 'true',
-            'tableFilters' => $tableFilters
+            'tableFilters' => $tableFilters,
         ];
 
         // Add user filter if provided
@@ -273,9 +277,7 @@ class ClientBreakdownResource extends Resource
 
     public static function getVisitedClientsQuery($filters)
     {
-        $query = Client::query()
-            ->whereIn('brick_id', $filters['bricks_id'])
-            ->where('active', true);
+        $query = self::getAccountableClientsQuery($filters);
 
         $query->whereHas('visits', function ($query) use ($filters) {
             $query->where('status', 'visited')
@@ -299,11 +301,7 @@ class ClientBreakdownResource extends Resource
 
     public static function getUnvisitedClientsQuery($filters)
     {
-        $query = Client::query();
-
-        // Filter by user's bricks and active status
-        $query->whereIn('clients.brick_id', $filters['bricks_id']);
-        $query->where('clients.active', true);
+        $query = self::getAccountableClientsQuery($filters);
 
         // Exclude clients that have visited status visits in the date range
         $query->whereNotExists(function ($subQuery) use ($filters) {
@@ -331,17 +329,21 @@ class ClientBreakdownResource extends Resource
     public static function getAllClientsQuery($filters)
     {
         $userId = $filters['user_id'];
-        $bricksId = $filters['bricks_id'];
         $dateFrom = $filters['date_from'];
         $dateTo = $filters['date_to'];
 
-        $query = Client::query();
-        $query->whereIn('brick_id', $bricksId);
-        $query->where('active', true);
-        $query->leftJoin('visits', 'clients.id', '=', 'visits.client_id');
+        $query = self::getAccountableClientsQuery($filters);
 
         $query->select([
-            'clients.*',
+            'clients.id',
+            'clients.name_en',
+            'clients.name_ar',
+            'clients.brick_id',
+            'clients.shift',
+            'clients.client_type_id',
+            'clients.active',
+            'clients.created_at',
+            'clients.updated_at',
             DB::raw('(
                 SELECT COUNT(*)
                 FROM visits v
@@ -353,12 +355,21 @@ class ClientBreakdownResource extends Resource
             ) as visits_count'),
         ]);
         $query->with(['brick']);
-        $query->groupBy('clients.id');
         $query->orderBy('visits_count', 'desc');
 
         $query->addBinding([$userId], 'select');
         $query->addBinding([$filters['date_from'], $filters['date_to']], 'select');
 
         return $query;
+    }
+
+    private static function getAccountableClientsQuery(array $filters): Builder
+    {
+        return Client::query()
+            ->accountablePool(
+                (int) $filters['user_id'],
+                (int) $filters['client_type_id'],
+            )
+            ->where('client_type_id', $filters['client_type_id']);
     }
 }

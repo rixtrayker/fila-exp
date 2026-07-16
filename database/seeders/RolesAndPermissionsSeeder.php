@@ -38,6 +38,7 @@ class RolesAndPermissionsSeeder extends Seeder
         'hospital',
         'item',
         'message',
+        'my-client-list',
         'office-work',
         'official-holiday',
         'order',
@@ -50,6 +51,7 @@ class RolesAndPermissionsSeeder extends Seeder
         'product-visit',
         'region',
         'role',
+        'role-visit-target',
         'setting',
         'speciality',
         'template-file',
@@ -61,11 +63,12 @@ class RolesAndPermissionsSeeder extends Seeder
         'visit',
     ];
 
-     /**
+    /**
      * Report models that only need view permission
      */
     private array $reportModels = [
         'sops-and-call-rate',
+        'all-activity-sops-report',
         'expenses-report',
         'visit-coverage-report',
         'accounts-coverage-report',
@@ -73,6 +76,9 @@ class RolesAndPermissionsSeeder extends Seeder
         'sales-report',
         'vacations-report',
         'visit-report',
+        'visit-performance-report',
+        'client-coverage-report',
+        'samples-report',
     ];
 
     /**
@@ -90,7 +96,7 @@ class RolesAndPermissionsSeeder extends Seeder
      * Standard CRUD actions for models
      */
     private array $standardActions = [
-        'view-any', 'view', 'create', 'update', 'delete', 'restore', 'force-delete'
+        'view-any', 'view', 'create', 'update', 'delete', 'restore', 'force-delete',
     ];
 
     /**
@@ -118,8 +124,6 @@ class RolesAndPermissionsSeeder extends Seeder
 
     /**
      * Create all required permissions
-     *
-     * @return Collection
      */
     private function createPermissions(): Collection
     {
@@ -156,8 +160,6 @@ class RolesAndPermissionsSeeder extends Seeder
 
     /**
      * Create the miscellaneous permission
-     *
-     * @return Permission
      */
     private function createMiscPermission(): Permission
     {
@@ -166,10 +168,6 @@ class RolesAndPermissionsSeeder extends Seeder
 
     /**
      * Create roles with their permissions
-     *
-     * @param Collection $allPermissions
-     * @param Permission $miscPermission
-     * @return void
      */
     private function createRoles(Collection $allPermissions, Permission $miscPermission): void
     {
@@ -203,9 +201,6 @@ class RolesAndPermissionsSeeder extends Seeder
 
     /**
      * Get permissions for moderator role
-     *
-     * @param Collection $allPermissions
-     * @return Collection
      */
     private function getModeratorPermissions(Collection $allPermissions): Collection
     {
@@ -221,9 +216,6 @@ class RolesAndPermissionsSeeder extends Seeder
 
     /**
      * Get permissions for developer role
-     *
-     * @param Collection $allPermissions
-     * @return Collection
      */
     private function getDeveloperPermissions(Collection $allPermissions): Collection
     {
@@ -237,8 +229,6 @@ class RolesAndPermissionsSeeder extends Seeder
 
     /**
      * Create default users for each role
-     *
-     * @return void
      */
     private function createUsers(): void
     {
@@ -249,6 +239,10 @@ class RolesAndPermissionsSeeder extends Seeder
             'super-admin'
         );
 
+        // Convenience and bulk test accounts must never reach production
+        if (app()->environment('production')) {
+            return;
+        }
 
         // Create developer user
         $this->createUserWithRole(
@@ -274,8 +268,8 @@ class RolesAndPermissionsSeeder extends Seeder
         // Create test users
         for ($i = 0; $i < 50; $i++) {
             $this->createUserWithRole(
-                'test' . $i,
-                'test' . $i . '@user.com',
+                'test'.$i,
+                'test'.$i.'@user.com',
                 'user'
             );
         }
@@ -284,11 +278,7 @@ class RolesAndPermissionsSeeder extends Seeder
     /**
      * Create a user with the specified role
      *
-     * @param string $name
-     * @param string $email
-     * @param string $roleName
-     * @param bool $isAdmin
-     * @return void
+     * @param  bool  $isAdmin
      */
     private function createUserWithRole(
         string $name,
@@ -301,7 +291,6 @@ class RolesAndPermissionsSeeder extends Seeder
             'email_verified_at' => now(),
             'password' => bcrypt('1234'),
         ];
-
 
         $user = User::firstOrCreate(
             ['email' => $email],

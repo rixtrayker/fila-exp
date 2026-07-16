@@ -2,15 +2,14 @@
 
 namespace App\Filament\Strategies;
 
-use App\Models\Visit;
 use App\Models\User;
-use App\Models\Client;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Filters\Filter;
-use Filament\Tables\Actions\Action;
+use App\Models\Visit;
 use Filament\Forms\Components\DatePicker;
 use Filament\Support\Enums\FontWeight;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
 
 class SOPsAndCallRateStrategy implements VisitBreakdownStrategyInterface
@@ -19,23 +18,23 @@ class SOPsAndCallRateStrategy implements VisitBreakdownStrategyInterface
     {
         return $query
             ->with(['client', 'user'])
-            ->when($filters['from_date'] ?? null, fn($q) => $q->whereDate('visit_date', '>=', $filters['from_date']))
-            ->when($filters['to_date'] ?? null, fn($q) => $q->whereDate('visit_date', '<=', $filters['to_date']))
-            ->when($filters['user_id'] ?? null, fn($q) => $q->where('user_id', $filters['user_id']))
-            ->when($filters['client_id'] ?? null, fn($q) => $q->where('client_id', $filters['client_id']))
-            ->when($filters['status'] ?? null, fn($q) => $q->where('status', $filters['status']))
-            ->when($filters['area'] ?? null, function($q) use ($filters) {
-                $q->whereHas('user', function($userQuery) use ($filters) {
+            ->when($filters['from_date'] ?? null, fn ($q) => $q->whereDate('visit_date', '>=', $filters['from_date']))
+            ->when($filters['to_date'] ?? null, fn ($q) => $q->whereDate('visit_date', '<=', $filters['to_date']))
+            ->when($filters['user_id'] ?? null, fn ($q) => $q->participatedBy($filters['user_id']))
+            ->when($filters['client_id'] ?? null, fn ($q) => $q->where('client_id', $filters['client_id']))
+            ->when($filters['status'] ?? null, fn ($q) => $q->where('status', $filters['status']))
+            ->when($filters['area'] ?? null, function ($q) use ($filters) {
+                $q->whereHas('user', function ($userQuery) use ($filters) {
                     $userQuery->whereIn('area_id', (array) $filters['area']);
                 });
             })
-            ->when($filters['grade'] ?? null, function($q) use ($filters) {
-                $q->whereHas('client', function($clientQuery) use ($filters) {
+            ->when($filters['grade'] ?? null, function ($q) use ($filters) {
+                $q->whereHas('client', function ($clientQuery) use ($filters) {
                     $clientQuery->whereIn('grade', (array) $filters['grade']);
                 });
             })
-            ->when($filters['client_type_id'] ?? null, function($q) use ($filters) {
-                $q->whereHas('client', function($clientQuery) use ($filters) {
+            ->when($filters['client_type_id'] ?? null, function ($q) use ($filters) {
+                $q->whereHas('client', function ($clientQuery) use ($filters) {
                     $clientQuery->whereIn('client_type_id', (array) $filters['client_type_id']);
                 });
             })
@@ -66,7 +65,7 @@ class SOPsAndCallRateStrategy implements VisitBreakdownStrategyInterface
                 ->label('Visit Date')
                 ->date('M j, Y')
                 ->sortable()
-                ->description(fn($record) => $record->visit_date->format('l'))
+                ->description(fn ($record) => $record->visit_date->format('l'))
                 ->icon('heroicon-m-calendar-days')
                 ->iconColor('gray'),
 
@@ -76,13 +75,13 @@ class SOPsAndCallRateStrategy implements VisitBreakdownStrategyInterface
                 ->color(fn (string $state): string => match ($state) {
                     'visited' => 'success',
                     'pending' => 'warning',
-                    'missed' => 'danger',
+                    'cancelled' => 'danger',
                     default => 'gray',
                 })
                 ->icon(fn (string $state): string => match ($state) {
                     'visited' => 'heroicon-m-check-circle',
                     'pending' => 'heroicon-m-clock',
-                    'missed' => 'heroicon-m-x-circle',
+                    'cancelled' => 'heroicon-m-x-circle',
                     default => 'heroicon-m-question-mark-circle',
                 }),
 
@@ -142,7 +141,7 @@ class SOPsAndCallRateStrategy implements VisitBreakdownStrategyInterface
                 ->options([
                     'visited' => 'Visited',
                     'pending' => 'Pending',
-                    'missed' => 'Missed',
+                    'cancelled' => 'Missed',
                 ])
                 ->multiple(),
         ];
@@ -163,22 +162,22 @@ class SOPsAndCallRateStrategy implements VisitBreakdownStrategyInterface
     public function getStats(array $filters): array
     {
         $query = Visit::query()
-            ->when($filters['from_date'] ?? null, fn($q) => $q->whereDate('visit_date', '>=', $filters['from_date']))
-            ->when($filters['to_date'] ?? null, fn($q) => $q->whereDate('visit_date', '<=', $filters['to_date']))
-            ->when($filters['user_id'] ?? null, fn($q) => $q->where('user_id', $filters['user_id']))
-            ->when($filters['client_id'] ?? null, fn($q) => $q->where('client_id', $filters['client_id']))
-            ->when($filters['area'] ?? null, function($q) use ($filters) {
-                $q->whereHas('user', function($userQuery) use ($filters) {
+            ->when($filters['from_date'] ?? null, fn ($q) => $q->whereDate('visit_date', '>=', $filters['from_date']))
+            ->when($filters['to_date'] ?? null, fn ($q) => $q->whereDate('visit_date', '<=', $filters['to_date']))
+            ->when($filters['user_id'] ?? null, fn ($q) => $q->participatedBy($filters['user_id']))
+            ->when($filters['client_id'] ?? null, fn ($q) => $q->where('client_id', $filters['client_id']))
+            ->when($filters['area'] ?? null, function ($q) use ($filters) {
+                $q->whereHas('user', function ($userQuery) use ($filters) {
                     $userQuery->whereIn('area_id', (array) $filters['area']);
                 });
             })
-            ->when($filters['grade'] ?? null, function($q) use ($filters) {
-                $q->whereHas('client', function($clientQuery) use ($filters) {
+            ->when($filters['grade'] ?? null, function ($q) use ($filters) {
+                $q->whereHas('client', function ($clientQuery) use ($filters) {
                     $clientQuery->whereIn('grade', (array) $filters['grade']);
                 });
             })
-            ->when($filters['client_type_id'] ?? null, function($q) use ($filters) {
-                $q->whereHas('client', function($clientQuery) use ($filters) {
+            ->when($filters['client_type_id'] ?? null, function ($q) use ($filters) {
+                $q->whereHas('client', function ($clientQuery) use ($filters) {
                     $clientQuery->whereIn('client_type_id', (array) $filters['client_type_id']);
                 });
             });
@@ -187,7 +186,7 @@ class SOPsAndCallRateStrategy implements VisitBreakdownStrategyInterface
             'total_visits' => $query->count(),
             'visited' => $query->clone()->where('status', 'visited')->count(),
             'pending' => $query->clone()->where('status', 'pending')->count(),
-            'missed' => $query->clone()->where('status', 'missed')->count(),
+            'missed' => $query->clone()->where('status', 'cancelled')->count(),
             'unique_clients' => $query->clone()->distinct('client_id')->count('client_id'),
         ];
     }
@@ -196,6 +195,7 @@ class SOPsAndCallRateStrategy implements VisitBreakdownStrategyInterface
     {
         if ($filters['user_id'] ?? null) {
             $user = User::find($filters['user_id']);
+
             return $user ? "Visit Breakdown - {$user->name}" : 'Visit Breakdown Analysis';
         }
 
@@ -212,29 +212,29 @@ class SOPsAndCallRateStrategy implements VisitBreakdownStrategyInterface
         // For coverage report breakdown, show visits for the specific user (medical rep)
         $query = Visit::query()
             ->with('client')
-            ->when($filters['from_date'] ?? null, fn($q) => $q->whereDate('visit_date', '>=', $filters['from_date']))
-            ->when($filters['to_date'] ?? null, fn($q) => $q->whereDate('visit_date', '<=', $filters['to_date']))
-            ->when($filters['client_id'] ?? null, fn($q) => $q->where('client_id', $filters['client_id']))
-            ->when($filters['area'] ?? null, function($q) use ($filters) {
-                $q->whereHas('user', function($userQuery) use ($filters) {
+            ->when($filters['from_date'] ?? null, fn ($q) => $q->whereDate('visit_date', '>=', $filters['from_date']))
+            ->when($filters['to_date'] ?? null, fn ($q) => $q->whereDate('visit_date', '<=', $filters['to_date']))
+            ->when($filters['client_id'] ?? null, fn ($q) => $q->where('client_id', $filters['client_id']))
+            ->when($filters['area'] ?? null, function ($q) use ($filters) {
+                $q->whereHas('user', function ($userQuery) use ($filters) {
                     $userQuery->whereIn('area_id', (array) $filters['area']);
                 });
             })
-            ->when($filters['grade'] ?? null, function($q) use ($filters) {
-                $q->whereHas('client', function($clientQuery) use ($filters) {
+            ->when($filters['grade'] ?? null, function ($q) use ($filters) {
+                $q->whereHas('client', function ($clientQuery) use ($filters) {
                     $clientQuery->whereIn('grade', (array) $filters['grade']);
                 });
             })
-            ->when($filters['client_type_id'] ?? null, function($q) use ($filters) {
-                $q->whereHas('client', function($clientQuery) use ($filters) {
+            ->when($filters['client_type_id'] ?? null, function ($q) use ($filters) {
+                $q->whereHas('client', function ($clientQuery) use ($filters) {
                     $clientQuery->whereIn('client_type_id', (array) $filters['client_type_id']);
                 });
             });
 
-        // IMPORTANT: Filter by specific user_id for coverage report breakdown
+        // Include visits where the selected user was either the owner or the
+        // accompanying participant, while keeping all prior filters grouped.
         if ($filters['user_id'] ?? null) {
-            $query->where('user_id', $filters['user_id']);
-            $query->orWhere('second_id', $filters['user_id']);
+            $query->participatedBy($filters['user_id']);
         }
 
         return $query
@@ -252,7 +252,7 @@ class SOPsAndCallRateStrategy implements VisitBreakdownStrategyInterface
                     'total' => array_sum($statusCounts),
                     'visited' => $statusCounts['visited'] ?? 0,
                     'pending' => $statusCounts['pending'] ?? 0,
-                    'missed' => $statusCounts['missed'] ?? 0,
+                    'missed' => $statusCounts['cancelled'] ?? 0,
                 ];
             })
             ->sortByDesc('total')

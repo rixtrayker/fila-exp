@@ -3,21 +3,20 @@
 namespace App\Models;
 
 use App\Models\Scopes\GetMineScope;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
-
-use function PHPUnit\Framework\isInstanceOf;
+use Illuminate\Support\Facades\DB;
 
 class AccountsCoverageReport extends Model
 {
     // This model uses a query builder for data access, not a table
     public $timestamps = false;
+
     public $incrementing = false;
 
     protected $table = 'accounts_coverage_reports'; // Add table name for compatibility
+
     protected $primaryKey = 'id'; // Define primary key
 
     protected $fillable = [
@@ -56,10 +55,122 @@ class AccountsCoverageReport extends Model
     ];
 
     /**
-     * Build the accounts coverage report query using the user_bricks_view
-     * This view consolidates user brick access through direct assignments and area-based access
+     * SQL for the per-user accountable client pool (user_id, client_id rows).
+     *
+     * Users WITH a personal client list (client_user rows) are evaluated
+     * against that list; users WITHOUT one keep the legacy area-derived pool
+     * from user_bricks_view. Both branches respect the active flag and the
+     * client type filter. See Client::scopeAccountablePool for the same rule
+     * on the Eloquent side.
      */
-    public static function buildReportQuery(string $fromDate, string $toDate, ?array $medicalRepIds = null): Builder
+    private static function buildAccountableClientsPoolSql(int $clientTypeId, string $userIdsStr): string
+    {
+        return "
+                    SELECT
+                        cu.user_id,
+                        cu.client_id
+                    FROM client_user cu
+                    JOIN clients c ON cu.client_id = c.id
+                    WHERE c.active = 1
+                      AND c.client_type_id = {$clientTypeId}
+                      AND cu.user_id IN ({$userIdsStr})
+                      AND EXISTS (
+                          SELECT 1
+                          FROM user_bricks_view personal_ubv
+                          WHERE personal_ubv.user_id = cu.user_id
+                            AND personal_ubv.brick_id = c.brick_id
+                      )
+                    UNION ALL
+                    SELECT
+                        ubv.user_id,
+                        c.id as client_id
+                    FROM user_bricks_view ubv
+                    JOIN clients c ON ubv.brick_id = c.brick_id
+                    WHERE c.active = 1
+                      AND c.client_type_id = {$clientTypeId}
+                      AND ubv.user_id IN ({$userIdsStr})
+                      AND NOT EXISTS (
+                          SELECT 1
+                          FROM client_user cux
+                          JOIN clients cx ON cx.id = cux.client_id
+                          JOIN user_bricks_view fallback_ubv
+                            ON fallback_ubv.user_id = cux.user_id
+                           AND fallback_ubv.brick_id = cx.brick_id
+                          WHERE cux.user_id = ubv.user_id
+                            AND cx.active = 1
+                            AND cx.client_type_id = {$clientTypeId}
+                      )
+        ";
+    }
+
+    /**
+     * SQL for visits restricted to each user's accountable client pool
+     * (personal list when present, legacy area-derived pool otherwise).
+     *
+     * @param  string  $select        Columns to select from the visits alias `v`
+     * @param  string  $extraCondition Additional WHERE fragment (e.g. plan filter)
+     */
+    private static function buildAccountableVisitsPoolSql(
+        string $select,
+        string $extraCondition,
+        string $fromDate,
+        string $toDate,
+        int $clientTypeId,
+        string $userIdsStr
+    ): string {
+        return "
+                    SELECT {$select}
+                    FROM visits v
+                    JOIN clients c ON v.client_id = c.id
+                    JOIN client_user cu ON cu.client_id = c.id AND cu.user_id = v.user_id
+                    WHERE v.status = 'visited'
+                      AND DATE(v.visit_date) BETWEEN '{$fromDate}' AND '{$toDate}'
+                      AND v.deleted_at IS NULL
+                      AND c.active = 1
+                      AND c.client_type_id = {$clientTypeId}
+                      {$extraCondition}
+                      AND cu.user_id IN ({$userIdsStr})
+                      AND EXISTS (
+                          SELECT 1
+                          FROM user_bricks_view personal_ubv
+                          WHERE personal_ubv.user_id = cu.user_id
+                            AND personal_ubv.brick_id = c.brick_id
+                      )
+                    UNION ALL
+                    SELECT {$select}
+                    FROM visits v
+                    JOIN clients c ON v.client_id = c.id
+                    JOIN user_bricks_view ubv ON c.brick_id = ubv.brick_id AND v.user_id = ubv.user_id
+                    WHERE v.status = 'visited'
+                      AND DATE(v.visit_date) BETWEEN '{$fromDate}' AND '{$toDate}'
+                      AND v.deleted_at IS NULL
+                      AND c.active = 1
+                      AND c.client_type_id = {$clientTypeId}
+                      {$extraCondition}
+                      AND ubv.user_id IN ({$userIdsStr})
+                      AND NOT EXISTS (
+                          SELECT 1
+                          FROM client_user cux
+                          JOIN clients cx ON cx.id = cux.client_id
+                          JOIN user_bricks_view fallback_ubv
+                            ON fallback_ubv.user_id = cux.user_id
+                           AND fallback_ubv.brick_id = cx.brick_id
+                          WHERE cux.user_id = v.user_id
+                            AND cx.active = 1
+                            AND cx.client_type_id = {$clientTypeId}
+                      )
+        ";
+    }
+
+    /**
+     * Build the accounts coverage report query using the user_bricks_view
+     * This view consolidates user brick access through direct assignments and area-based access.
+     *
+     * Users who maintain a personal client list (client_user rows) have their
+     * denominators and coverage counts computed over that list instead of the
+     * area-derived pool; users without one keep the legacy behavior.
+     */
+    public static function buildReportQuery(string $fromDate, string $toDate, array $medicalRepIds = null, int $clientTypeId = null): Builder
     {
         $userIds = GetMineScope::getUserIds();
 
@@ -68,7 +179,7 @@ class AccountsCoverageReport extends Model
         }
 
         // If specific medical reps are selected, filter by them
-        if (!empty($medicalRepIds)) {
+        if (! empty($medicalRepIds)) {
             $userIds = array_intersect($userIds, $medicalRepIds);
             if (empty($userIds)) {
                 return User::query()->whereRaw('1 = 0');
@@ -77,6 +188,11 @@ class AccountsCoverageReport extends Model
 
         $userIdsStr = implode(',', $userIds);
 
+        // Set default client type if not provided
+        if ($clientTypeId === null) {
+            $clientTypeId = ClientType::PM;
+        }
+
         return User::withoutGlobalScopes()
             ->select([
                 'users.id',
@@ -84,108 +200,67 @@ class AccountsCoverageReport extends Model
                 DB::raw('COALESCE(area_clients.total_clients, 0) as total_area_clients'),
                 DB::raw('COALESCE(visited_clients.visited_count, 0) as visited_doctors'),
                 DB::raw('COALESCE(area_clients.total_clients, 0) - COALESCE(visited_clients.visited_count, 0) as unvisited_doctors'),
-                DB::raw("
+                DB::raw('
                     CASE
                         WHEN COALESCE(area_clients.total_clients, 0) > 0 THEN
                             ROUND((COALESCE(visited_clients.visited_count, 0) * 100.0) / area_clients.total_clients, 2)
                         ELSE 0
                     END as coverage_percentage
-                "),
+                '),
                 DB::raw('COALESCE(actual_visits.visit_count, 0) as actual_visits'),
                 DB::raw('COALESCE(clinic_visits.clinic_visit_count, 0) as clinic_visits'),
                 DB::raw('COALESCE(planned_visits.planned_visit_count, 0) as planned_visits'),
                 DB::raw('COALESCE(random_visits.random_visit_count, 0) as random_visits'),
-                DB::raw("
+                DB::raw('
                     CASE
                         WHEN COALESCE(random_visits.random_visit_count, 0) > 0 THEN
                             ROUND((COALESCE(planned_visits.planned_visit_count, 0) * 1.0) / random_visits.random_visit_count, 2)
                         ELSE 0
                     END as planned_random_ratio
-                ")
+                '),
             ])
-            ->leftJoin(DB::raw("(
+            ->leftJoin(DB::raw('(
                 SELECT
-                    ubv.user_id,
-                    COUNT(DISTINCT c.id) as total_clients
-                FROM user_bricks_view ubv
-                JOIN clients c ON ubv.brick_id = c.brick_id
-                WHERE c.active = 1
-                  AND ubv.user_id IN ({$userIdsStr})
-                GROUP BY ubv.user_id
-            ) as area_clients"), 'users.id', '=', 'area_clients.user_id')
-            ->leftJoin(DB::raw("(
+                    pool.user_id,
+                    COUNT(DISTINCT pool.client_id) as total_clients
+                FROM ('.self::buildAccountableClientsPoolSql($clientTypeId, $userIdsStr).') as pool
+                GROUP BY pool.user_id
+            ) as area_clients'), 'users.id', '=', 'area_clients.user_id')
+            ->leftJoin(DB::raw('(
                 SELECT
-                    v.user_id,
-                    COUNT(DISTINCT v.client_id) as visited_count
-                FROM visits v
-                JOIN clients c ON v.client_id = c.id
-                JOIN user_bricks_view ubv ON c.brick_id = ubv.brick_id AND v.user_id = ubv.user_id
-                WHERE v.status = 'visited'
-                  AND DATE(v.visit_date) BETWEEN '{$fromDate}' AND '{$toDate}'
-                  AND v.deleted_at IS NULL
-                  AND c.active = 1
-                  AND ubv.user_id IN ({$userIdsStr})
-                GROUP BY v.user_id
-            ) as visited_clients"), 'users.id', '=', 'visited_clients.user_id')
-            ->leftJoin(DB::raw("(
+                    pool.user_id,
+                    COUNT(DISTINCT pool.client_id) as visited_count
+                FROM ('.self::buildAccountableVisitsPoolSql('v.user_id, v.client_id', '', $fromDate, $toDate, $clientTypeId, $userIdsStr).') as pool
+                GROUP BY pool.user_id
+            ) as visited_clients'), 'users.id', '=', 'visited_clients.user_id')
+            ->leftJoin(DB::raw('(
                 SELECT
-                    v2.user_id,
+                    pool.user_id,
                     COUNT(*) as visit_count
-                FROM visits v2
-                JOIN clients c2 ON v2.client_id = c2.id
-                JOIN user_bricks_view ubv2 ON c2.brick_id = ubv2.brick_id AND v2.user_id = ubv2.user_id
-                WHERE v2.status = 'visited'
-                  AND DATE(v2.visit_date) BETWEEN '{$fromDate}' AND '{$toDate}'
-                  AND v2.deleted_at IS NULL
-                  AND c2.active = 1
-                  AND ubv2.user_id IN ({$userIdsStr})
-                GROUP BY v2.user_id
-            ) as actual_visits"), 'users.id', '=', 'actual_visits.user_id')
-            ->leftJoin(DB::raw("(
+                FROM ('.self::buildAccountableVisitsPoolSql('v.user_id', '', $fromDate, $toDate, $clientTypeId, $userIdsStr).') as pool
+                GROUP BY pool.user_id
+            ) as actual_visits'), 'users.id', '=', 'actual_visits.user_id')
+            ->leftJoin(DB::raw('(
                 SELECT
-                    v3.user_id,
+                    pool.user_id,
                     COUNT(*) as clinic_visit_count
-                FROM visits v3
-                JOIN clients c3 ON v3.client_id = c3.id
-                JOIN user_bricks_view ubv3 ON c3.brick_id = ubv3.brick_id AND v3.user_id = ubv3.user_id
-                WHERE v3.status = 'visited'
-                  AND DATE(v3.visit_date) BETWEEN '{$fromDate}' AND '{$toDate}'
-                  AND v3.deleted_at IS NULL
-                  AND c3.client_type_id = 1
-                  AND c3.active = 1
-                  AND ubv3.user_id IN ({$userIdsStr})
-                GROUP BY v3.user_id
-            ) as clinic_visits"), 'users.id', '=', 'clinic_visits.user_id')
-            ->leftJoin(DB::raw("(
+                FROM ('.self::buildAccountableVisitsPoolSql('v.user_id', '', $fromDate, $toDate, $clientTypeId, $userIdsStr).') as pool
+                GROUP BY pool.user_id
+            ) as clinic_visits'), 'users.id', '=', 'clinic_visits.user_id')
+            ->leftJoin(DB::raw('(
                 SELECT
-                    v4.user_id,
+                    pool.user_id,
                     COUNT(*) as planned_visit_count
-                FROM visits v4
-                JOIN clients c4 ON v4.client_id = c4.id
-                JOIN user_bricks_view ubv4 ON c4.brick_id = ubv4.brick_id AND v4.user_id = ubv4.user_id
-                WHERE v4.status = 'visited'
-                  AND DATE(v4.visit_date) BETWEEN '{$fromDate}' AND '{$toDate}'
-                  AND v4.deleted_at IS NULL
-                  AND v4.plan_id IS NOT NULL
-                  AND c4.active = 1
-                  AND ubv4.user_id IN ({$userIdsStr})
-                GROUP BY v4.user_id
-            ) as planned_visits"), 'users.id', '=', 'planned_visits.user_id')
-            ->leftJoin(DB::raw("(
+                FROM ('.self::buildAccountableVisitsPoolSql('v.user_id', 'AND v.plan_id IS NOT NULL', $fromDate, $toDate, $clientTypeId, $userIdsStr).') as pool
+                GROUP BY pool.user_id
+            ) as planned_visits'), 'users.id', '=', 'planned_visits.user_id')
+            ->leftJoin(DB::raw('(
                 SELECT
-                    v5.user_id,
+                    pool.user_id,
                     COUNT(*) as random_visit_count
-                FROM visits v5
-                JOIN clients c5 ON v5.client_id = c5.id
-                JOIN user_bricks_view ubv5 ON c5.brick_id = ubv5.brick_id AND v5.user_id = ubv5.user_id
-                WHERE v5.status = 'visited'
-                  AND DATE(v5.visit_date) BETWEEN '{$fromDate}' AND '{$toDate}'
-                  AND v5.deleted_at IS NULL
-                  AND v5.plan_id IS NULL
-                  AND c5.active = 1
-                  AND ubv5.user_id IN ({$userIdsStr})
-                GROUP BY v5.user_id
-            ) as random_visits"), 'users.id', '=', 'random_visits.user_id')
+                FROM ('.self::buildAccountableVisitsPoolSql('v.user_id', 'AND v.plan_id IS NULL', $fromDate, $toDate, $clientTypeId, $userIdsStr).') as pool
+                GROUP BY pool.user_id
+            ) as random_visits'), 'users.id', '=', 'random_visits.user_id')
             ->where('users.is_active', 1)
             ->whereIn('users.id', $userIds)
             ->orderBy('coverage_percentage', 'desc')
@@ -200,8 +275,9 @@ class AccountsCoverageReport extends Model
         $fromDate = $filters['from_date'] ?? today()->firstOfMonth()->toDateString();
         $toDate = $filters['to_date'] ?? today()->toDateString();
         $medicalRepIds = $filters['medical_rep_id'] ?? null;
+        $clientTypeId = $filters['client_type_id'] ?? ClientType::PM;
 
-        $query = self::buildReportQuery($fromDate, $toDate, $medicalRepIds);
+        $query = self::buildReportQuery($fromDate, $toDate, $medicalRepIds, $clientTypeId);
         $results = $query->get();
 
         $newResults = collect();
@@ -230,7 +306,6 @@ class AccountsCoverageReport extends Model
 
         return $newResults;
     }
-
 
     /**
      * Get client breakdown all URL attribute
@@ -279,12 +354,14 @@ class AccountsCoverageReport extends Model
     {
         $fromDate = $filters['from_date'] ?? today()->firstOfMonth()->toDateString();
         $toDate = $filters['to_date'] ?? today()->toDateString();
+        $clientTypeId = $filters['client_type_id'] ?? ClientType::PM;
 
         $params = [
             'from_date' => $fromDate,
             'to_date' => $toDate,
             'status' => $status,
-            'user_id' => $recordId
+            'user_id' => $recordId,
+            'client_type_id' => $clientTypeId,
         ];
 
         return route('filament.admin.resources.client-breakdowns.index', $params);
@@ -297,21 +374,25 @@ class AccountsCoverageReport extends Model
     {
         $fromDate = $filters['from_date'] ?? today()->firstOfMonth()->toDateString();
         $toDate = $filters['to_date'] ?? today()->toDateString();
+        $clientTypeId = $filters['client_type_id'] ?? ClientType::PM;
 
         $tableFilters = [
             'visit_date' => [
                 'from_date' => $fromDate,
-                'to_date' => $toDate
+                'to_date' => $toDate,
             ],
             'status' => [
-                'value' => 'visited'
-            ]
+                'value' => 'visited',
+            ],
+            'client_type_id' => [
+                'value' => [$clientTypeId],
+            ],
         ];
 
         $params = [
             'breakdown' => 'true',
             'user_id' => [$recordId],
-            'tableFilters' => $tableFilters
+            'tableFilters' => $tableFilters,
         ];
 
         return route('filament.admin.resources.visits.index', $params);
@@ -324,24 +405,25 @@ class AccountsCoverageReport extends Model
     {
         $fromDate = $filters['from_date'] ?? today()->firstOfMonth()->toDateString();
         $toDate = $filters['to_date'] ?? today()->toDateString();
+        $clientTypeId = $filters['client_type_id'] ?? ClientType::PM;
 
         $tableFilters = [
             'client_type_id' => [
-                'value' => [1]
+                'value' => [$clientTypeId],
             ],
             'visit_date' => [
                 'from_date' => $fromDate,
-                'to_date' => $toDate
+                'to_date' => $toDate,
             ],
             'status' => [
-                'value' => 'visited'
-            ]
+                'value' => 'visited',
+            ],
         ];
 
         $params = [
             'breakdown' => 'true',
             'user_id' => [$recordId],
-            'tableFilters' => $tableFilters
+            'tableFilters' => $tableFilters,
         ];
 
         return route('filament.admin.resources.visits.index', $params);

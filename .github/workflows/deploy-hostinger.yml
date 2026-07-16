@@ -1,19 +1,10 @@
-name: Deploy Laravel to Hostinger (Prod + Dev)
+name: Deploy Laravel to Hostinger (Prod + Dev + Tags)
 
 on:
-  push:
-    branches:
-      - master
-      - dev
-  pull_request:
-    branches:
-      - master
-      - dev
-    types: [closed]
+  workflow_dispatch:
 
 jobs:
   deploy:
-    if: github.event.pull_request.merged == true || github.event_name == 'push'
     runs-on: ubuntu-latest
 
     steps:
@@ -26,8 +17,6 @@ jobs:
           php-version: '8.2'
           extensions: mbstring, bcmath, intl, pdo_mysql
 
-      - name: Install composer dependencies
-        run: composer install --no-dev --optimize-autoloader
 
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.0
@@ -41,6 +30,8 @@ jobs:
              rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }}" \
                --exclude=".git" \
                --exclude=".github" \
+               --exclude="vendor" \
+               --exclude="node_modules" \
                --exclude=".env" \
                --exclude=".htaccess" \
                --exclude="index.php" \
@@ -51,15 +42,17 @@ jobs:
                --exclude="bootstrap/cache/*" \
                --exclude="public/storage" \
                ./ \
-               ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }}:~/domains/${{ vars.HOSTINGER_PROD_SUBDOMAIN }}/public_html/
+               ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }}:~/${{ vars.HOSTINGER_PROD_PROJECT_PATH }}
 
-            ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} "cd ~/domains/${{ vars.HOSTINGER_PROD_SUBDOMAIN }}/public_html && chmod +x scripts/deploy.sh && ./scripts/deploy.sh"
+            ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} "cd ~/${{ vars.HOSTINGER_PROD_PROJECT_PATH }} && chmod +x scripts/deploy.sh && ./scripts/deploy.sh"
 
           elif [ "${GITHUB_REF##*/}" = "dev" ]; then
             echo "🚀 Deploying to DEVELOPMENT"
              rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }}" \
                --exclude=".git" \
                --exclude=".github" \
+               --exclude="vendor" \
+               --exclude="node_modules" \
                --exclude=".env" \
                --exclude=".htaccess" \
                --exclude="index.php" \
@@ -70,7 +63,36 @@ jobs:
                --exclude="bootstrap/cache/*" \
                --exclude="public/storage" \
                ./ \
-               ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }}:~/domains/${{ vars.HOSTINGER_DEV_SUBDOMAIN }}/public_html/
+               ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }}:~/${{ vars.HOSTINGER_DEV_PROJECT_PATH }}
 
-            ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} "cd ~/domains/${{ vars.HOSTINGER_DEV_SUBDOMAIN }}/public_html && chmod +x scripts/deploy.sh && ./scripts/deploy.sh"
+            ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} "cd ~/${{ vars.HOSTINGER_DEV_PROJECT_PATH }} && chmod +x scripts/deploy.sh && ./scripts/deploy.sh"
+
+          elif [[ "${GITHUB_REF}" =~ ^refs/tags/ ]]; then
+            echo "🚀 Deploying SPECIFIC DIRECTORIES via TAG: ${GITHUB_REF##*/}"
+
+            # Extract directory names from tag (e.g., dir:app,dir:config -> app,config)
+            TAG_NAME="${GITHUB_REF##*/}"
+            DIRECTORIES=""
+
+            # Check if tag contains directory specifications
+            if [[ "$TAG_NAME" == *"dir:"* ]]; then
+              # Extract all dir: specifications from tag
+              DIRS=$(echo "$TAG_NAME" | grep -o 'dir:[^,]*' | sed 's/dir://g' | tr '\n' ' ')
+              echo "📁 Directories to sync: $DIRS"
+
+              # Sync each specified directory
+              for dir in $DIRS; do
+                if [ -d "$dir" ]; then
+                  echo "🔄 Syncing directory: $dir"
+                  rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }}" \
+                    "$dir/" \
+                    ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }}:~/${{ vars.HOSTINGER_CURRENT_PROJECT_PATH }}$dir/
+                else
+                  echo "⚠️  Directory '$dir' not found, skipping..."
+                fi
+              done
+            else
+              echo "⚠️  No directory specifications found in tag. Expected format: dir:app,dir:config"
+            fi
           fi
+

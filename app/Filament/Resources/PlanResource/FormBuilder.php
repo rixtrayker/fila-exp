@@ -5,7 +5,7 @@ namespace App\Filament\Resources\PlanResource;
 use App\Filament\Resources\PlanResource;
 use App\Helpers\DateHelper;
 use App\Models\Visit;
-use Carbon\Carbon;
+use App\Services\PlanDataService;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\TimePicker;
@@ -14,17 +14,6 @@ use Illuminate\Support\Str;
 
 class FormBuilder
 {
-    // Days of the week mapping
-    private static array $daysOfWeek = [
-        "sat",
-        "sun",
-        "mon",
-        "tues",
-        "wednes",
-        "thurs",
-        "fri",
-    ];
-
     /**
      * Build the form for creating/editing a Plan
      */
@@ -38,18 +27,18 @@ class FormBuilder
      */
     public static function getPlanDayState($record, $day)
     {
-        if (!$record) {
+        if (! $record) {
             return [];
         }
 
         $dates = self::dates();
-        if (!isset($dates[$day])) {
+        if (! isset($dates[$day])) {
             return [];
         }
 
-        return Visit::where("plan_id", $record->id)
-            ->where("visit_date", $dates[$day])
-            ->pluck("client_id")
+        return Visit::where('plan_id', $record->id)
+            ->where('visit_date', $dates[$day])
+            ->pluck('client_id')
             ->toArray();
     }
 
@@ -60,6 +49,7 @@ class FormBuilder
     {
         return DateHelper::calculateVisitDates($startDate);
     }
+
     /**
      * Build the form tabs for the weekly plan
      */
@@ -70,7 +60,7 @@ class FormBuilder
             $tabs[] = self::makeTab($day);
         }
 
-        return Tabs::make("Weekly Plan")->tabs($tabs)->columnSpanFull();
+        return Tabs::make('Weekly Plan')->tabs($tabs)->columnSpanFull();
     }
 
     /**
@@ -78,22 +68,23 @@ class FormBuilder
      */
     private static function makeTab($key)
     {
-        $day = self::$daysOfWeek[$key];
-        $isListPlanPage = fn($record) => request()->fingerprint &&
-            Str::contains(request()->fingerprint["name"], "list-plans");
+        $day = PlanDataService::DAYS[$key];
+        $isListPlanPage = fn ($record) => request()->fingerprint &&
+            Str::contains(request()->fingerprint['name'], 'list-plans');
 
         return Tabs\Tab::make($day)
             ->label(function ($record) use ($key) {
                 $startDate = $record?->start_at ?? DateHelper::getFirstOfWeek();
-                $date = $startDate->addDays($key)->format("D M-d");
+                $date = $startDate->copy()->addDays($key)->format('D M-d');
+
                 return $date;
             })
             ->schema([
-                Select::make($day . "_am_shift")
-                    ->label("AM shift")
+                Select::make($day.'_am_shift')
+                    ->label('AM shift')
                     ->searchable()
                     ->default(
-                        state: fn($record) => $isListPlanPage($record)
+                        state: fn ($record) => $isListPlanPage($record)
                             ? $record->shiftClient($day)?->am_shift
                             : null
                     )
@@ -102,25 +93,25 @@ class FormBuilder
                     //         string $search
                     //     ) => ClientManager::searchClientsByType($search)
                     // )
-                    ->options(PlanResource::getClients("am", $day))
+                    ->options(PlanResource::getClients('am', $day))
                     ->searchable()
                     ->preload(),
 
-                TimePicker::make($day . "_time_am")
+                TimePicker::make($day.'_am_time')
                     ->default(
-                        fn($record) => $isListPlanPage($record)
+                        fn ($record) => $isListPlanPage($record)
                             ? $record->shiftClient($day)?->am_time
                             : null
                     )
-                    ->label("AM time")
+                    ->label('AM time')
                     ->native(false)
                     ->withoutSeconds(),
 
-                Select::make($day . "_pm_shift")
-                    ->label("PM shift")
+                Select::make($day.'_pm_shift')
+                    ->label('PM shift')
                     ->searchable()
                     ->default(
-                        fn($record) => $isListPlanPage($record)
+                        fn ($record) => $isListPlanPage($record)
                             ? $record->shiftClient($day)?->pm_shift
                             : null
                     )
@@ -130,27 +121,28 @@ class FormBuilder
                     //     ) => ClientManager::searchClientsByType($search, "pm")
                     // )
                     ->searchable()
-                    ->options(PlanResource::getClients("pm", $day))
+                    ->options(PlanResource::getClients('pm', $day))
                     ->preload(),
 
-                TimePicker::make($day . "_time_pm")
+                TimePicker::make($day.'_pm_time')
                     ->default(
-                        fn($record) => $isListPlanPage($record)
+                        fn ($record) => $isListPlanPage($record)
                             ? $record->shiftClient($day)?->pm_time
                             : null
                     )
-                    ->label("PM time")
+                    ->label('PM time')
                     ->native(false)
                     ->withoutSeconds(),
 
-                Select::make($day . "_clients")
-                    ->label("Clients")
+                Select::make($day.'_clients')
+                    ->label('Clients')
                     ->multiple()
-                    ->options(PlanResource::getClients("all", $day))
+                    ->options(PlanResource::getClients('all', $day))
                     ->searchable()
                     ->getSearchResultsUsing(
-                        fn(string $search) => ClientManager::searchClients(
-                            $search
+                        fn (string $search) => ClientManager::searchClients(
+                            $search,
+                            $day,
                         )
                     )
                     ->preload(),

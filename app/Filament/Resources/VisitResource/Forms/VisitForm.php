@@ -15,13 +15,16 @@ use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Illuminate\Support\Facades\Route;
-use Filament\Resources\Pages\EditRecord;
 use Filament\Resources\Pages\CreateRecord;
+use Filament\Resources\Pages\EditRecord;
+use Illuminate\Support\Facades\Route;
+
 class VisitForm
 {
     protected static $clients;
+
     protected static $clientOptions;
+
     protected static $clientTypes;
 
     public static function boot()
@@ -90,15 +93,28 @@ class VisitForm
             ->rules([
                 function ($get) {
                     return function (string $attribute, $value, Closure $fail) use ($get) {
+                        $primaryUserId = $get('user_id') ?: auth()->id();
+
+                        if ($value && (int) $value === (int) $primaryUserId) {
+                            $fail('The visit accompany must be different from the medical rep.');
+                        }
+
                         if ($value && $get('call_type_id') != CallType::where('name', 'Double')->value('id')) {
-                            $fail("The Visit Accompany must be empty unless the call type is Double.");
+                            $fail('The Visit Accompany must be empty unless the call type is Double.');
                         }
                     };
                 },
             ])
-            ->required(fn($get) => $get('call_type_id') == CallType::where('name', 'Double')->value('id'))
+            ->required(fn ($get) => $get('call_type_id') == CallType::where('name', 'Double')->value('id'))
             ->placeholder('Search name')
-            ->options(options: User::myDistrictManager()->pluck('name', 'id'))
+            ->options(function ($get) {
+                $primaryUserId = $get('user_id') ?: auth()->id();
+
+                return User::managers()
+                    ->when($primaryUserId, fn ($query) => $query->whereKeyNot($primaryUserId))
+                    ->orderBy('name')
+                    ->pluck('name', 'id');
+            })
             ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
             ->preload();
     }
@@ -114,13 +130,16 @@ class VisitForm
             ->relationship('client', 'name')
             ->placeholder('Search by name or phone or speciality')
             ->disabled($isDailyVisits)
-            ->getSearchResultsUsing(function(string $search) {
+            ->getSearchResultsUsing(function (string $search) {
                 return Client::inMyAreas()
-                    ->where('name_en', 'like', "%{$search}%")
-                    ->orWhere('name_ar', 'like', "%{$search}%")
-                    ->orWhere('phone', 'like', "%{$search}%")
-                    ->orWhereHas('speciality', function ($q) use ($search) {
-                        $q->where('name', 'like', "%{$search}%");
+                    ->where(function ($query) use ($search) {
+                        $query
+                            ->where('name_en', 'like', "%{$search}%")
+                            ->orWhere('name_ar', 'like', "%{$search}%")
+                            ->orWhere('phone', 'like', "%{$search}%")
+                            ->orWhereHas('speciality', function ($specialityQuery) use ($search) {
+                                $specialityQuery->where('name', 'like', "%{$search}%");
+                            });
                     })
                     ->limit(50)
                     ->pluck('name_en', 'id');
@@ -129,7 +148,7 @@ class VisitForm
             // ->getOptionLabelUsing(fn ($value): ?string => self::getClientName($value))
             ->preload()
             ->reactive()
-            ->required(!$isDailyVisits);
+            ->required(! $isDailyVisits);
     }
 
     /**
@@ -173,7 +192,7 @@ class VisitForm
             DatePicker::make('visit_date')
                 ->label('Visit Date')
                 ->default(today())
-                ->disabled(fn($livewire) => $livewire instanceof EditRecord || $livewire instanceof CreateRecord),
+                ->disabled(fn ($livewire) => $livewire instanceof EditRecord || $livewire instanceof CreateRecord),
         ];
     }
 
@@ -194,7 +213,7 @@ class VisitForm
 
         return ! (
             str_contains($uri, 'create') ||
-            str_contains($uri, 'edit') && !str_contains($uri, 'daily-visits')
+            str_contains($uri, 'edit') && ! str_contains($uri, 'daily-visits')
         );
     }
 
@@ -205,7 +224,7 @@ class VisitForm
 
         return Section::make('products')
             ->hiddenLabel()
-            ->schema(fn($livewire) => $livewire instanceof EditRecord || $livewire instanceof CreateRecord ? [$repeater] : [$viewRepeater])
+            ->schema(fn ($livewire) => $livewire instanceof EditRecord || $livewire instanceof CreateRecord ? [$repeater] : [$viewRepeater])
             ->compact();
     }
 
@@ -214,7 +233,7 @@ class VisitForm
      */
     private static function getProductsRepeater(): TableRepeater
     {
-        return  TableRepeater::make('products')
+        return TableRepeater::make('products')
             ->addActionLabel('Add product')
             ->hiddenLabel()
             ->emptyLabel('There is no product added.')
@@ -246,6 +265,7 @@ class VisitForm
             ->label('Feedback')
             ->options(function ($get) {
                 $clientId = $get('client_id');
+
                 return self::getFeedbackOptions($clientId);
             })
             ->required();
@@ -261,11 +281,13 @@ class VisitForm
             ->columnSpan('full')
             ->minLength('3');
     }
+
     private static function getClientName(?int $clientId): ?string
     {
-        if (!$clientId) {
+        if (! $clientId) {
             return null;
         }
+
         return self::$clients->where('id', $clientId)->first()?->name_en;
     }
 
@@ -287,12 +309,12 @@ class VisitForm
             ],
         ];
 
-        if (!$clientId) {
+        if (! $clientId) {
             return $feedbackOptions['default'];
         }
 
         $client = self::$clients->where('id', $clientId)->first();
-        if (!$client) {
+        if (! $client) {
             return $feedbackOptions['default'];
         }
 

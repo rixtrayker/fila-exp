@@ -1,18 +1,17 @@
 <?php
 
+use App\Http\Controllers\ClientRequestAttachmentController;
 use App\Http\Controllers\SystemUtilityController;
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TemplateFileController;
+use App\Jobs\FixOrdersWith0Total;
 use App\Jobs\OptimizeAppPerformance;
 use App\Models\Area;
 use App\Models\Brick;
 use App\Models\Client;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 use Laravel\Octane\Swoole\SwooleExtension;
-use App\Jobs\FixOrdersWith0Total;
-use Symfony\Component\Process\Process;
-use App\Http\Controllers\TemplateFileController;
-use App\Http\Controllers\ClientRequestAttachmentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -32,15 +31,18 @@ use App\Http\Controllers\ClientRequestAttachmentController;
 
 Route::get('/admin/ops/start-swoole', function () {
     (new SwooleExtension)->isInstalled();
-    if(extension_loaded('swoole'))
+    if (extension_loaded('swoole')) {
         return 1;
+    }
+
     return 0;
-});
+})->middleware(['auth', 'super-admin']);
 
 Route::get('/admin/ops/optimize-app', function () {
     dispatch(new OptimizeAppPerformance());
+
     return true;
-});
+})->middleware(['auth', 'super-admin']);
 
 // Route::get('/admin/migrate-areas', function () {
 //    $areas = Area::with('bricks')->get();
@@ -64,22 +66,25 @@ Route::get('/admin/ops/migrate-plan-data', function () {
     Artisan::call('db:seed', [
         '--class' => 'MigratePlanData',
     ]);
+
     return true;
-});
+})->middleware(['auth', 'super-admin']);
 // artisan migrate
 Route::get('/admin/ops/migrate', function () {
     Artisan::call('migrate');
+
     return Artisan::output();
-});
+})->middleware(['auth', 'super-admin']);
 
 // composer dump-autoload
-Route::get('/admin/ops/run-composer-dump-autoload', [SystemUtilityController::class, 'dumpAutoload']);
-    // ->middleware(['auth', 'can:run-system-commands']);
+Route::get('/admin/ops/run-composer-dump-autoload', [SystemUtilityController::class, 'dumpAutoload'])
+    ->middleware(['auth', 'super-admin']);
+// ->middleware(['auth', 'can:run-system-commands']);
 
 // php version
 Route::get('/admin/ops/php-version', function () {
     return phpversion();
-});
+})->middleware(['auth', 'super-admin']);
 
 // seed all roles and permissions
 Route::get('/admin/ops/seed-roles-and-permissions', function () {
@@ -98,18 +103,21 @@ Route::get('/admin/ops/seed-roles-and-permissions', function () {
     foreach ($seeders as $seeder) {
         Artisan::call('db:seed', ['--class' => $seeder]);
     }
+
     return true;
-});
+})->middleware(['auth', 'super-admin']);
 
 Route::get('/admin/ops/fix-orders-with-0-total', function () {
     dispatch(new FixOrdersWith0Total());
+
     return true;
-});
+})->middleware(['auth', 'super-admin']);
 
 Route::get('/admin/ops/clear-permission-cache', function () {
     Artisan::call('permission:cache-reset');
+
     return true;
-});
+})->middleware(['auth', 'super-admin']);
 
 // Route::get('/login', [\Filament\Http\Livewire\Auth::class,'login'])->name('filament.auth.login');
 // Route::get('/logout', [\Filament\Http\Livewire\Auth::class,'logout'])->name('filament.app.auth.logout');
@@ -117,13 +125,12 @@ Route::get('/admin/ops/clear-permission-cache', function () {
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
-    'verified'
+    'verified',
 ])->group(function () {
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
 });
-
 
 // Template file download route
 Route::get('/template-files/{templateFile}/download', [TemplateFileController::class, 'download'])
@@ -147,10 +154,12 @@ Route::get('/client-requests/{clientRequest}/zip/download', [ClientRequestAttach
 // link the storage
 Route::get('/admin/ops/link-storage', function () {
     Artisan::call('storage:link');
+
     return Artisan::output();
-});
+})->middleware(['auth', 'super-admin']);
 
 Route::get('/admin/ops/flush-permission-cache', function () {
     Artisan::call('permission:cache-reset');
+
     return true;
-});
+})->middleware(['auth', 'super-admin']);

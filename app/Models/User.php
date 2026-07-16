@@ -2,40 +2,36 @@
 
 namespace App\Models;
 
+use App\Traits\HasEditRequest;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
+use Finller\Kpi\HasKpi;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Kalnoy\Nestedset\NodeTrait;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
-
-use App\Traits\HasEditRequest;
-use Filament\Models\Contracts\FilamentUser;
-use Finller\Kpi\HasKpi;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Kalnoy\Nestedset\NodeTrait;
-use App\Models\Role;
-use Filament\Panel;
-use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Traits\HasRoles;
-use \Staudenmeir\LaravelMergedRelations\Eloquent\HasMergedRelationships;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Staudenmeir\LaravelMergedRelations\Eloquent\HasMergedRelationships;
 
 class User extends Authenticatable implements FilamentUser
 {
-    use NodeTrait;
-    use \Staudenmeir\EloquentHasManyDeep\HasRelationships;
     use HasApiTokens;
+    use HasEditRequest;
     use HasFactory;
-    use HasRoles;
+    use HasKpi;
+    use HasMergedRelationships;
     use HasProfilePhoto;
+    use HasRoles;
+    use NodeTrait;
     use Notifiable;
     use SoftDeletes;
-    use HasEditRequest;
+    use \Staudenmeir\EloquentHasManyDeep\HasRelationships;
     use TwoFactorAuthenticatable;
-    use HasMergedRelationships;
-    use HasKpi;
 
     /**
      * The attributes that are mass assignable.
@@ -48,6 +44,7 @@ class User extends Authenticatable implements FilamentUser
         'password',
         'parent_id',
         'is_active',
+        'annual_vacation_days',
     ];
 
     /**
@@ -70,6 +67,7 @@ class User extends Authenticatable implements FilamentUser
     protected $casts = [
         'email_verified_at' => 'datetime',
         'is_active' => 'boolean',
+        'annual_vacation_days' => 'float',
     ];
 
     /**
@@ -83,12 +81,20 @@ class User extends Authenticatable implements FilamentUser
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return true;
+        return $this->is_active;
     }
 
     public function bricks()
     {
         return $this->belongsToMany(Brick::class);
+    }
+
+    /**
+     * The user's personal client list, selected from their area-derived pool.
+     */
+    public function clients()
+    {
+        return $this->belongsToMany(Client::class)->withTimestamps();
     }
 
     public function myManager()
@@ -99,7 +105,13 @@ class User extends Authenticatable implements FilamentUser
     public function scopeMyDistrictManager($query)
     {
         $id = auth()->user()->parent_id;
+
         return $query->where('id', $id);
+    }
+
+    public function scopeManagers($query)
+    {
+        return $query->role(['district-manager', 'area-manager', 'country-manager']);
     }
 
     public function areas()
@@ -141,7 +153,7 @@ class User extends Authenticatable implements FilamentUser
     {
         $pivot = $this->userMessages()->getTable();
 
-        $query->whereHas('userMessages', function ($q) use ($pivot,$msg) {
+        $query->whereHas('userMessages', function ($q) use ($pivot, $msg) {
             $q->where("{$pivot}.hidden", 0)->where("{$pivot}.message_id", $msg->id);
         });
     }
@@ -153,7 +165,7 @@ class User extends Authenticatable implements FilamentUser
 
     public function manager()
     {
-        return $this->belongsTo(User::class,'parent_id');
+        return $this->belongsTo(User::class, 'parent_id');
     }
 
     public function managedUsers()
@@ -188,12 +200,13 @@ class User extends Authenticatable implements FilamentUser
 
     public function scopeGetMine($builder)
     {
-        if(auth()->user() && auth()->user()->roles->contains('name', 'medical-rep')){
+        if (auth()->user() && auth()->user()->roles->contains('name', 'medical-rep')) {
             return $builder->where('id', '=', auth()->id());
         }
 
-        if(auth()->user() && auth()->user()->roles->whereIn('name', ['country-manager','area-manager','district-manager'])->isNotEmpty()) {
+        if (auth()->user() && auth()->user()->roles->whereIn('name', ['country-manager', 'area-manager', 'district-manager'])->isNotEmpty()) {
             $ids = User::descendantsAndSelf(auth()->user())->pluck('id')->toArray();
+
             return $builder->whereIn('id', $ids);
         }
 
@@ -233,7 +246,7 @@ class User extends Authenticatable implements FilamentUser
         });
 
         static::updated(function ($model) {
-            if( $model->isDirty('parent_id') ){
+            if ($model->isDirty('parent_id')) {
                 self::fixTree();
             }
         });

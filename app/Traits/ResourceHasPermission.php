@@ -3,15 +3,14 @@
 namespace App\Traits;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 trait ResourceHasPermission
 {
     /**
      * Get the permission name for the resource
      *
-     * @return string
      * @throws \RuntimeException If neither $pName nor $model is defined
      */
     public static function getPermissionName(): string
@@ -20,7 +19,7 @@ trait ResourceHasPermission
             return static::class::$permissionName;
         }
 
-        if (!property_exists(static::class, 'model')) {
+        if (! property_exists(static::class, 'model')) {
             throw new \RuntimeException(
                 sprintf('Neither $pName nor $model is defined in %s', static::class)
             );
@@ -34,7 +33,7 @@ trait ResourceHasPermission
      */
     public static function canViewAny(): bool
     {
-        return static::checkPermission('view');
+        return static::checkPermission('view-any');
     }
 
     /**
@@ -58,7 +57,7 @@ trait ResourceHasPermission
      */
     public static function canUpdate(Model $record): bool
     {
-        return static::checkPermission('edit');
+        return static::checkPermission('update');
     }
 
     /**
@@ -74,23 +73,22 @@ trait ResourceHasPermission
      */
     public static function shouldRegisterNavigation(): bool
     {
-        return static::checkPermission('view');
+        return static::checkPermission('view-any');
     }
 
     /**
      * Check if the authenticated user has a specific permission
      *
-     * @param string $action The permission action (view, create, edit, delete)
-     * @return bool
+     * @param  string  $action The permission action (view, create, edit, delete)
      */
     protected static function checkPermission(string $action): bool
     {
         $user = Auth::user();
 
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
-        return $user->can($action . ' ' . static::getPermissionName());
+        return $user->can($action.' '.static::getPermissionName());
     }
 }

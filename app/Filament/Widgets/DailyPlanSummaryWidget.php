@@ -32,11 +32,13 @@ class DailyPlanSummaryWidget extends Widget
     {
         $today = DateHelper::today();
 
-        // Get today's planned visits with client and brick information
+        // Get today's planned visits with client and brick information,
+        // limited to each visit owner's accountable client pool
         $visits = Visit::query()
             ->whereDate('visit_date', $today)
             ->where('status', 'pending')
             ->whereNotNull('plan_id')
+            ->withinAccountablePool()
             ->with(['client.brick', 'client.clientType'])
             ->get();
 

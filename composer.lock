@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9c9a523091405b2a0541a50f90587ed9",
+    "content-hash": "cd19ed0f3e555235bb4c02191adc7727",
     "packages": [
         {
             "name": "althinect/filament-spatie-roles-permissions",
@@ -1422,32 +1422,31 @@
         },
         {
             "name": "eightynine/filament-reports",
-            "version": "3.x-dev",
+            "version": "3.0.16",
             "source": {
                 "type": "git",
                 "url": "https://github.com/eighty9nine/filament-reports.git",
-                "reference": "86484e6c40f7093eeebba7f2b22d94e14f07b3c8"
+                "reference": "c483c2e0ba76c3ce1ffc8cd64c53cfa366c9afe8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/eighty9nine/filament-reports/zipball/86484e6c40f7093eeebba7f2b22d94e14f07b3c8",
-                "reference": "86484e6c40f7093eeebba7f2b22d94e14f07b3c8",
+                "url": "https://api.github.com/repos/eighty9nine/filament-reports/zipball/c483c2e0ba76c3ce1ffc8cd64c53cfa366c9afe8",
+                "reference": "c483c2e0ba76c3ce1ffc8cd64c53cfa366c9afe8",
                 "shasum": ""
             },
             "require": {
                 "filament/filament": "^3.0",
-                "illuminate/contracts": "^10.0|^11.0|^12.0",
-                "php": "^8.2",
+                "illuminate/contracts": "^10.0|^11.0",
+                "php": "^8.1",
                 "spatie/laravel-package-tools": "^1.15.0"
             },
             "require-dev": {
-                "nunomaduro/collision": "^7.9|^8.0",
-                "orchestra/testbench": "^8.0|^9.0|^10.0",
-                "pestphp/pest": "^2.0|^3.0",
-                "pestphp/pest-plugin-arch": "^2.0|^3.0",
-                "pestphp/pest-plugin-laravel": "^2.0|^3.0"
+                "nunomaduro/collision": "^7.9",
+                "orchestra/testbench": "^8.0",
+                "pestphp/pest": "^2.0",
+                "pestphp/pest-plugin-arch": "^2.0",
+                "pestphp/pest-plugin-laravel": "^2.0"
             },
-            "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
@@ -1496,7 +1495,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-05-25T10:32:10+00:00"
+            "time": "2024-12-04T10:35:41+00:00"
         },
         {
             "name": "ezyang/htmlpurifier",
@@ -13557,14 +13556,12 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "eightynine/filament-reports": 20
-    },
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": "^8.1"
     },
     "platform-dev": {},
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.9.0"
 }

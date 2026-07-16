@@ -11,6 +11,9 @@ BEGIN
     DECLARE v_total_working_days INT DEFAULT 0;
     DECLARE v_daily_target INT DEFAULT 6;
 
+    -- NULL means all users, same as the empty string the app passes
+    SET p_user_ids = IFNULL(p_user_ids, '');
+
     -- Set default date range (current month if not provided)
     SET v_from_date = IFNULL(p_from_date, DATE_FORMAT(CURDATE(), '%Y-%m-01'));
     SET v_to_date = IFNULL(p_to_date, CURDATE());
@@ -35,13 +38,14 @@ BEGIN
       );
 
     -- Get daily target based on client type with fallback to settings
+    -- Client type ids must match App\Models\ClientType: PM = 1, PH = 2, AM = 3
     CASE p_client_type_id
-        WHEN 1 THEN -- AM
-            SELECT COALESCE(CAST(value AS UNSIGNED), 2) INTO v_daily_target
-            FROM settings WHERE `key` = 'daily_am_target' LIMIT 1;
-        WHEN 3 THEN -- PH
+        WHEN 2 THEN -- PH
             SELECT COALESCE(CAST(value AS UNSIGNED), 8) INTO v_daily_target
             FROM settings WHERE `key` = 'daily_ph_target' LIMIT 1;
+        WHEN 3 THEN -- AM
+            SELECT COALESCE(CAST(value AS UNSIGNED), 2) INTO v_daily_target
+            FROM settings WHERE `key` = 'daily_am_target' LIMIT 1;
         ELSE -- PM (default)
             SELECT COALESCE(CAST(value AS UNSIGNED), 6) INTO v_daily_target
             FROM settings WHERE `key` = 'daily_pm_target' LIMIT 1;
@@ -139,19 +143,19 @@ BEGIN
             -- Vacation days
             SELECT
                 vr.user_id,
-                DATE(vd.start + INTERVAL offset_days.offset DAY) as busy_date
+                DATE(vd.start + INTERVAL offset_days.`offset` DAY) as busy_date
             FROM vacation_durations vd
             JOIN vacation_requests vr ON vd.vacation_request_id = vr.id
             CROSS JOIN (
-                SELECT 0 as offset UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6
+                SELECT 0 as `offset` UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6
                 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 UNION SELECT 10 UNION SELECT 11 UNION SELECT 12 UNION SELECT 13
                 UNION SELECT 14 UNION SELECT 15 UNION SELECT 16 UNION SELECT 17 UNION SELECT 18 UNION SELECT 19 UNION SELECT 20
                 UNION SELECT 21 UNION SELECT 22 UNION SELECT 23 UNION SELECT 24 UNION SELECT 25 UNION SELECT 26 UNION SELECT 27
                 UNION SELECT 28 UNION SELECT 29 UNION SELECT 30
             ) offset_days
             WHERE vr.approved = 1
-              AND DATE(vd.start + INTERVAL offset_days.offset DAY) <= vd.end
-              AND DATE(vd.start + INTERVAL offset_days.offset DAY) BETWEEN v_from_date AND v_to_date
+              AND DATE(vd.start + INTERVAL offset_days.`offset` DAY) <= vd.end
+              AND DATE(vd.start + INTERVAL offset_days.`offset` DAY) BETWEEN v_from_date AND v_to_date
         ) all_busy_days
         GROUP BY user_id
     ) busy_days ON u.id = busy_days.user_id
@@ -199,11 +203,11 @@ BEGIN
               )
               AND cal_date NOT IN (
                   -- Exclude vacation dates
-                  SELECT DISTINCT DATE(vd.start + INTERVAL offset_days.offset DAY)
+                  SELECT DISTINCT DATE(vd.start + INTERVAL offset_days.`offset` DAY)
                   FROM vacation_durations vd
                   JOIN vacation_requests vr ON vd.vacation_request_id = vr.id
                   CROSS JOIN (
-                      SELECT 0 as offset UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6
+                      SELECT 0 as `offset` UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6
                       UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 UNION SELECT 10 UNION SELECT 11 UNION SELECT 12 UNION SELECT 13
                       UNION SELECT 14 UNION SELECT 15 UNION SELECT 16 UNION SELECT 17 UNION SELECT 18 UNION SELECT 19 UNION SELECT 20
                       UNION SELECT 21 UNION SELECT 22 UNION SELECT 23 UNION SELECT 24 UNION SELECT 25 UNION SELECT 26 UNION SELECT 27
@@ -211,8 +215,8 @@ BEGIN
                   ) offset_days
                   WHERE vr.user_id = u.id
                     AND vr.approved = 1
-                    AND DATE(vd.start + INTERVAL offset_days.offset DAY) <= vd.end
-                    AND DATE(vd.start + INTERVAL offset_days.offset DAY) BETWEEN v_from_date AND v_to_date
+                    AND DATE(vd.start + INTERVAL offset_days.`offset` DAY) <= vd.end
+                    AND DATE(vd.start + INTERVAL offset_days.`offset` DAY) BETWEEN v_from_date AND v_to_date
               )
         ) available_work_days
         GROUP BY user_id
@@ -220,56 +224,67 @@ BEGIN
 
     -- Actual visits subquery
     LEFT JOIN (
-        SELECT
-            CASE WHEN v.second_user_id IS NOT NULL THEN v.second_user_id ELSE v.user_id END as user_id,
-            COUNT(*) as actual_visits
-        FROM visits v
-        LEFT JOIN clients c ON v.client_id = c.id
-        WHERE v.status = 'visited'
-          AND DATE(v.visit_date) BETWEEN v_from_date AND v_to_date
-          AND v.deleted_at IS NULL
-          AND (p_client_type_id = 0 OR c.client_type_id = p_client_type_id)
-        GROUP BY CASE WHEN v.second_user_id IS NOT NULL THEN v.second_user_id ELSE v.user_id END
+        -- One row per user: both branches summed, otherwise a user present
+        -- in both (own visits + accompanied doubles) duplicates report rows
+        SELECT user_id, SUM(actual_visits) as actual_visits
+        FROM (
+            SELECT
+                CASE WHEN v.second_user_id IS NOT NULL THEN v.second_user_id ELSE v.user_id END as user_id,
+                COUNT(*) as actual_visits
+            FROM visits v
+            LEFT JOIN clients c ON v.client_id = c.id
+            WHERE v.status = 'visited'
+              AND DATE(v.visit_date) BETWEEN v_from_date AND v_to_date
+              AND v.deleted_at IS NULL
+              AND (p_client_type_id = 0 OR c.client_type_id = p_client_type_id)
+            GROUP BY CASE WHEN v.second_user_id IS NOT NULL THEN v.second_user_id ELSE v.user_id END
 
-        UNION ALL
+            UNION ALL
 
-        SELECT
-            v.user_id,
-            COUNT(*) as actual_visits
-        FROM visits v
-        LEFT JOIN clients c ON v.client_id = c.id
-        WHERE v.status = 'visited'
-          AND DATE(v.visit_date) BETWEEN v_from_date AND v_to_date
-          AND v.deleted_at IS NULL
-          AND v.second_user_id IS NOT NULL
-          AND (p_client_type_id = 0 OR c.client_type_id = p_client_type_id)
-        GROUP BY v.user_id
+            SELECT
+                v.user_id,
+                COUNT(*) as actual_visits
+            FROM visits v
+            LEFT JOIN clients c ON v.client_id = c.id
+            WHERE v.status = 'visited'
+              AND DATE(v.visit_date) BETWEEN v_from_date AND v_to_date
+              AND v.deleted_at IS NULL
+              AND v.second_user_id IS NOT NULL
+              AND (p_client_type_id = 0 OR c.client_type_id = p_client_type_id)
+            GROUP BY v.user_id
+        ) actual_visits_branches
+        GROUP BY user_id
     ) actual_visits_counts ON u.id = actual_visits_counts.user_id
 
     -- Total visits subquery
     LEFT JOIN (
-        SELECT
-            CASE WHEN v.second_user_id IS NOT NULL THEN v.second_user_id ELSE v.user_id END as user_id,
-            COUNT(*) as total_visits
-        FROM visits v
-        LEFT JOIN clients c ON v.client_id = c.id
-        WHERE DATE(v.visit_date) BETWEEN v_from_date AND v_to_date
-          AND v.deleted_at IS NULL
-          AND (p_client_type_id = 0 OR c.client_type_id = p_client_type_id)
-        GROUP BY CASE WHEN v.second_user_id IS NOT NULL THEN v.second_user_id ELSE v.user_id END
+        -- One row per user, same reason as actual_visits_counts above
+        SELECT user_id, SUM(total_visits) as total_visits
+        FROM (
+            SELECT
+                CASE WHEN v.second_user_id IS NOT NULL THEN v.second_user_id ELSE v.user_id END as user_id,
+                COUNT(*) as total_visits
+            FROM visits v
+            LEFT JOIN clients c ON v.client_id = c.id
+            WHERE DATE(v.visit_date) BETWEEN v_from_date AND v_to_date
+              AND v.deleted_at IS NULL
+              AND (p_client_type_id = 0 OR c.client_type_id = p_client_type_id)
+            GROUP BY CASE WHEN v.second_user_id IS NOT NULL THEN v.second_user_id ELSE v.user_id END
 
-        UNION ALL
+            UNION ALL
 
-        SELECT
-            v.user_id,
-            COUNT(*) as total_visits
-        FROM visits v
-        LEFT JOIN clients c ON v.client_id = c.id
-        WHERE DATE(v.visit_date) BETWEEN v_from_date AND v_to_date
-          AND v.deleted_at IS NULL
-          AND v.second_user_id IS NOT NULL
-          AND (p_client_type_id = 0 OR c.client_type_id = p_client_type_id)
-        GROUP BY v.user_id
+            SELECT
+                v.user_id,
+                COUNT(*) as total_visits
+            FROM visits v
+            LEFT JOIN clients c ON v.client_id = c.id
+            WHERE DATE(v.visit_date) BETWEEN v_from_date AND v_to_date
+              AND v.deleted_at IS NULL
+              AND v.second_user_id IS NOT NULL
+              AND (p_client_type_id = 0 OR c.client_type_id = p_client_type_id)
+            GROUP BY v.user_id
+        ) total_visits_branches
+        GROUP BY user_id
     ) total_visits_counts ON u.id = total_visits_counts.user_id
 
     -- Vacation days subquery (counting whole days as integers)

@@ -2,17 +2,16 @@
 
 namespace App\Filament\Strategies;
 
-use App\Models\Visit;
-use App\Models\User;
-use App\Models\Client;
 use App\Models\Brick;
+use App\Models\Client;
 use App\Models\ClientType;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Filters\Filter;
-use Filament\Tables\Actions\Action;
+use App\Models\Visit;
 use Filament\Forms\Components\DatePicker;
 use Filament\Support\Enums\FontWeight;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
 
 class VisitCoverageReportStrategy implements VisitBreakdownStrategyInterface
@@ -21,23 +20,23 @@ class VisitCoverageReportStrategy implements VisitBreakdownStrategyInterface
     {
         return $query
             ->with(['client', 'user'])
-            ->when($filters['from_date'] ?? null, fn($q) => $q->whereDate('visit_date', '>=', $filters['from_date']))
-            ->when($filters['to_date'] ?? null, fn($q) => $q->whereDate('visit_date', '<=', $filters['to_date']))
-            ->when($filters['client_id'] ?? null, fn($q) => $q->where('client_id', $filters['client_id']))
-            ->when($filters['user_id'] ?? null, fn($q) => $q->where('user_id', $filters['user_id']))
-            ->when($filters['status'] ?? null, fn($q) => $q->where('status', $filters['status']))
-            ->when($filters['brick_id'] ?? null, function($q) use ($filters) {
-                $q->whereHas('client', function($clientQuery) use ($filters) {
+            ->when($filters['from_date'] ?? null, fn ($q) => $q->whereDate('visit_date', '>=', $filters['from_date']))
+            ->when($filters['to_date'] ?? null, fn ($q) => $q->whereDate('visit_date', '<=', $filters['to_date']))
+            ->when($filters['client_id'] ?? null, fn ($q) => $q->where('client_id', $filters['client_id']))
+            ->when($filters['user_id'] ?? null, fn ($q) => $q->where('user_id', $filters['user_id']))
+            ->when($filters['status'] ?? null, fn ($q) => $q->where('status', $filters['status']))
+            ->when($filters['brick_id'] ?? null, function ($q) use ($filters) {
+                $q->whereHas('client', function ($clientQuery) use ($filters) {
                     $clientQuery->whereIn('brick_id', (array) $filters['brick_id']);
                 });
             })
-            ->when($filters['grade'] ?? null, function($q) use ($filters) {
-                $q->whereHas('client', function($clientQuery) use ($filters) {
+            ->when($filters['grade'] ?? null, function ($q) use ($filters) {
+                $q->whereHas('client', function ($clientQuery) use ($filters) {
                     $clientQuery->whereIn('grade', (array) $filters['grade']);
                 });
             })
-            ->when($filters['client_type_id'] ?? null, function($q) use ($filters) {
-                $q->whereHas('client', function($clientQuery) use ($filters) {
+            ->when($filters['client_type_id'] ?? null, function ($q) use ($filters) {
+                $q->whereHas('client', function ($clientQuery) use ($filters) {
                     $clientQuery->whereIn('client_type_id', (array) $filters['client_type_id']);
                 });
             })
@@ -85,7 +84,7 @@ class VisitCoverageReportStrategy implements VisitBreakdownStrategyInterface
                 ->label('Visit Date')
                 ->date('M j, Y')
                 ->sortable()
-                ->description(fn($record) => $record->visit_date->format('l'))
+                ->description(fn ($record) => $record->visit_date->format('l'))
                 ->icon('heroicon-m-calendar-days')
                 ->iconColor('gray'),
 
@@ -95,20 +94,20 @@ class VisitCoverageReportStrategy implements VisitBreakdownStrategyInterface
                 ->color(fn (string $state): string => match ($state) {
                     'visited' => 'success',
                     'pending' => 'warning',
-                    'missed' => 'danger',
+                    'cancelled' => 'danger',
                     default => 'gray',
                 })
                 ->icon(fn (string $state): string => match ($state) {
                     'visited' => 'heroicon-m-check-circle',
                     'pending' => 'heroicon-m-clock',
-                    'missed' => 'heroicon-m-x-circle',
+                    'cancelled' => 'heroicon-m-x-circle',
                     default => 'heroicon-m-question-mark-circle',
                 }),
 
             TextColumn::make('comment')
                 ->label('Notes')
                 ->limit(50)
-                ->tooltip(function ($record) { 
+                ->tooltip(function ($record) {
                     return $record->comment ?: 'No notes available';
                 })
                 ->placeholder('No notes')
@@ -180,7 +179,7 @@ class VisitCoverageReportStrategy implements VisitBreakdownStrategyInterface
                 ->options([
                     'visited' => 'Visited',
                     'pending' => 'Pending',
-                    'missed' => 'Missed',
+                    'cancelled' => 'Missed',
                 ])
                 ->multiple(),
         ];
@@ -208,22 +207,22 @@ class VisitCoverageReportStrategy implements VisitBreakdownStrategyInterface
     public function getStats(array $filters): array
     {
         $query = Visit::query()
-            ->when($filters['from_date'] ?? null, fn($q) => $q->whereDate('visit_date', '>=', $filters['from_date']))
-            ->when($filters['to_date'] ?? null, fn($q) => $q->whereDate('visit_date', '<=', $filters['to_date']))
-            ->when($filters['client_id'] ?? null, fn($q) => $q->where('client_id', $filters['client_id']))
-            ->when($filters['user_id'] ?? null, fn($q) => $q->where('user_id', $filters['user_id']))
-            ->when($filters['brick_id'] ?? null, function($q) use ($filters) {
-                $q->whereHas('client', function($clientQuery) use ($filters) {
+            ->when($filters['from_date'] ?? null, fn ($q) => $q->whereDate('visit_date', '>=', $filters['from_date']))
+            ->when($filters['to_date'] ?? null, fn ($q) => $q->whereDate('visit_date', '<=', $filters['to_date']))
+            ->when($filters['client_id'] ?? null, fn ($q) => $q->where('client_id', $filters['client_id']))
+            ->when($filters['user_id'] ?? null, fn ($q) => $q->where('user_id', $filters['user_id']))
+            ->when($filters['brick_id'] ?? null, function ($q) use ($filters) {
+                $q->whereHas('client', function ($clientQuery) use ($filters) {
                     $clientQuery->whereIn('brick_id', (array) $filters['brick_id']);
                 });
             })
-            ->when($filters['grade'] ?? null, function($q) use ($filters) {
-                $q->whereHas('client', function($clientQuery) use ($filters) {
+            ->when($filters['grade'] ?? null, function ($q) use ($filters) {
+                $q->whereHas('client', function ($clientQuery) use ($filters) {
                     $clientQuery->whereIn('grade', (array) $filters['grade']);
                 });
             })
-            ->when($filters['client_type_id'] ?? null, function($q) use ($filters) {
-                $q->whereHas('client', function($clientQuery) use ($filters) {
+            ->when($filters['client_type_id'] ?? null, function ($q) use ($filters) {
+                $q->whereHas('client', function ($clientQuery) use ($filters) {
                     $clientQuery->whereIn('client_type_id', (array) $filters['client_type_id']);
                 });
             });
@@ -232,7 +231,7 @@ class VisitCoverageReportStrategy implements VisitBreakdownStrategyInterface
             'total_visits' => $query->count(),
             'visited' => $query->clone()->where('status', 'visited')->count(),
             'pending' => $query->clone()->where('status', 'pending')->count(),
-            'missed' => $query->clone()->where('status', 'missed')->count(),
+            'missed' => $query->clone()->where('status', 'cancelled')->count(),
             'unique_clients' => $query->clone()->distinct('client_id')->count('client_id'),
         ];
     }
@@ -241,9 +240,10 @@ class VisitCoverageReportStrategy implements VisitBreakdownStrategyInterface
     {
         if ($filters['client_id'] ?? null) {
             $client = Client::find($filters['client_id']);
+
             return $client ? "Visit Breakdown - {$client->name_en}" : 'Client Visit Analysis';
         }
-        
+
         return 'Client Visit Analysis';
     }
 
@@ -257,21 +257,21 @@ class VisitCoverageReportStrategy implements VisitBreakdownStrategyInterface
         // For visit coverage report breakdown, show visits for the specific client only
         $query = Visit::query()
             ->with(['client', 'user'])
-            ->when($filters['from_date'] ?? null, fn($q) => $q->whereDate('visit_date', '>=', $filters['from_date']))
-            ->when($filters['to_date'] ?? null, fn($q) => $q->whereDate('visit_date', '<=', $filters['to_date']))
-            ->when($filters['user_id'] ?? null, fn($q) => $q->where('user_id', $filters['user_id']))
-            ->when($filters['brick_id'] ?? null, function($q) use ($filters) {
-                $q->whereHas('client', function($clientQuery) use ($filters) {
+            ->when($filters['from_date'] ?? null, fn ($q) => $q->whereDate('visit_date', '>=', $filters['from_date']))
+            ->when($filters['to_date'] ?? null, fn ($q) => $q->whereDate('visit_date', '<=', $filters['to_date']))
+            ->when($filters['user_id'] ?? null, fn ($q) => $q->where('user_id', $filters['user_id']))
+            ->when($filters['brick_id'] ?? null, function ($q) use ($filters) {
+                $q->whereHas('client', function ($clientQuery) use ($filters) {
                     $clientQuery->whereIn('brick_id', (array) $filters['brick_id']);
                 });
             })
-            ->when($filters['grade'] ?? null, function($q) use ($filters) {
-                $q->whereHas('client', function($clientQuery) use ($filters) {
+            ->when($filters['grade'] ?? null, function ($q) use ($filters) {
+                $q->whereHas('client', function ($clientQuery) use ($filters) {
                     $clientQuery->whereIn('grade', (array) $filters['grade']);
                 });
             })
-            ->when($filters['client_type_id'] ?? null, function($q) use ($filters) {
-                $q->whereHas('client', function($clientQuery) use ($filters) {
+            ->when($filters['client_type_id'] ?? null, function ($q) use ($filters) {
+                $q->whereHas('client', function ($clientQuery) use ($filters) {
                     $clientQuery->whereIn('client_type_id', (array) $filters['client_type_id']);
                 });
             });
@@ -289,17 +289,17 @@ class VisitCoverageReportStrategy implements VisitBreakdownStrategyInterface
             ->map(function ($visits) {
                 $user = $visits->first()->user;
                 $statusCounts = $visits->pluck('count', 'status')->toArray();
-                
+
                 return [
                     'user' => $user,
                     'user_name' => $user->name,
                     'total' => array_sum($statusCounts),
                     'visited' => $statusCounts['visited'] ?? 0,
                     'pending' => $statusCounts['pending'] ?? 0,
-                    'missed' => $statusCounts['missed'] ?? 0,
-                    'coverage_rate' => array_sum($statusCounts) > 0 
+                    'missed' => $statusCounts['cancelled'] ?? 0,
+                    'coverage_rate' => array_sum($statusCounts) > 0
                         ? round(($statusCounts['visited'] ?? 0) / array_sum($statusCounts) * 100, 2)
-                        : 0
+                        : 0,
                 ];
             })
             ->sortByDesc('total')

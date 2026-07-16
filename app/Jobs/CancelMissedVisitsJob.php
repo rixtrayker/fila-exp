@@ -2,16 +2,17 @@
 
 namespace App\Jobs;
 
-use App\Models\Plan;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\SerializesModels;
+use App\Helpers\DateHelper;
+use App\Models\Visit;
+use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 
 class CancelMissedVisitsJob
 {
+    public function __construct(private ?CarbonInterface $cutoffDate = null)
+    {
+    }
+
     /**
      * Execute the job.
      *
@@ -19,11 +20,13 @@ class CancelMissedVisitsJob
      */
     public function handle()
     {
-        $closedPlans = Plan::whereDate('start_at',today()->subDays(8))->get();
-        // $cutoffDate = today()->addDays(7)->addHours(10);
+        $cutoffDate = $this->cutoffDate ?? DateHelper::today();
+        $missedVisitDate = CarbonImmutable::instance($cutoffDate)->subDay();
 
-        foreach($closedPlans as $plan){
-            $plan->pendingVisits()->update(['status' => 'cancelled']);
-        }
+        Visit::withoutGlobalScopes()
+            ->whereNotNull('plan_id')
+            ->where('status', 'pending')
+            ->whereDate('visit_date', $missedVisitDate)
+            ->update(['status' => 'cancelled']);
     }
 }
