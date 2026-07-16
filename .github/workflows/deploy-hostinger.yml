@@ -45,6 +45,8 @@ jobs:
              rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }}" \
                --exclude=".git" \
                --exclude=".github" \
+               --exclude="vendor" \
+               --exclude="node_modules" \
                --exclude=".env" \
                --exclude=".htaccess" \
                --exclude="index.php" \
@@ -64,6 +66,8 @@ jobs:
              rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }}" \
                --exclude=".git" \
                --exclude=".github" \
+               --exclude="vendor" \
+               --exclude="node_modules" \
                --exclude=".env" \
                --exclude=".htaccess" \
                --exclude="index.php" \
