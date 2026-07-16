@@ -16,7 +16,11 @@ echo "🚀 Starting Laravel deployment tasks..."
 
 # Run database migrations
 echo "📊 Running database migrations..."
-"$PHP_BIN" artisan migrate --force
+if ! "$PHP_BIN" artisan migrate --force; then
+    echo "⚠️ Migration command failed immediately after sync; retrying once..."
+    sleep 3
+    "$PHP_BIN" artisan migrate --force
+fi
 
 # Clear and cache configuration
 echo "⚙️ Clearing and caching configuration..."
