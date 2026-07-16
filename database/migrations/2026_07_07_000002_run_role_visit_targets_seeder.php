@@ -2,7 +2,6 @@
 
 use Database\Seeders\RoleVisitTargetsSeeder;
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Support\Facades\Artisan;
 
 return new class extends Migration
 {
@@ -11,7 +10,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Artisan::call('db:seed', ['--class' => RoleVisitTargetsSeeder::class]);
+        // Invoke the idempotent data seeder directly so production migrations
+        // do not depend on Artisan's interactive --force protection.
+        app(RoleVisitTargetsSeeder::class)->run();
     }
 
     /**

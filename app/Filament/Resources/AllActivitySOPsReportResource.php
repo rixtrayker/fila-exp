@@ -5,7 +5,10 @@ namespace App\Filament\Resources;
 use App\Exports\AllActivitySOPsReportExport;
 use App\Filament\Resources\AllActivitySOPsReportResource\Pages;
 use App\Models\AllActivitySOPsReport;
+use App\Models\Role;
 use App\Models\Scopes\GetMineScope;
+use App\Models\User;
+use App\Services\AllActivitySOPsReportService;
 use App\Traits\ResourceHasPermission;
 use Filament\Forms;
 use Filament\Resources\Pages\ListRecords;
@@ -13,7 +16,6 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\DB;
 
 class AllActivitySOPsReportResource extends Resource
 {
@@ -22,10 +24,15 @@ class AllActivitySOPsReportResource extends Resource
     protected static ?string $model = AllActivitySOPsReport::class;
 
     protected static ?string $label = 'All Activity SOPs';
+
     protected static ?string $navigationLabel = 'All Activity SOPs Report';
+
     protected static ?string $navigationGroup = 'Reports';
+
     protected static ?string $navigationIcon = 'heroicon-o-chart-bar-square';
+
     protected static ?string $slug = 'all-activity-sops-report';
+
     protected static ?string $permissionName = 'all-activity-sops-report';
 
     public static function table(Table $table): Table
@@ -93,6 +100,17 @@ class AllActivitySOPsReportResource extends Resource
     protected static function getFilters(): array
     {
         return [
+            Tables\Filters\SelectFilter::make('evaluation_role_id')
+                ->label('Evaluation Role')
+                ->options(fn () => Role::query()
+                    ->whereIn('name', AllActivitySOPsReportService::EVALUATION_ROLES)
+                    ->orderBy('name')
+                    ->pluck('display_name', 'id')
+                    ->toArray())
+                ->default(fn () => Role::query()->where('name', 'medical-rep')->value('id'))
+                ->selectablePlaceholder(false)
+                ->searchable()
+                ->preload(),
             Tables\Filters\Filter::make('date_range')
                 ->label('Date Range')
                 ->form([
@@ -104,10 +122,12 @@ class AllActivitySOPsReportResource extends Resource
                         ->maxDate(today()),
                 ]),
             Tables\Filters\SelectFilter::make('user_id')
-                ->label('Medical Rep')
+                ->label('Evaluated Users')
                 ->options(function () {
-                    return DB::table('users')
+                    return User::withoutGlobalScopes()
                         ->whereIn('id', GetMineScope::getUserIds())
+                        ->whereHas('roles', fn ($query) => $query
+                            ->whereIn('name', AllActivitySOPsReportService::EVALUATION_ROLES))
                         ->pluck('name', 'id')
                         ->toArray();
                 })

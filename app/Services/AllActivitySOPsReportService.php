@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\ClientType;
+use App\Models\Role;
 use App\Models\RoleVisitTarget;
 use App\Models\Scopes\GetMineScope;
 use App\Models\User;
@@ -10,12 +11,13 @@ use Carbon\CarbonPeriod;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 
 /**
- * Builds the "All Activity SOPs" report: one row per rep, with every required
- * activity type (AM accounts / PM doctors / PH pharmacies) counted side by side
- * and targets resolved per role (role_visit_targets matrix, falling back to the
- * global settings values).
+ * Builds the "All Activity SOPs" report: one row per evaluated user, with every
+ * required activity type (AM accounts / PM doctors / PH pharmacies) counted
+ * side by side and targets resolved for the explicitly selected evaluation role
+ * (role_visit_targets matrix, falling back to the global settings values).
  *
  * Counting rules intentionally mirror the GetSOPsAndCallRateData stored
  * procedure: only visits with status "visited", non-deleted, within the date
@@ -26,6 +28,13 @@ use Illuminate\Support\Facades\DB;
  */
 class AllActivitySOPsReportService
 {
+    public const EVALUATION_ROLES = [
+        'medical-rep',
+        'district-manager',
+        'area-manager',
+        'country-manager',
+    ];
+
     /**
      * Report sections keyed by row prefix => client type id.
      */
@@ -39,15 +48,16 @@ class AllActivitySOPsReportService
     {
         $fromDate = Carbon::parse($filters['from_date'] ?? today()->startOfMonth())->toDateString();
         $toDate = Carbon::parse($filters['to_date'] ?? today())->toDateString();
+        $evaluationRole = $this->getEvaluationRole($filters);
 
-        $userIds = $this->getFilteredUserIds($filters);
+        $userIds = $this->getFilteredUserIds($filters, $evaluationRole);
 
         if (empty($userIds)) {
             return collect();
         }
 
         $users = User::withoutGlobalScopes()
-            ->with('roles')
+            ->whereHas('roles', fn ($query) => $query->whereKey($evaluationRole->id))
             ->whereIn('id', $userIds)
             ->whereNull('deleted_at')
             ->orderBy('name')
@@ -60,19 +70,18 @@ class AllActivitySOPsReportService
         $workingDays = count($workingDates);
 
         return $users
-            ->map(function (User $user) use ($workingDates, $workingDays, $busyDates, $visitCounts) {
+            ->map(function (User $user) use ($workingDates, $workingDays, $busyDates, $visitCounts, $evaluationRole) {
                 $userBusyDates = $busyDates[$user->id] ?? [];
                 $actualWorkingDays = count(array_filter(
                     $workingDates,
                     fn (string $date) => ! isset($userBusyDates[$date])
                 ));
 
-                $role = $user->roles->first();
-
                 $row = [
                     'id' => $user->id,
                     'name' => $user->name,
-                    'role_name' => $role->name ?? null,
+                    'evaluation_role_id' => $evaluationRole->id,
+                    'role_name' => $evaluationRole->name,
                     'working_days' => $workingDays,
                     'actual_working_days' => $actualWorkingDays,
                 ];
@@ -81,7 +90,7 @@ class AllActivitySOPsReportService
 
                 foreach (self::SECTIONS as $prefix => $clientTypeId) {
                     $visits = (int) ($visitCounts[$user->id][$clientTypeId] ?? 0);
-                    $dailyTarget = RoleVisitTarget::resolveDailyTarget($role->id ?? null, $clientTypeId);
+                    $dailyTarget = RoleVisitTarget::resolveDailyTarget($evaluationRole->id, $clientTypeId);
                     $monthlyTarget = round($actualWorkingDays * $dailyTarget, 2);
 
                     $row["{$prefix}_visits"] = $visits;
@@ -105,10 +114,37 @@ class AllActivitySOPsReportService
     }
 
     /**
+     * Resolve and validate the role explicitly selected for this evaluation.
+     */
+    protected function getEvaluationRole(array $filters): Role
+    {
+        $roleId = filter_var(
+            $filters['evaluation_role_id'] ?? null,
+            FILTER_VALIDATE_INT,
+            ['options' => ['min_range' => 1]]
+        );
+
+        if ($roleId === false || $roleId === null) {
+            throw new InvalidArgumentException('An evaluation role must be selected.');
+        }
+
+        $role = Role::query()
+            ->whereKey($roleId)
+            ->whereIn('name', self::EVALUATION_ROLES)
+            ->first();
+
+        if ($role === null) {
+            throw new InvalidArgumentException('The selected evaluation role is not supported.');
+        }
+
+        return $role;
+    }
+
+    /**
      * Get filtered user IDs based on permissions and filters
      * (same scoping as the existing SOPs and Call Rate report).
      */
-    protected function getFilteredUserIds(array $filters): array
+    protected function getFilteredUserIds(array $filters, Role $evaluationRole): array
     {
         $userIds = GetMineScope::getUserIds();
 
@@ -117,10 +153,28 @@ class AllActivitySOPsReportService
         }
 
         if (! empty($filters['user_id'])) {
-            $userIds = array_intersect($userIds, (array) $filters['user_id']);
+            $requestedUserIds = array_map('intval', (array) $filters['user_id']);
+            $userIds = array_intersect($userIds, $requestedUserIds);
+
+            $invalidUserIds = User::withoutGlobalScopes()
+                ->whereIn('id', $userIds)
+                ->whereDoesntHave('roles', fn ($query) => $query->whereKey($evaluationRole->id))
+                ->pluck('id')
+                ->all();
+
+            if ($invalidUserIds !== []) {
+                throw new InvalidArgumentException(
+                    'The selected evaluation role must belong to every evaluated user.'
+                );
+            }
         }
 
-        return array_map('intval', array_values($userIds));
+        return User::withoutGlobalScopes()
+            ->whereIn('id', array_map('intval', array_values($userIds)))
+            ->whereHas('roles', fn ($query) => $query->whereKey($evaluationRole->id))
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
     }
 
     /**

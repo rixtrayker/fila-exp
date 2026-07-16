@@ -20,8 +20,8 @@ class RoleVisitTargetsSeeder extends Seeder
             ['display_name' => 'Medical Rep']
         );
 
-        foreach (RoleVisitTarget::SETTING_KEYS as $clientTypeId => $settingKey) {
-            RoleVisitTarget::updateOrCreate(
+        foreach (array_keys(RoleVisitTarget::SETTING_KEYS) as $clientTypeId) {
+            RoleVisitTarget::firstOrCreate(
                 [
                     'role_id' => $role->id,
                     'client_type_id' => $clientTypeId,

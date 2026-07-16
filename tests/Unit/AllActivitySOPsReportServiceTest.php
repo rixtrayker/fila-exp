@@ -2,13 +2,16 @@
 
 namespace Tests\Unit;
 
+use App\Models\AllActivitySOPsReport;
 use App\Models\ClientType;
 use App\Models\RoleVisitTarget;
 use App\Models\Setting;
 use App\Services\AllActivitySOPsReportService;
+use Database\Seeders\RoleVisitTargetsSeeder;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use InvalidArgumentException;
 use Tests\TestCase;
 
 class AllActivitySOPsReportServiceTest extends TestCase
@@ -17,12 +20,17 @@ class AllActivitySOPsReportServiceTest extends TestCase
 
     // 2026-06-01 is a Monday; 2026-06-01..2026-06-05 is a full Mon-Fri week.
     private const FROM_DATE = '2026-06-01';
+
     private const TO_DATE = '2026-06-05';
 
     private const MEDICAL_REP_ROLE_ID = 10;
+
     private const MANAGER_ROLE_ID = 11;
 
+    private const UNSUPPORTED_ROLE_ID = 12;
+
     private const REP_ID = 1;
+
     private const MANAGER_ID = 2;
 
     protected function setUp(): void
@@ -30,7 +38,7 @@ class AllActivitySOPsReportServiceTest extends TestCase
         parent::setUp();
 
         config([
-            'database.connections.' . self::CONNECTION => [
+            'database.connections.'.self::CONNECTION => [
                 'driver' => 'sqlite',
                 'database' => ':memory:',
                 'prefix' => '',
@@ -57,12 +65,8 @@ class AllActivitySOPsReportServiceTest extends TestCase
 
     public function test_report_splits_visit_counts_per_client_type_and_credits_double_visits_to_both_users(): void
     {
-        $rows = $this->getReportRows();
-
-        $this->assertCount(2, $rows);
-
-        $rep = $rows[self::REP_ID];
-        $manager = $rows[self::MANAGER_ID];
+        $rep = $this->getReportRows(self::MEDICAL_REP_ROLE_ID)[self::REP_ID];
+        $manager = $this->getReportRows(self::MANAGER_ROLE_ID)[self::MANAGER_ID];
 
         // Rep: 1 AM + 3 PM + 2 PH visited visits; pending, soft-deleted and
         // out-of-range visits are excluded.
@@ -81,26 +85,24 @@ class AllActivitySOPsReportServiceTest extends TestCase
 
     public function test_working_days_exclude_weekends_holidays_and_busy_days(): void
     {
-        $rows = $this->getReportRows();
-
         // Mon-Fri week minus the official holiday on Thursday => 4 working days.
-        $this->assertSame(4, $rows[self::REP_ID]['working_days']);
-        $this->assertSame(4, $rows[self::MANAGER_ID]['working_days']);
+        $rep = $this->getReportRows(self::MEDICAL_REP_ROLE_ID)[self::REP_ID];
+        $manager = $this->getReportRows(self::MANAGER_ROLE_ID)[self::MANAGER_ID];
+        $this->assertSame(4, $rep['working_days']);
+        $this->assertSame(4, $manager['working_days']);
 
         // Rep has an approved vacation on Tuesday => 3 actual working days.
-        $this->assertSame(3, $rows[self::REP_ID]['actual_working_days']);
+        $this->assertSame(3, $rep['actual_working_days']);
 
         // Manager has approved office work on Wednesday and an activity on
         // Friday => 2 actual working days.
-        $this->assertSame(2, $rows[self::MANAGER_ID]['actual_working_days']);
+        $this->assertSame(2, $manager['actual_working_days']);
     }
 
     public function test_targets_resolve_role_matrix_first_then_settings_and_percentages_are_correct(): void
     {
-        $rows = $this->getReportRows();
-
-        $rep = $rows[self::REP_ID];
-        $manager = $rows[self::MANAGER_ID];
+        $rep = $this->getReportRows(self::MEDICAL_REP_ROLE_ID)[self::REP_ID];
+        $manager = $this->getReportRows(self::MANAGER_ROLE_ID)[self::MANAGER_ID];
 
         // Rep role has matrix rows (AM 2 / PM 8 / PH 5), distinct from settings.
         $this->assertSame(2.0, $rep['am_daily_target']);
@@ -151,20 +153,121 @@ class AllActivitySOPsReportServiceTest extends TestCase
             'from_date' => self::FROM_DATE,
             'to_date' => self::TO_DATE,
             'user_id' => [self::MANAGER_ID],
+            'evaluation_role_id' => self::MANAGER_ROLE_ID,
         ]);
 
         $this->assertCount(1, $rows);
         $this->assertSame(self::MANAGER_ID, $rows->first()['id']);
     }
 
+    public function test_filament_filter_state_preserves_the_role_for_report_and_export(): void
+    {
+        $filters = AllActivitySOPsReport::normalizeFilters([
+            'evaluation_role_id' => ['value' => (string) self::MANAGER_ROLE_ID],
+            'user_id' => ['values' => [(string) self::MANAGER_ID]],
+            'date_range' => [
+                'from_date' => self::FROM_DATE,
+                'to_date' => self::TO_DATE,
+            ],
+        ]);
+
+        $this->assertSame(self::MANAGER_ROLE_ID, $filters['evaluation_role_id']);
+        $this->assertSame([self::MANAGER_ID], $filters['user_id']);
+    }
+
+    public function test_evaluation_role_is_required(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('An evaluation role must be selected.');
+
+        (new AllActivitySOPsReportService())->getReportData([
+            'from_date' => self::FROM_DATE,
+            'to_date' => self::TO_DATE,
+        ]);
+    }
+
+    public function test_selected_role_must_be_supported_and_belong_to_the_evaluated_user(): void
+    {
+        $service = new AllActivitySOPsReportService();
+
+        try {
+            $service->getReportData([
+                'from_date' => self::FROM_DATE,
+                'to_date' => self::TO_DATE,
+                'evaluation_role_id' => self::UNSUPPORTED_ROLE_ID,
+            ]);
+            $this->fail('Unsupported evaluation role was accepted.');
+        } catch (InvalidArgumentException $exception) {
+            $this->assertSame('The selected evaluation role is not supported.', $exception->getMessage());
+        }
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The selected evaluation role must belong to every evaluated user.');
+
+        $service->getReportData([
+            'from_date' => self::FROM_DATE,
+            'to_date' => self::TO_DATE,
+            'user_id' => [self::MANAGER_ID],
+            'evaluation_role_id' => self::MEDICAL_REP_ROLE_ID,
+        ]);
+    }
+
+    public function test_explicit_role_selection_controls_targets_for_a_multi_role_user(): void
+    {
+        DB::table('model_has_roles')->insert([
+            'role_id' => self::MANAGER_ROLE_ID,
+            'model_type' => 'App\\Models\\User',
+            'model_id' => self::REP_ID,
+        ]);
+        RoleVisitTarget::create([
+            'role_id' => self::MANAGER_ROLE_ID,
+            'client_type_id' => ClientType::AM,
+            'daily_target' => 12,
+        ]);
+
+        $medicalRepRow = $this->getReportRows(self::MEDICAL_REP_ROLE_ID, [self::REP_ID])[self::REP_ID];
+        $managerRow = $this->getReportRows(self::MANAGER_ROLE_ID, [self::REP_ID])[self::REP_ID];
+
+        $this->assertSame('medical-rep', $medicalRepRow['role_name']);
+        $this->assertSame(2.0, $medicalRepRow['am_daily_target']);
+        $this->assertSame('district-manager', $managerRow['role_name']);
+        $this->assertSame(12.0, $managerRow['am_daily_target']);
+    }
+
+    public function test_role_target_seeder_only_creates_missing_defaults_and_is_idempotent(): void
+    {
+        RoleVisitTarget::query()
+            ->where('role_id', self::MEDICAL_REP_ROLE_ID)
+            ->where('client_type_id', ClientType::AM)
+            ->update(['daily_target' => 99]);
+        RoleVisitTarget::query()
+            ->where('role_id', self::MEDICAL_REP_ROLE_ID)
+            ->where('client_type_id', ClientType::PH)
+            ->delete();
+
+        $seeder = app(RoleVisitTargetsSeeder::class);
+        $seeder->run();
+        $seeder->run();
+
+        $targets = RoleVisitTarget::query()
+            ->where('role_id', self::MEDICAL_REP_ROLE_ID)
+            ->pluck('daily_target', 'client_type_id');
+
+        $this->assertCount(3, $targets);
+        $this->assertSame(99.0, (float) $targets[ClientType::AM]);
+        $this->assertSame(9.0, (float) $targets[ClientType::PH]);
+    }
+
     /**
      * @return array<int, array> report rows keyed by user id
      */
-    private function getReportRows(): array
+    private function getReportRows(int $evaluationRoleId, array $userIds = []): array
     {
         $rows = (new AllActivitySOPsReportService())->getReportData([
             'from_date' => self::FROM_DATE,
             'to_date' => self::TO_DATE,
+            'evaluation_role_id' => $evaluationRoleId,
+            'user_id' => $userIds,
         ]);
 
         return $rows->keyBy('id')->all();
@@ -288,6 +391,7 @@ class AllActivitySOPsReportServiceTest extends TestCase
         DB::table('roles')->insert([
             ['id' => self::MEDICAL_REP_ROLE_ID, 'name' => 'medical-rep', 'guard_name' => 'web'],
             ['id' => self::MANAGER_ROLE_ID, 'name' => 'district-manager', 'guard_name' => 'web'],
+            ['id' => self::UNSUPPORTED_ROLE_ID, 'name' => 'accountant', 'guard_name' => 'web'],
         ]);
 
         DB::table('model_has_roles')->insert([

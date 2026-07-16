@@ -11,14 +11,17 @@ class AllActivitySOPsReport extends Model
 {
     // This model is backed by a service (query builder), not a table
     public $timestamps = false;
+
     public $incrementing = false;
 
     protected $table = 'all_activity_sops_reports'; // Add table name for compatibility
+
     protected $primaryKey = 'id';
 
     protected $fillable = [
         'id',
         'name',
+        'evaluation_role_id',
         'role_name',
         'working_days',
         'actual_working_days',
@@ -40,6 +43,7 @@ class AllActivitySOPsReport extends Model
 
     protected $casts = [
         'id' => 'integer',
+        'evaluation_role_id' => 'integer',
         'working_days' => 'integer',
         'actual_working_days' => 'integer',
         'am_visits' => 'integer',
@@ -69,7 +73,7 @@ class AllActivitySOPsReport extends Model
     }
 
     /**
-     * Normalize filters from any source into from_date / to_date / user_id.
+     * Normalize filters from any source into report service inputs.
      */
     public static function normalizeFilters(array $filters): array
     {
@@ -85,6 +89,11 @@ class AllActivitySOPsReport extends Model
         }
 
         $userFilter = array_filter((array) ($userFilter ?? []));
+        $evaluationRoleId = $filters['evaluation_role_id'] ?? null;
+
+        if (is_array($evaluationRoleId)) {
+            $evaluationRoleId = $evaluationRoleId['value'] ?? null;
+        }
 
         return [
             'from_date' => $fromDate
@@ -94,6 +103,9 @@ class AllActivitySOPsReport extends Model
                 ? Carbon::parse($toDate)->toDateString()
                 : today()->toDateString(),
             'user_id' => array_map('intval', array_values($userFilter)),
+            'evaluation_role_id' => $evaluationRoleId !== null && $evaluationRoleId !== ''
+                ? (int) $evaluationRoleId
+                : null,
         ];
     }
 }
