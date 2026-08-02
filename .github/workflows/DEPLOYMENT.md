@@ -92,9 +92,8 @@ Same command without `--dry-run`.
 
 ### 4. Migrate and rebuild caches
 
-Prod's `scripts/deploy.sh` is an older revision that calls bare `php` (8.0) and
-will fail. Either sync the current script from the repository first, or run the
-steps by hand with the pinned binary:
+`scripts/deploy.sh` on prod now matches the repository version and pins PHP
+8.2, so `./scripts/deploy.sh` works. To run the steps by hand instead:
 
 ```bash
 cd ~/domains/avantgardepharma.net/public_html/rep
@@ -176,8 +175,10 @@ left configured but unused.
 - **Production is behind.** As of 2026-08-02 it had 37 pending migrations.
   Review `migrate:status` carefully before the next release; applying that
   backlog in one pass is a significant change and deserves a staging rehearsal.
-- **Prod `scripts/deploy.sh` is stale.** It calls bare `php` (8.0 on this
-  server) instead of the 8.2 binary, and will fail if run as-is. Sync the
-  current version from the repository before relying on it.
+- **Prod has a stale route cache.** `bootstrap/cache/routes-v7.php` dates from
+  2025-10-28, written by an older deploy script that ran `route:cache`. This
+  app has closure-based `/admin/ops/*` routes which cannot be cached, so the
+  current script runs `route:clear` instead. The existing cache file was left
+  in place rather than cleared mid-session; clear it during the next release.
 - **`./vendor/bin/phpunit` is not executable** in some checkouts; run tests as
   `php vendor/bin/phpunit`.
