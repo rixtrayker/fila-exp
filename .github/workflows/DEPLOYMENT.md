@@ -115,6 +115,9 @@ routes, which cannot be cached.
 ```bash
 curl -s -o /dev/null -w '%{http_code}\n' https://rep.avantgardepharma.net/admin   # expect 200
 tail -50 storage/logs/laravel-$(date +%Y-%m-%d).log | grep -iE 'ERROR|CRITICAL'
+
+# No compiled route cache should remain — see "Known issues".
+ls bootstrap/cache/routes-v7.php 2>/dev/null && echo 'WARNING: route cache present'
 ```
 
 If migrations touched a stored procedure, confirm it was reinstalled:
@@ -175,10 +178,10 @@ left configured but unused.
 - **Production is behind.** As of 2026-08-02 it had 37 pending migrations.
   Review `migrate:status` carefully before the next release; applying that
   backlog in one pass is a significant change and deserves a staging rehearsal.
-- **Prod has a stale route cache.** `bootstrap/cache/routes-v7.php` dates from
-  2025-10-28, written by an older deploy script that ran `route:cache`. This
-  app has closure-based `/admin/ops/*` routes which cannot be cached, so the
-  current script runs `route:clear` instead. The existing cache file was left
-  in place rather than cleared mid-session; clear it during the next release.
+- **Routes are intentionally never cached.** `routes/web.php` defines
+  closure-based `/admin/ops/*` routes, which Laravel cannot compile, so every
+  environment runs `route:clear` rather than `route:cache`. Do not "optimise"
+  this by reinstating `route:cache` — it will fail. Caching routes again would
+  require moving those closures into controller actions first.
 - **`./vendor/bin/phpunit` is not executable** in some checkouts; run tests as
   `php vendor/bin/phpunit`.
