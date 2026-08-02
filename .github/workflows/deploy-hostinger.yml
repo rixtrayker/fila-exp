@@ -1,4 +1,4 @@
-name: Deploy Laravel to Hostinger (Prod + Dev + Tags)
+name: Deploy Laravel to Hostinger (Dev + Tags)
 
 on:
   workflow_dispatch:
@@ -25,26 +25,11 @@ jobs:
 
       - name: Deploy to correct server
         run: |
+          # Production is intentionally not deployable from this workflow.
+          # Releases to prod are performed out of band.
           if [ "${GITHUB_REF##*/}" = "master" ]; then
-            echo "🚀 Deploying to PRODUCTION"
-             rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }}" \
-               --exclude=".git" \
-               --exclude=".github" \
-               --exclude="vendor" \
-               --exclude="node_modules" \
-               --exclude=".env" \
-               --exclude=".htaccess" \
-               --exclude="index.php" \
-               --exclude="storage/logs/*" \
-               --exclude="storage/framework/cache/*" \
-               --exclude="storage/framework/sessions/*" \
-               --exclude="storage/framework/views/*" \
-               --exclude="bootstrap/cache/*" \
-               --exclude="public/storage" \
-               ./ \
-               ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }}:~/${{ vars.HOSTINGER_PROD_PROJECT_PATH }}
-
-            ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} "cd ~/${{ vars.HOSTINGER_PROD_PROJECT_PATH }} && chmod +x scripts/deploy.sh && ./scripts/deploy.sh"
+            echo "❌ Refusing to deploy master: production releases are not handled by this workflow."
+            exit 1
 
           elif [ "${GITHUB_REF##*/}" = "dev" ]; then
             echo "🚀 Deploying to DEVELOPMENT"
