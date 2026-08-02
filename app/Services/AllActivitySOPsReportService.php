@@ -268,25 +268,31 @@ class AllActivitySOPsReportService
      * additionally credited to the accompanying manager (second_user_id),
      * exactly like the GetSOPsAndCallRateData stored procedure.
      *
+     * Only visits inside the credited user's accountable pool are counted:
+     * when that user maintains a personal client list for the visit's client
+     * type, the client must be on it; otherwise the area-derived pool applies.
+     * See Client::scopeAccountablePool for the same rule on the Eloquent side.
+     *
      * @return array<int, array<int, int>> user id => [client type id => count]
      */
     protected function getVisitCountsByUserAndType(string $fromDate, string $toDate, array $userIds): array
     {
         $baseQuery = fn () => DB::table('visits as v')
-            ->leftJoin('clients as c', 'v.client_id', '=', 'c.id')
+            ->join('clients as c', 'v.client_id', '=', 'c.id')
             ->where('v.status', 'visited')
+            ->where('c.active', true)
             ->whereNull('v.deleted_at')
             ->whereDate('v.visit_date', '>=', $fromDate)
             ->whereDate('v.visit_date', '<=', $toDate);
 
-        $repRows = $baseQuery()
+        $repRows = $this->restrictToAccountablePool($baseQuery(), 'v.user_id')
             ->whereIn('v.user_id', $userIds)
             ->select('v.user_id as credited_user_id', 'c.client_type_id')
             ->selectRaw('COUNT(*) as visits_count')
             ->groupBy('v.user_id', 'c.client_type_id')
             ->get();
 
-        $managerRows = $baseQuery()
+        $managerRows = $this->restrictToAccountablePool($baseQuery(), 'v.second_user_id')
             ->whereNotNull('v.second_user_id')
             ->whereIn('v.second_user_id', $userIds)
             ->select('v.second_user_id as credited_user_id', 'c.client_type_id')
@@ -296,7 +302,74 @@ class AllActivitySOPsReportService
 
         $counts = [];
 
-        foreach ($repRows->concat($managerRows) as $row) {
+        return $this->tallyVisitCounts($repRows->concat($managerRows), $counts);
+    }
+
+    /**
+     * Restrict a visits query to the accountable pool of the user credited in
+     * $creditedUserColumn.
+     *
+     * A visit counts when either:
+     * - the credited user has no personal list for the visited client's type,
+     *   and the client sits in one of their bricks (legacy area-derived pool);
+     * - or the client is explicitly on the credited user's personal list.
+     *
+     * Personal lists are evaluated per client type so that a rep who curates
+     * only, say, their pharmacy list is not penalised on the other sections.
+     */
+    protected function restrictToAccountablePool($query, string $creditedUserColumn)
+    {
+        return $query
+            ->whereExists(function ($inTerritory) use ($creditedUserColumn) {
+                $inTerritory
+                    ->selectRaw('1')
+                    ->from('user_bricks_view as accountable_brick')
+                    ->whereColumn('accountable_brick.user_id', $creditedUserColumn)
+                    ->whereColumn('accountable_brick.brick_id', 'c.brick_id');
+            })
+            ->where(function ($accountablePool) use ($creditedUserColumn) {
+                $accountablePool
+                    ->whereNotExists(fn ($hasList) => $this->personalListForVisitedTypeQuery($hasList, $creditedUserColumn))
+                    ->orWhereExists(function ($onList) use ($creditedUserColumn) {
+                        $onList
+                            ->selectRaw('1')
+                            ->from('client_user as selected_clients')
+                            ->whereColumn('selected_clients.user_id', $creditedUserColumn)
+                            ->whereColumn('selected_clients.client_id', 'c.id');
+                    });
+            });
+    }
+
+    /**
+     * Whether the credited user maintains a personal list for the client type
+     * of the visit being counted. Stale entries (clients that fell out of the
+     * user's territory or were deactivated) do not make a list "maintained".
+     */
+    protected function personalListForVisitedTypeQuery($query, string $creditedUserColumn)
+    {
+        return $query
+            ->selectRaw('1')
+            ->from('client_user as list_entries')
+            ->join('clients as list_clients', 'list_clients.id', '=', 'list_entries.client_id')
+            ->whereColumn('list_entries.user_id', $creditedUserColumn)
+            ->where('list_clients.active', true)
+            ->whereColumn('list_clients.client_type_id', 'c.client_type_id')
+            ->whereExists(function ($eligible) {
+                $eligible
+                    ->selectRaw('1')
+                    ->from('user_bricks_view as list_bricks')
+                    ->whereColumn('list_bricks.user_id', 'list_entries.user_id')
+                    ->whereColumn('list_bricks.brick_id', 'list_clients.brick_id');
+            });
+    }
+
+    /**
+     * @param  array<int, array<int, int>>  $counts
+     * @return array<int, array<int, int>>
+     */
+    protected function tallyVisitCounts(Collection $rows, array $counts): array
+    {
+        foreach ($rows as $row) {
             if ($row->client_type_id === null) {
                 continue;
             }

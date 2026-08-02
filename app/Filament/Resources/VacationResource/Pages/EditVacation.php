@@ -17,6 +17,15 @@ class EditVacation extends EditRecord
         ];
     }
 
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        // Approval state is owned by the approve/reject actions, and the owning
+        // rep never changes on edit.
+        unset($data['approved'], $data['approved_at'], $data['user_id']);
+
+        return $data;
+    }
+
     protected function getRedirectUrl(): string
     {
         return VacationResource::getUrl('index');

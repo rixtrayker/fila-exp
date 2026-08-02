@@ -41,10 +41,16 @@ class AreaManagerRole extends Seeder
         //     'view bundle', 'create bundle', 'update bundle', 'delete bundle',
         //     'view campaign', 'create campaign', 'update campaign', 'delete campaign',
         // ];
+        $additionalPermissions = [
+            'view client', 'view-any client', 'create client', 'update client', 'delete client',
+        ];
 
-        // $allPermissions = array_merge($medicalRepPermissions, $additionalPermissions);
-        // $role->syncPermissions($allPermissions);
-        $role->syncPermissions($medicalRepPermissions);
+        foreach ($additionalPermissions as $permissionName) {
+            Permission::firstOrCreate(['name' => $permissionName]);
+        }
+
+        $allPermissions = array_merge($medicalRepPermissions, $additionalPermissions);
+        $role->syncPermissions(array_unique($allPermissions));
     }
 }
 

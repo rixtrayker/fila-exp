@@ -42,6 +42,7 @@ class DistrictManagerRole extends Seeder
             'call-type' => ['view', 'create', 'update', 'delete'],
             'campaign' => ['view', 'create', 'update', 'delete'],
             'city' => ['view', 'create', 'update', 'delete'],
+            'client' => ['view', 'view-any', 'create', 'update', 'delete'],
             'client-request-type' => ['view', 'create', 'update', 'delete'],
             'client-type' => ['view', 'create', 'update', 'delete'],
             'country' => ['view', 'create', 'update', 'delete'],

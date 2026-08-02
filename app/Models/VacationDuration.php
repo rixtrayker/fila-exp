@@ -12,8 +12,6 @@ class VacationDuration extends Model
 {
     use HasFactory;
 
-    protected $guarded = [];
-
     protected $fillable = [
         'vacation_request_id',
         'start_shift',

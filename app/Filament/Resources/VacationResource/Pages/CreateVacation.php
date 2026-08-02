@@ -14,10 +14,13 @@ class CreateVacation extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        // $data['parent_id'] = 0;
-        // if(auth()->user()->hasRole('medical-rep')){
-            $data['user_id'] = auth()->id();
-        // }
+        // The form has no rep picker, so a request always belongs to its author.
+        $data['user_id'] = auth()->id();
+
+        // Approval state is owned by the approve/reject actions, never by the
+        // submitted payload.
+        unset($data['approved'], $data['approved_at']);
+
         return $data;
     }
 

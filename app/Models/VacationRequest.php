@@ -11,7 +11,17 @@ class VacationRequest extends Model
 {
     use HasFactory;
     use CanApprove;
-    protected $guarded = [];
+
+    protected $fillable = [
+        'user_id',
+        'vacation_type_id',
+        'approved',
+        'approved_at',
+    ];
+
+    protected $casts = [
+        'approved_at' => 'datetime',
+    ];
 
     public function repUser()
     {

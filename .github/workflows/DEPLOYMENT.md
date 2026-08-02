@@ -1,265 +1,187 @@
-# GitHub Actions Deployment Workflow Documentation
+# Deployment
 
-## Overview
+Deployment to Hostinger is **manual only**. There is no automatic deploy on
+push, and the GitHub Actions workflow can no longer release to production.
 
-This document describes the GitHub Actions workflow for deploying the Laravel application to Hostinger hosting. The workflow supports three different deployment strategies based on the trigger type.
+| Environment | URL | Server path | Database | How it deploys |
+|---|---|---|---|---|
+| Development | https://dev-crm.avantgardepharma.net | `~/domains/avantgardepharma.net/public_html/dev-crm` | `u530702363_dev_crm` | GitHub Actions (manual dispatch) or by hand |
+| Production | https://rep.avantgardepharma.net | `~/domains/avantgardepharma.net/public_html/rep` | `u530702363_fila` | By hand only (see below) |
 
-## Workflow File
+Server: `31.220.106.100`, SSH port `65002`, user `u530702363`.
 
-**Location:** `.github/workflows/deploy-hostinger.yml`
-
-## Deployment Strategies
-
-### 1. Branch-Based Deployments
-
-#### Production Deployment (master branch)
-- **Trigger:** Push to `master` branch or merged PR to `master`
-- **Target:** Production environment
-- **Path:** `~/domains/{HOSTINGER_PROD_SUBDOMAIN}/public_html/`
-- **Composer:** No vendor replacement
-- **Migrations:** No automatic migrations
-
-#### Development Deployment (dev branch)
-- **Trigger:** Push to `dev` branch or merged PR to `dev`
-- **Target:** Development environment
-- **Path:** `~/domains/{HOSTINGER_DEV_SUBDOMAIN}/public_html/`
-- **Composer:** No vendor replacement
-- **Migrations:** No automatic migrations
-
-### 2. Tag-Based Deployments
-
-#### Directory-Specific Deployment (directory tags)
-- **Trigger:** Push with directory tags (e.g., `dir:app`, `dir:app,dir:config`)
-- **Target:** Specific project environment
-- **Path:** `~/{HOSTINGER_CURRENT_PROJECT_PATH}`
-- **Composer:** ❌ No vendor replacement (code-only deployment)
-- **Migrations:** ❌ No automatic migrations
-- **Sync:** Only specified directories are synchronized
-
-## Workflow Steps
-
-### 1. Environment Setup
-```yaml
-- Checkout code
-- Setup PHP 8.2 with required extensions (mbstring, bcmath, intl, pdo_mysql)
-- Setup SSH authentication
-```
-
-### 2. Deployment Logic
-
-The workflow uses conditional logic to determine the deployment target:
-
-```bash
-if [ "${GITHUB_REF##*/}" = "master" ]; then
-  # Production deployment
-elif [ "${GITHUB_REF##*/}" = "dev" ]; then
-  # Development deployment
-elif [[ "${GITHUB_REF}" =~ ^refs/tags/ ]]; then
-  # Tag-based deployment
-fi
-```
-
-### 3. File Synchronization
-
-#### Branch Deployments (master/dev)
-Use `rsync` with the following exclusions:
-- `.git` directory
-- `.github` directory
-- `.env` file
-- `.htaccess` file
-- `index.php` file
-- Storage logs and cache directories
-- Bootstrap cache
-- Public storage symlink
-
-#### Tag Deployments (directory-specific)
-- **Only syncs specified directories** based on tag format
-- **Validates directory existence** before syncing
-- **Individual rsync** for each directory
-- **No exclusions** (pure directory replacement)
-
-### 4. Post-Deployment
-
-#### Branch Deployments (master/dev)
-After file synchronization, the workflow:
-1. Makes the deploy script executable
-2. Executes the deploy script
-
-#### Tag Deployments (directory-specific)
-- **No post-deployment steps** (pure code replacement)
-- **No script execution** (only directory sync)
-
-## Required GitHub Secrets
-
-Configure these secrets in your GitHub repository settings:
-
-| Secret Name | Description | Example |
-|-------------|-------------|---------|
-| `HOSTINGER_SSH_KEY` | Private SSH key for server access | `-----BEGIN OPENSSH PRIVATE KEY-----...` |
-| `SSH_PORT` | SSH port number | `22` or `2222` |
-| `SSH_USER` | SSH username | `username` |
-| `SSH_SERVER` | Server hostname or IP | `server.hostinger.com` |
-
-## Required GitHub Variables
-
-Configure these variables in your GitHub repository settings:
-
-| Variable Name | Description | Example |
-|---------------|-------------|---------|
-| `HOSTINGER_PROD_SUBDOMAIN` | Production subdomain | `app.yourdomain.com` |
-| `HOSTINGER_DEV_SUBDOMAIN` | Development subdomain | `dev.yourdomain.com` |
-| `HOSTINGER_CURRENT_PROJECT_PATH` | Specific project path for tag deployments | `domains/spyropharma.com/public_html/crm/` |
-
-## Usage Examples
-
-### Deploy to Production
-```bash
-git push origin master
-```
-
-### Deploy to Development
-```bash
-git push origin dev
-```
-
-### Deploy Specific Directories
-```bash
-# Deploy only the app directory
-git tag dir:app
-git push origin dir:app
-
-# Deploy multiple directories
-git tag dir:app,dir:config
-git push origin dir:app,dir:config
-
-# Deploy app, config, and database directories
-git tag dir:app,dir:config,dir:database
-git push origin dir:app,dir:config,dir:database
-```
-
-## Directory Tag Format
-
-### Tag Naming Convention
-- **Format:** `dir:directory1,dir:directory2,dir:directory3`
-- **Prefix:** Always use `dir:` before each directory name
-- **Separator:** Use commas to separate multiple directories
-- **No spaces:** Don't include spaces around commas
-
-### Supported Directories
-Common Laravel directories you can deploy:
-- `dir:app` - Application code
-- `dir:config` - Configuration files
-- `dir:database` - Database migrations and seeders
-- `dir:resources` - Views, assets, and language files
-- `dir:routes` - Route definitions
-- `dir:public` - Public assets and index.php
-- `dir:storage` - Storage directory (be careful with this)
-
-### Examples
-```bash
-# Single directory
-git tag dir:app
-git push origin dir:app
-
-# Multiple directories
-git tag dir:app,dir:config
-git push origin dir:app,dir:config
-
-# Complex deployment
-git tag dir:app,dir:config,dir:database,dir:resources
-git push origin dir:app,dir:config,dir:database,dir:resources
-```
-
-## Deployment Process Flow
-
-```mermaid
-graph TD
-    A[Push/PR Trigger] --> B{Check Trigger Type}
-    B -->|master| C[Production Deployment]
-    B -->|dev| D[Development Deployment]
-    B -->|tag| E[Directory Tag Deployment]
-    
-    C --> F[Sync All Files to Prod Path]
-    D --> G[Sync All Files to Dev Path]
-    E --> H[Parse Directory Tags]
-    
-    H --> I[Validate Directories]
-    I --> J[Sync Each Directory Individually]
-    
-    F --> K[Execute Deploy Script]
-    G --> K
-    J --> L[Directory Sync Complete]
-    
-    K --> M[Deployment Complete]
-    L --> M
-```
-
-## Important Notes
-
-### Tag Deployments
-- **Use for:** Quick code updates, specific directory changes, or targeted deployments
-- **Composer:** No vendor replacement (code-only deployment)
-- **Migrations:** No automatic migrations
-- **Path:** Uses the specific project path defined in `HOSTINGER_CURRENT_PROJECT_PATH`
-- **Sync:** Only specified directories are synchronized
-
-### Branch Deployments
-- **Use for:** Regular development and testing
-- **Composer:** No vendor replacement (uses existing vendor directory)
-- **Migrations:** No automatic migrations
-- **Path:** Uses standard subdomain paths
-
-### Security Considerations
-- SSH keys are stored as encrypted secrets
-- All SSH connections use `StrictHostKeyChecking=no` for automation
-- Environment files (`.env`) are excluded from deployment
-- Sensitive files are properly excluded from synchronization
-
-## Troubleshooting
-
-### Common Issues
-
-1. **SSH Connection Failed**
-   - Verify SSH key is correctly configured
-   - Check SSH port and server details
-   - Ensure SSH user has proper permissions
-
-2. **Directory Not Found**
-   - Check if the directory exists in your repository
-   - Verify the tag format is correct (dir:app, dir:config)
-   - Ensure directory names match exactly
-
-3. **Tag Format Issues**
-   - Use correct format: dir:app,dir:config
-   - Separate multiple directories with commas
-   - No spaces around commas
-
-4. **File Sync Issues**
-   - Check target directory permissions
-   - Verify rsync exclusions are correct
-   - Ensure sufficient disk space
-
-### Debug Steps
-
-1. Check GitHub Actions logs for detailed error messages
-2. Verify all secrets and variables are correctly set
-3. Test SSH connection manually
-4. Check server-side deploy script execution
-
-## Maintenance
-
-### Updating the Workflow
-- Modify `.github/workflows/deploy-hostinger.yml`
-- Test changes in development environment first
-- Update this documentation when making changes
-
-### Adding New Environments
-1. Add new branch/tag conditions
-2. Define new paths and variables
-3. Update this documentation
-4. Test thoroughly before production use
+> The app root serves 404 by design on both environments — there is no `/`
+> route. Use `/admin` to check that a deploy is healthy.
 
 ---
 
-**Last Updated:** $(date)
-**Workflow Version:** 3.0 (with directory-specific tag deployments)
+## Manual production release
+
+Production has no automated path. Follow these steps in order; do not skip
+the backup.
+
+### 0. Preflight
+
+Confirm what you are about to ship, and that prod is currently healthy.
+
+```bash
+git log --oneline origin/master -5
+curl -s -o /dev/null -w '%{http_code}\n' https://rep.avantgardepharma.net/admin   # expect 200
+```
+
+Use the PHP 8.2 binary explicitly for every `artisan` call. The default `php`
+on this server is 8.0, which the application does not support:
+
+```bash
+PHP_BIN=/opt/alt/php82/usr/bin/php
+```
+
+### 1. Back up the database
+
+Always back up before a release, and verify the dump is non-empty before
+continuing. A backup that silently failed is worse than none.
+
+```bash
+ssh -i ~/.ssh/spyro-pharma -p 65002 u530702363@31.220.106.100
+cd ~/domains/avantgardepharma.net/public_html/rep
+
+# Read credentials literally — the password is quoted and contains characters
+# that a shell would otherwise expand. Do not `source .env` for this.
+DB_USER=$(sed -n 's/^DB_USERNAME=//p' .env | tr -d '"'"'"'' | head -1)
+DB_PASS=$(sed -n 's/^DB_PASSWORD=//p' .env | tr -d '"'"'"'' | head -1)
+DB_NAME=$(sed -n 's/^DB_DATABASE=//p' .env | tr -d '"'"'"'' | head -1)
+
+mkdir -p ~/backups
+OUT=~/backups/prod_$(date +%Y%m%d_%H%M%S).sql.gz
+MYSQL_PWD="$DB_PASS" mysqldump --routines --single-transaction \
+  -h 127.0.0.1 -u "$DB_USER" "$DB_NAME" | gzip > "$OUT"
+
+# Verify: expect a multi-hundred-KB file and a non-zero table count.
+ls -lh "$OUT"
+gunzip -c "$OUT" | grep -c '^CREATE TABLE'
+```
+
+`--routines` is required. This project keeps logic in stored procedures
+(`GetSOPsAndCallRateData` and friends); a dump without it cannot restore them.
+
+### 2. Review what will change
+
+Run rsync as a dry run first, and specifically check what `--delete` would
+remove. Never run the real sync until this output looks right.
+
+```bash
+rsync -avz --delete --dry-run \
+  -e "ssh -i ~/.ssh/spyro-pharma -o StrictHostKeyChecking=no -p 65002" \
+  --exclude=".git" --exclude=".github" --exclude="vendor" \
+  --exclude="node_modules" --exclude=".env" --exclude=".htaccess" \
+  --exclude="index.php" --exclude="storage/logs/*" \
+  --exclude="storage/framework/cache/*" --exclude="storage/framework/sessions/*" \
+  --exclude="storage/framework/views/*" --exclude="bootstrap/cache/*" \
+  --exclude="public/storage" \
+  ./ u530702363@31.220.106.100:/home/u530702363/domains/avantgardepharma.net/public_html/rep \
+  | grep '^deleting'
+```
+
+The exclusions are not optional. `.env`, `.htaccess` and `index.php` are
+server-specific and differ from the repository; `vendor/` is installed on the
+server and is not shipped.
+
+### 3. Sync
+
+Same command without `--dry-run`.
+
+### 4. Migrate and rebuild caches
+
+`scripts/deploy.sh` on prod now matches the repository version and pins PHP
+8.2, so `./scripts/deploy.sh` works. To run the steps by hand instead:
+
+```bash
+cd ~/domains/avantgardepharma.net/public_html/rep
+PHP_BIN=/opt/alt/php82/usr/bin/php
+
+$PHP_BIN artisan migrate:status | grep Pending   # review before applying
+$PHP_BIN artisan migrate --force
+
+$PHP_BIN artisan config:clear && $PHP_BIN artisan config:cache
+$PHP_BIN artisan route:clear
+$PHP_BIN artisan view:cache
+```
+
+Route cache is cleared rather than built: this app has closure-based operations
+routes, which cannot be cached.
+
+### 5. Verify
+
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' https://rep.avantgardepharma.net/admin   # expect 200
+tail -50 storage/logs/laravel-$(date +%Y-%m-%d).log | grep -iE 'ERROR|CRITICAL'
+
+# No compiled route cache should remain — see "Known issues".
+ls bootstrap/cache/routes-v7.php 2>/dev/null && echo 'WARNING: route cache present'
+```
+
+If migrations touched a stored procedure, confirm it was reinstalled:
+
+```sql
+SELECT ROUTINE_NAME, LAST_ALTERED FROM information_schema.ROUTINES
+WHERE ROUTINE_SCHEMA = DATABASE();
+```
+
+### Rollback
+
+Code: re-sync from the previous known-good commit (step 2-3).
+Database: restore the dump taken in step 1.
+
+```bash
+gunzip -c ~/backups/prod_TIMESTAMP.sql.gz \
+  | MYSQL_PWD="$DB_PASS" mysql -h 127.0.0.1 -u "$DB_USER" "$DB_NAME"
+```
+
+Migrations in this project are not all reversible, so treat the dump — not
+`migrate:rollback` — as the real recovery path.
+
+---
+
+## Development release
+
+Dev can be deployed the same way, or through GitHub Actions:
+
+**Actions → "Deploy Laravel to Hostinger (Dev + Tags)" → Run workflow → branch `dev`.**
+
+The workflow is `workflow_dispatch` only. Dispatching it against `master`
+fails deliberately — production is not deployable from CI.
+
+The dev server's `scripts/deploy.sh` is current and pins PHP 8.2, so the
+one-line form works there:
+
+```bash
+cd ~/domains/avantgardepharma.net/public_html/dev-crm && ./scripts/deploy.sh
+```
+
+## Tag-based directory sync
+
+Pushing a tag of the form `dir:app,dir:config` syncs only those directories to
+`HOSTINGER_CURRENT_PROJECT_PATH`. No migrations, no cache rebuild, no
+exclusions. It is a blunt tool for a code-only hotfix — prefer a normal
+release.
+
+## CI configuration
+
+Secrets: `HOSTINGER_SSH_KEY`, `SSH_PORT`, `SSH_USER`, `SSH_SERVER`.
+Variables: `HOSTINGER_DEV_PROJECT_PATH`, `HOSTINGER_CURRENT_PROJECT_PATH`.
+
+`HOSTINGER_PROD_PROJECT_PATH` is no longer referenced by the workflow. It is
+left configured but unused.
+
+## Known issues
+
+- **Production is behind.** As of 2026-08-02 it had 37 pending migrations.
+  Review `migrate:status` carefully before the next release; applying that
+  backlog in one pass is a significant change and deserves a staging rehearsal.
+- **Routes are intentionally never cached.** `routes/web.php` defines
+  closure-based `/admin/ops/*` routes, which Laravel cannot compile, so every
+  environment runs `route:clear` rather than `route:cache`. Do not "optimise"
+  this by reinstating `route:cache` — it will fail. Caching routes again would
+  require moving those closures into controller actions first.
+- **`./vendor/bin/phpunit` is not executable** in some checkouts; run tests as
+  `php vendor/bin/phpunit`.

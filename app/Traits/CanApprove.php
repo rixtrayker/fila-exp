@@ -6,13 +6,19 @@ use Illuminate\Support\Str;
 
 trait CanApprove {
     protected function approvalOrder(){
-        if(auth()->user()->hasRole('district-manager'))
+        $user = auth()->user();
+
+        // No authenticated user (console, queue) carries no approval authority.
+        if(!$user)
+            return 0;
+
+        if($user->hasRole('district-manager'))
             return 2;
 
-        if(auth()->user()->hasRole('country-manager'))
+        if($user->hasRole('country-manager'))
             return 3;
 
-        if(auth()->user()->hasRole('super-admin'))
+        if($user->hasRole('super-admin'))
             return 5;
 
         return 0;
@@ -33,7 +39,7 @@ trait CanApprove {
         $modelName = class_basename(self::class);
         $permissionName = 'approve '.Str::kebab($modelName);
 
-        if(auth()->user()->can($permissionName) && $this->approved === 0 )
+        if(auth()->user()?->can($permissionName) && $this->approved === 0 )
             return true;
 
         return false;
@@ -43,7 +49,7 @@ trait CanApprove {
     {
         $modelName = class_basename(self::class);
         $permissionName = 'approve '.Str::kebab($modelName);
-        if(!auth()->user()->can($permissionName))
+        if(!auth()->user()?->can($permissionName))
             return false;
 
         if($this->approved < 0 || $this->approved == $this->approvalOrder())

@@ -83,6 +83,100 @@ class AllActivitySOPsReportServiceTest extends TestCase
         $this->assertSame(1, $manager['total_visits']);
     }
 
+    public function test_visits_outside_the_users_territory_are_not_counted(): void
+    {
+        // A client in a brick nobody covers: visits to it are logged but the
+        // rep is not accountable for it, so it must not inflate SOPs.
+        DB::table('clients')->insert([
+            'id' => 4, 'name' => 'Foreign Client', 'client_type_id' => ClientType::PM, 'brick_id' => 99,
+        ]);
+        DB::table('visits')->insert([
+            'user_id' => self::REP_ID, 'client_id' => 4,
+            'status' => 'visited', 'visit_date' => '2026-06-01',
+        ]);
+
+        $rep = $this->getReportRows(self::MEDICAL_REP_ROLE_ID)[self::REP_ID];
+
+        $this->assertSame(3, $rep['pm_visits']);
+        $this->assertSame(6, $rep['total_visits']);
+    }
+
+    public function test_personal_list_replaces_the_area_pool_for_that_client_type_only(): void
+    {
+        // The rep curates a PM list holding only client 1... but not the
+        // second PM client they also visited.
+        DB::table('clients')->insert([
+            'id' => 4, 'name' => 'Unlisted Doctor', 'client_type_id' => ClientType::PM, 'brick_id' => 1,
+        ]);
+        DB::table('visits')->insert([
+            'user_id' => self::REP_ID, 'client_id' => 4,
+            'status' => 'visited', 'visit_date' => '2026-06-01',
+        ]);
+        DB::table('client_user')->insert([
+            'client_id' => 1, 'user_id' => self::REP_ID,
+        ]);
+
+        $rep = $this->getReportRows(self::MEDICAL_REP_ROLE_ID)[self::REP_ID];
+
+        // PM is now evaluated against the list: the 3 visits to the listed
+        // client count, the visit to the unlisted one does not.
+        $this->assertSame(3, $rep['pm_visits']);
+
+        // PH and AM have no personal list, so they keep the area-derived pool.
+        $this->assertSame(2, $rep['ph_visits']);
+        $this->assertSame(1, $rep['am_visits']);
+        $this->assertSame(6, $rep['total_visits']);
+    }
+
+    public function test_stale_list_entries_do_not_switch_a_user_off_the_area_pool(): void
+    {
+        // The rep's only list entry is a client that left their territory.
+        // That is not a maintained list, so the area pool must still apply.
+        DB::table('clients')->insert([
+            'id' => 4, 'name' => 'Moved Away', 'client_type_id' => ClientType::PM, 'brick_id' => 99,
+        ]);
+        DB::table('client_user')->insert([
+            'client_id' => 4, 'user_id' => self::REP_ID,
+        ]);
+
+        $rep = $this->getReportRows(self::MEDICAL_REP_ROLE_ID)[self::REP_ID];
+
+        $this->assertSame(3, $rep['pm_visits']);
+        $this->assertSame(6, $rep['total_visits']);
+    }
+
+    public function test_double_visits_respect_the_accompanying_managers_own_list(): void
+    {
+        // The manager curates a PM list that excludes the client visited on
+        // the double visit; the rep has no list and keeps the area pool.
+        DB::table('client_user')->insert([
+            'client_id' => 4, 'user_id' => self::MANAGER_ID,
+        ]);
+        DB::table('clients')->insert([
+            'id' => 4, 'name' => 'Manager Only Doctor', 'client_type_id' => ClientType::PM, 'brick_id' => 1,
+        ]);
+
+        $rep = $this->getReportRows(self::MEDICAL_REP_ROLE_ID)[self::REP_ID];
+        $manager = $this->getReportRows(self::MANAGER_ROLE_ID)[self::MANAGER_ID];
+
+        // The manager is credited only for clients on their own list.
+        $this->assertSame(0, $manager['pm_visits']);
+        $this->assertSame(0, $manager['total_visits']);
+
+        // The rep is unaffected by the manager's list.
+        $this->assertSame(3, $rep['pm_visits']);
+    }
+
+    public function test_inactive_clients_are_excluded_from_visit_counts(): void
+    {
+        DB::table('clients')->where('id', 2)->update(['active' => false]);
+
+        $rep = $this->getReportRows(self::MEDICAL_REP_ROLE_ID)[self::REP_ID];
+
+        $this->assertSame(0, $rep['ph_visits']);
+        $this->assertSame(4, $rep['total_visits']);
+    }
+
     public function test_working_days_exclude_weekends_holidays_and_busy_days(): void
     {
         // Mon-Fri week minus the official holiday on Thursday => 4 working days.
@@ -362,7 +456,23 @@ class AllActivitySOPsReportServiceTest extends TestCase
             $table->id();
             $table->string('name')->nullable();
             $table->unsignedBigInteger('client_type_id')->nullable();
+            $table->unsignedBigInteger('brick_id')->nullable();
+            $table->boolean('active')->default(true);
             $table->timestamps();
+        });
+
+        Schema::create('client_user', function ($table) {
+            $table->id();
+            $table->unsignedBigInteger('client_id');
+            $table->unsignedBigInteger('user_id');
+            $table->timestamps();
+        });
+
+        // Mirrors the user_bricks_view database view: which bricks each user
+        // covers, via direct assignment or area membership.
+        Schema::create('user_bricks_view', function ($table) {
+            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('brick_id');
         });
 
         Schema::create('visits', function ($table) {
@@ -455,11 +565,18 @@ class AllActivitySOPsReportServiceTest extends TestCase
             ['user_id' => self::MANAGER_ID, 'date' => '2026-06-05'],
         ]);
 
-        // Clients: one per type.
+        // Clients: one per type, all inside brick 1.
         DB::table('clients')->insert([
-            ['id' => 1, 'name' => 'Doctor Client', 'client_type_id' => ClientType::PM],
-            ['id' => 2, 'name' => 'Pharmacy Client', 'client_type_id' => ClientType::PH],
-            ['id' => 3, 'name' => 'Account Client', 'client_type_id' => ClientType::AM],
+            ['id' => 1, 'name' => 'Doctor Client', 'client_type_id' => ClientType::PM, 'brick_id' => 1],
+            ['id' => 2, 'name' => 'Pharmacy Client', 'client_type_id' => ClientType::PH, 'brick_id' => 1],
+            ['id' => 3, 'name' => 'Account Client', 'client_type_id' => ClientType::AM, 'brick_id' => 1],
+        ]);
+
+        // Both users cover brick 1. Neither maintains a personal client list
+        // yet, so every visit falls back to this area-derived pool.
+        DB::table('user_bricks_view')->insert([
+            ['user_id' => self::REP_ID, 'brick_id' => 1],
+            ['user_id' => self::MANAGER_ID, 'brick_id' => 1],
         ]);
 
         $visit = fn (array $attributes) => array_merge([
