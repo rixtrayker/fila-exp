@@ -277,7 +277,7 @@ class Client extends Model
 
     private static function isSuperAdmin(): bool
     {
-        return auth()->user()->hasRole('super-admin');
+        return (bool) auth()->user()?->hasRole('super-admin');
     }
 
     public static function getMyBricksIds(): array

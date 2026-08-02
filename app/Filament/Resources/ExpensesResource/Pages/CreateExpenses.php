@@ -14,7 +14,12 @@ class CreateExpenses extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        // No complex calculations needed for simplified expense structure
+        // The Medical Rep select is hidden for medical-rep users, so fall back
+        // to the authenticated user when no rep was chosen on the form.
+        if (blank($data['user_id'] ?? null)) {
+            $data['user_id'] = auth()->id();
+        }
+
         return $data;
     }
 }

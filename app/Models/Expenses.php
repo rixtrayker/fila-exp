@@ -63,7 +63,11 @@ class Expenses extends Model
     public static function boot()
     {
         parent::boot();
-        if (!auth()->user()->hasRole('accountant')) {
+
+        // Accountants see every expense; everyone else is limited to their own
+        // hierarchy. Unauthenticated contexts (console, queue) stay scoped —
+        // GetMineScope resolves to an empty user list there.
+        if (!auth()->user()?->hasRole('accountant')) {
             static::addGlobalScope(new GetMineScope);
         }
     }
