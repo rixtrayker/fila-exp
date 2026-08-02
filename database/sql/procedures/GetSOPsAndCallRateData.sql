@@ -232,11 +232,40 @@ BEGIN
                 CASE WHEN v.second_user_id IS NOT NULL THEN v.second_user_id ELSE v.user_id END as user_id,
                 COUNT(*) as actual_visits
             FROM visits v
-            LEFT JOIN clients c ON v.client_id = c.id
+            JOIN clients c ON v.client_id = c.id
             WHERE v.status = 'visited'
               AND DATE(v.visit_date) BETWEEN v_from_date AND v_to_date
               AND v.deleted_at IS NULL
               AND (p_client_type_id = 0 OR c.client_type_id = p_client_type_id)
+              AND c.active = 1
+              AND EXISTS (
+                  SELECT 1
+                  FROM user_bricks_view accountable_brick
+                  WHERE accountable_brick.user_id = CASE WHEN v.second_user_id IS NOT NULL THEN v.second_user_id ELSE v.user_id END
+                    AND accountable_brick.brick_id = c.brick_id
+              )
+              AND (
+                  NOT EXISTS (
+                      SELECT 1
+                      FROM client_user list_entries
+                      JOIN clients list_clients ON list_clients.id = list_entries.client_id
+                      WHERE list_entries.user_id = CASE WHEN v.second_user_id IS NOT NULL THEN v.second_user_id ELSE v.user_id END
+                        AND list_clients.active = 1
+                        AND list_clients.client_type_id = c.client_type_id
+                        AND EXISTS (
+                            SELECT 1
+                            FROM user_bricks_view list_bricks
+                            WHERE list_bricks.user_id = list_entries.user_id
+                              AND list_bricks.brick_id = list_clients.brick_id
+                        )
+                  )
+                  OR EXISTS (
+                      SELECT 1
+                      FROM client_user selected_clients
+                      WHERE selected_clients.user_id = CASE WHEN v.second_user_id IS NOT NULL THEN v.second_user_id ELSE v.user_id END
+                        AND selected_clients.client_id = c.id
+                  )
+              )
             GROUP BY CASE WHEN v.second_user_id IS NOT NULL THEN v.second_user_id ELSE v.user_id END
 
             UNION ALL
@@ -245,12 +274,41 @@ BEGIN
                 v.user_id,
                 COUNT(*) as actual_visits
             FROM visits v
-            LEFT JOIN clients c ON v.client_id = c.id
+            JOIN clients c ON v.client_id = c.id
             WHERE v.status = 'visited'
               AND DATE(v.visit_date) BETWEEN v_from_date AND v_to_date
               AND v.deleted_at IS NULL
               AND v.second_user_id IS NOT NULL
               AND (p_client_type_id = 0 OR c.client_type_id = p_client_type_id)
+              AND c.active = 1
+              AND EXISTS (
+                  SELECT 1
+                  FROM user_bricks_view accountable_brick
+                  WHERE accountable_brick.user_id = v.user_id
+                    AND accountable_brick.brick_id = c.brick_id
+              )
+              AND (
+                  NOT EXISTS (
+                      SELECT 1
+                      FROM client_user list_entries
+                      JOIN clients list_clients ON list_clients.id = list_entries.client_id
+                      WHERE list_entries.user_id = v.user_id
+                        AND list_clients.active = 1
+                        AND list_clients.client_type_id = c.client_type_id
+                        AND EXISTS (
+                            SELECT 1
+                            FROM user_bricks_view list_bricks
+                            WHERE list_bricks.user_id = list_entries.user_id
+                              AND list_bricks.brick_id = list_clients.brick_id
+                        )
+                  )
+                  OR EXISTS (
+                      SELECT 1
+                      FROM client_user selected_clients
+                      WHERE selected_clients.user_id = v.user_id
+                        AND selected_clients.client_id = c.id
+                  )
+              )
             GROUP BY v.user_id
         ) actual_visits_branches
         GROUP BY user_id
@@ -265,10 +323,39 @@ BEGIN
                 CASE WHEN v.second_user_id IS NOT NULL THEN v.second_user_id ELSE v.user_id END as user_id,
                 COUNT(*) as total_visits
             FROM visits v
-            LEFT JOIN clients c ON v.client_id = c.id
+            JOIN clients c ON v.client_id = c.id
             WHERE DATE(v.visit_date) BETWEEN v_from_date AND v_to_date
               AND v.deleted_at IS NULL
               AND (p_client_type_id = 0 OR c.client_type_id = p_client_type_id)
+              AND c.active = 1
+              AND EXISTS (
+                  SELECT 1
+                  FROM user_bricks_view accountable_brick
+                  WHERE accountable_brick.user_id = CASE WHEN v.second_user_id IS NOT NULL THEN v.second_user_id ELSE v.user_id END
+                    AND accountable_brick.brick_id = c.brick_id
+              )
+              AND (
+                  NOT EXISTS (
+                      SELECT 1
+                      FROM client_user list_entries
+                      JOIN clients list_clients ON list_clients.id = list_entries.client_id
+                      WHERE list_entries.user_id = CASE WHEN v.second_user_id IS NOT NULL THEN v.second_user_id ELSE v.user_id END
+                        AND list_clients.active = 1
+                        AND list_clients.client_type_id = c.client_type_id
+                        AND EXISTS (
+                            SELECT 1
+                            FROM user_bricks_view list_bricks
+                            WHERE list_bricks.user_id = list_entries.user_id
+                              AND list_bricks.brick_id = list_clients.brick_id
+                        )
+                  )
+                  OR EXISTS (
+                      SELECT 1
+                      FROM client_user selected_clients
+                      WHERE selected_clients.user_id = CASE WHEN v.second_user_id IS NOT NULL THEN v.second_user_id ELSE v.user_id END
+                        AND selected_clients.client_id = c.id
+                  )
+              )
             GROUP BY CASE WHEN v.second_user_id IS NOT NULL THEN v.second_user_id ELSE v.user_id END
 
             UNION ALL
@@ -277,11 +364,40 @@ BEGIN
                 v.user_id,
                 COUNT(*) as total_visits
             FROM visits v
-            LEFT JOIN clients c ON v.client_id = c.id
+            JOIN clients c ON v.client_id = c.id
             WHERE DATE(v.visit_date) BETWEEN v_from_date AND v_to_date
               AND v.deleted_at IS NULL
               AND v.second_user_id IS NOT NULL
               AND (p_client_type_id = 0 OR c.client_type_id = p_client_type_id)
+              AND c.active = 1
+              AND EXISTS (
+                  SELECT 1
+                  FROM user_bricks_view accountable_brick
+                  WHERE accountable_brick.user_id = v.user_id
+                    AND accountable_brick.brick_id = c.brick_id
+              )
+              AND (
+                  NOT EXISTS (
+                      SELECT 1
+                      FROM client_user list_entries
+                      JOIN clients list_clients ON list_clients.id = list_entries.client_id
+                      WHERE list_entries.user_id = v.user_id
+                        AND list_clients.active = 1
+                        AND list_clients.client_type_id = c.client_type_id
+                        AND EXISTS (
+                            SELECT 1
+                            FROM user_bricks_view list_bricks
+                            WHERE list_bricks.user_id = list_entries.user_id
+                              AND list_bricks.brick_id = list_clients.brick_id
+                        )
+                  )
+                  OR EXISTS (
+                      SELECT 1
+                      FROM client_user selected_clients
+                      WHERE selected_clients.user_id = v.user_id
+                        AND selected_clients.client_id = c.id
+                  )
+              )
             GROUP BY v.user_id
         ) total_visits_branches
         GROUP BY user_id
@@ -319,11 +435,40 @@ BEGIN
                 CASE WHEN v.second_user_id IS NOT NULL THEN v.second_user_id ELSE v.user_id END as user_id,
                 DATE(v.visit_date) as work_date
             FROM visits v
-            LEFT JOIN clients c ON v.client_id = c.id
+            JOIN clients c ON v.client_id = c.id
             WHERE v.status = 'visited'
               AND DATE(v.visit_date) BETWEEN v_from_date AND v_to_date
               AND v.deleted_at IS NULL
               AND (p_client_type_id = 0 OR c.client_type_id = p_client_type_id)
+              AND c.active = 1
+              AND EXISTS (
+                  SELECT 1
+                  FROM user_bricks_view accountable_brick
+                  WHERE accountable_brick.user_id = CASE WHEN v.second_user_id IS NOT NULL THEN v.second_user_id ELSE v.user_id END
+                    AND accountable_brick.brick_id = c.brick_id
+              )
+              AND (
+                  NOT EXISTS (
+                      SELECT 1
+                      FROM client_user list_entries
+                      JOIN clients list_clients ON list_clients.id = list_entries.client_id
+                      WHERE list_entries.user_id = CASE WHEN v.second_user_id IS NOT NULL THEN v.second_user_id ELSE v.user_id END
+                        AND list_clients.active = 1
+                        AND list_clients.client_type_id = c.client_type_id
+                        AND EXISTS (
+                            SELECT 1
+                            FROM user_bricks_view list_bricks
+                            WHERE list_bricks.user_id = list_entries.user_id
+                              AND list_bricks.brick_id = list_clients.brick_id
+                        )
+                  )
+                  OR EXISTS (
+                      SELECT 1
+                      FROM client_user selected_clients
+                      WHERE selected_clients.user_id = CASE WHEN v.second_user_id IS NOT NULL THEN v.second_user_id ELSE v.user_id END
+                        AND selected_clients.client_id = c.id
+                  )
+              )
 
             UNION
 
@@ -331,12 +476,41 @@ BEGIN
                 v.user_id,
                 DATE(v.visit_date) as work_date
             FROM visits v
-            LEFT JOIN clients c ON v.client_id = c.id
+            JOIN clients c ON v.client_id = c.id
             WHERE v.status = 'visited'
               AND DATE(v.visit_date) BETWEEN v_from_date AND v_to_date
               AND v.deleted_at IS NULL
               AND v.second_user_id IS NOT NULL
               AND (p_client_type_id = 0 OR c.client_type_id = p_client_type_id)
+              AND c.active = 1
+              AND EXISTS (
+                  SELECT 1
+                  FROM user_bricks_view accountable_brick
+                  WHERE accountable_brick.user_id = v.user_id
+                    AND accountable_brick.brick_id = c.brick_id
+              )
+              AND (
+                  NOT EXISTS (
+                      SELECT 1
+                      FROM client_user list_entries
+                      JOIN clients list_clients ON list_clients.id = list_entries.client_id
+                      WHERE list_entries.user_id = v.user_id
+                        AND list_clients.active = 1
+                        AND list_clients.client_type_id = c.client_type_id
+                        AND EXISTS (
+                            SELECT 1
+                            FROM user_bricks_view list_bricks
+                            WHERE list_bricks.user_id = list_entries.user_id
+                              AND list_bricks.brick_id = list_clients.brick_id
+                        )
+                  )
+                  OR EXISTS (
+                      SELECT 1
+                      FROM client_user selected_clients
+                      WHERE selected_clients.user_id = v.user_id
+                        AND selected_clients.client_id = c.id
+                  )
+              )
 
             UNION
 

@@ -172,8 +172,11 @@ class RolesAndPermissionsSeeder extends Seeder
     private function createRoles(Collection $allPermissions, Permission $miscPermission): void
     {
         // User role - basic access only
+        $myClientListPermissions = $allPermissions->filter(
+            fn ($permission) => str_ends_with($permission->name, 'my-client-list')
+        );
         Role::firstOrCreate(['name' => 'user', 'display_name' => 'User'])
-            ->syncPermissions([$miscPermission]);
+            ->syncPermissions([$miscPermission, ...$myClientListPermissions]);
 
         // Super Admin role - all permissions
         $superAdminPermissions = $allPermissions->merge([$miscPermission]);
@@ -194,9 +197,13 @@ class RolesAndPermissionsSeeder extends Seeder
         Role::firstOrCreate(['name' => 'district-manager', 'display_name' => 'District Manager']);
         Role::firstOrCreate(['name' => 'area-manager', 'display_name' => 'Area Manager']);
         Role::firstOrCreate(['name' => 'country-manager', 'display_name' => 'Country Manager']);
-        Role::firstOrCreate(['name' => 'account-manager', 'display_name' => 'Account Manager']);
-        Role::firstOrCreate(['name' => 'account', 'display_name' => 'Account']);
-        Role::firstOrCreate(['name' => 'accountant', 'display_name' => 'Accountant']);
+
+        Role::firstOrCreate(['name' => 'account-manager', 'display_name' => 'Account Manager'])
+            ->syncPermissions($myClientListPermissions);
+        Role::firstOrCreate(['name' => 'account', 'display_name' => 'Account'])
+            ->syncPermissions($myClientListPermissions);
+        Role::firstOrCreate(['name' => 'accountant', 'display_name' => 'Accountant'])
+            ->syncPermissions($myClientListPermissions);
     }
 
     /**

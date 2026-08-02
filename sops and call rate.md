@@ -35,8 +35,18 @@ This document describes how the SOPs And Call Rate report is built and what each
       approved_vacation_dates
   )
   ```
-- Actual visits: count of `visits` where `(user_id = u OR second_user_id = u)` and `status = 'visited'` within the date range; excludes soft-deleted rows.
-- Total visits: count of all `visits` where `(user_id = u OR second_user_id = u)` within the date range; excludes soft-deleted rows.
+- Actual visits: count of `visits` where `(user_id = u OR second_user_id = u)` and `status = 'visited'` within the date range; excludes soft-deleted rows and visits outside the credited user's accountable client pool (see below).
+- Total visits: count of all `visits` where `(user_id = u OR second_user_id = u)` within the date range; excludes soft-deleted rows and visits outside the credited user's accountable client pool (see below).
+
+#### Accountable client pool
+
+Visits only count toward a user when the visited client is one that user is accountable for:
+
+- If the user maintains a personal client list (`client_user`) **for the visited client's type**, only clients on that list count.
+- Otherwise the area-derived pool applies: the client must sit in one of the user's bricks (`user_bricks_view`).
+- Inactive clients (`active = 0`) never count, and list entries pointing at inactive or out-of-territory clients are ignored when deciding whether a list is maintained.
+
+The list is evaluated per client type, so a user who curates only their pharmacy list is still measured against the area pool for AM and PM. On a double visit each participant is judged against their own list. This is the same rule used by the accounts coverage report (`Client::scopeAccountablePool`, `Visit::scopeWithinAccountablePool`).
 - Call rate: `ROUND(actual_visits / NULLIF(actual_working_days, 0), 2)` with 0 fallback.
 - SOPS: `ROUND(actual_visits / NULLIF(actual_working_days * daily_visit_target, 0) * 100, 2)` with 0 fallback.
 
@@ -62,7 +72,7 @@ Notes:
 - Resource: `app/Filament/Resources/SOPsAndCallRateResource.php`
 - Export: `app/Exports/SOPsAndCallRateExport.php`
 - Widget: `app/Filament/Widgets/SOPsAndCallRateWidget.php`
-- Related tables: `visits`, `activities`, `office_works`, `official_holidays`, `users`, `areas`, `area_user`, `settings`
+- Related tables: `visits`, `activities`, `office_works`, `official_holidays`, `users`, `areas`, `area_user`, `settings`, `clients`, `client_user`, `user_bricks_view`
 
 ### Legacy removed
 
